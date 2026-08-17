@@ -1,3 +1,11 @@
+# Slatejs Jianpu Editor
+
+## TODO
+
+- [ ] slur/tie rendering
+- [ ] bug: selection breaks when adding marks
+
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

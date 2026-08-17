@@ -1,122 +1,156 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useCallback, useState } from "react";
+import { createEditor, Editor, Transforms } from "slate";
+import { Editable, type RenderLeafProps, Slate, withReact } from "slate-react";
+import type { BaseEditor, Descendant } from "slate";
+import { ReactEditor } from "slate-react";
+import Toolbar from "./Toolbar";
 
-function App() {
-  const [count, setCount] = useState(0)
+type CustomElement = { type: "paragraph"; children: CustomText[] };
+type CustomText = { text: string; octave?: number; beam?: number };
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+declare module "slate" {
+  interface CustomTypes {
+    Editor: BaseEditor & ReactEditor;
+    Element: CustomElement;
+    Text: CustomText;
+  }
 }
 
-export default App
+const initialValue: Descendant[] = [
+  {
+    type: "paragraph",
+    children: [{ text: "A line of text in a paragraph." }],
+  },
+];
+
+export default function App() {
+  const [editor] = useState(() => withReact(createEditor()));
+
+  const renderLeaf = useCallback((props: RenderLeafProps) => {
+    return <Leaf {...props} />;
+  }, []);
+
+  return (
+    <Slate
+      editor={editor}
+      initialValue={initialValue}
+      onChange={(value) => {
+        const isAstChange = editor.operations.some(
+          (op) => "set_selection" !== op.type,
+        );
+        if (isAstChange) {
+          console.log(JSON.stringify(value));
+        }
+      }}
+    >
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Toolbar />
+
+        <Editable
+          renderLeaf={renderLeaf}
+          spellCheck={false}
+          style={{
+            height: "100%",
+            width: "100%",
+            padding: 20,
+            textAlign: "left",
+            boxSizing: "border-box",
+          }}
+          onKeyDown={(e) => {
+            if (e.ctrlKey && e.key == "a") {
+              e.preventDefault();
+              Transforms.select(editor, {
+                anchor: Editor.start(editor, []),
+                focus: Editor.end(editor, []),
+              });
+            }
+          }}
+        />
+      </div>
+    </Slate>
+  );
+}
+
+function Leaf(props: RenderLeafProps) {
+  return (
+    <span {...props.attributes} style={{ position: "relative" }}>
+      {props.children}
+      <JianpuFormatting {...props.leaf} />
+    </span>
+  );
+}
+
+function JianpuFormatting(props: CustomText) {
+  return (
+    <span
+      style={{
+        position: "absolute",
+        left: 0,
+        pointerEvents: "none",
+        userSelect: "none",
+      }}
+    >
+      {[...props.text].map((char, i) => (
+        <span
+          key={i}
+          style={{
+            position: "relative",
+            color: "pink",
+          }}
+        >
+          <span
+            style={{
+              visibility: "hidden",
+            }}
+          >
+            {char}
+          </span>
+          {char != " " &&
+            Array.from({ length: Math.abs(props.octave ?? 0) }).map((
+              _,
+              i,
+            ) => (
+              <span
+                key={i}
+                style={{
+                  position: "absolute",
+                  height: 2,
+                  width: 2,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  backgroundColor: "black",
+                  ...((props.octave ?? 0) > 0
+                    ? {
+                      bottom: 16 + (4 * i),
+                    }
+                    : {
+                      top: 20 + (4 * i) + (2 * (props.beam ?? 0)),
+                    }),
+                }}
+              />
+            ))}
+          {char != " " &&
+            Array.from({ length: props.beam ?? 0 }).map((_, i) => (
+              <span
+                key={i}
+                style={{
+                  position: "absolute",
+                  height: 1,
+                  left: 0,
+                  right: 0,
+                  top: 20 + (2 * i),
+                  backgroundColor: "black",
+                }}
+              />
+            ))}
+        </span>
+      ))}
+    </span>
+  );
+}
