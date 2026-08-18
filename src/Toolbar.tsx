@@ -1,8 +1,20 @@
-import { Editor, Transforms } from "slate";
+import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
 
 export default function Toolbar() {
   const editor = useSlate();
+
+  function toggleMono() {
+    const [match] = Editor.nodes(
+      editor,
+      { match: (n) => Element.isElement(n) && n.type === "code" },
+    );
+    Transforms.setNodes(
+      editor,
+      { type: match ? "paragraph" : "code" },
+      { match: (n) => Element.isElement(n) && Editor.isBlock(editor, n) },
+    );
+  }
 
   function handleOctave(value: -1 | 1) {
     const marks = Editor.marks(editor);
@@ -21,10 +33,11 @@ export default function Toolbar() {
 
   function addSlur() {
     if (!editor.selection) return;
-    Transforms.wrapNodes(editor, { type: "slur", children: [] }, {
-      at: editor.selection,
-      split: true,
-    });
+    Transforms.wrapNodes(
+      editor,
+      { type: "slur", children: [] },
+      { at: editor.selection, split: true },
+    );
   }
 
   function clear() {
@@ -42,6 +55,9 @@ export default function Toolbar() {
         gap: 10,
       }}
     >
+      <button onClick={toggleMono}>Mono</button>
+      <button onClick={editor.undo}>Undo</button>
+      <button onClick={editor.redo}>Redo</button>
       <button onClick={() => handleOctave(1)}>Oct+</button>
       <button onClick={() => handleOctave(-1)}>Oct-</button>
       <button onClick={() => handleBeam(1)}>Line+</button>

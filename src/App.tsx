@@ -10,9 +10,8 @@ import {
 import type { BaseEditor, Descendant } from "slate";
 import { ReactEditor } from "slate-react";
 import Toolbar from "./Toolbar";
+import { HistoryEditor, withHistory } from "slate-history";
 
-type ParagraphElement = { type: "paragraph"; children: CustomText[] };
-type SlurElement = { type: "slur"; children: CustomText[] };
 type CustomText = {
   text: string;
   octave?: number;
@@ -20,10 +19,14 @@ type CustomText = {
   slur?: number;
 };
 
+type ParagraphElement = { type: "paragraph"; children: CustomText[] };
+type CodeElement = { type: "code"; children: CustomText[] };
+type SlurElement = { type: "slur"; children: CustomText[] };
+
 declare module "slate" {
   interface CustomTypes {
-    Editor: BaseEditor & ReactEditor;
-    Element: ParagraphElement | SlurElement;
+    Editor: BaseEditor & ReactEditor & HistoryEditor;
+    Element: ParagraphElement | CodeElement | SlurElement;
     Text: CustomText;
   }
 }
@@ -36,16 +39,21 @@ const initialValue: Descendant[] = [
 ];
 
 export default function App() {
-  const [editor] = useState(() => withSlur(withReact(createEditor())));
+  const [editor] = useState(() =>
+    withSlur(withReact(withHistory(createEditor())))
+  );
 
   const renderElement = useCallback((props: RenderElementProps) => {
     switch (props.element.type) {
-      case "slur":
-        return <SlurElement {...props} />;
       case "paragraph":
         return <ParagraphElement {...props} />;
+      case "code":
+        return <CodeElement {...props} />;
+      case "slur":
+        return <SlurElement {...props} />;
     }
   }, []);
+
   const renderLeaf = useCallback((props: RenderLeafProps) => {
     return (
       <span {...props.attributes} style={{ position: "relative" }}>
@@ -104,14 +112,18 @@ export default function App() {
 }
 
 function ParagraphElement(props: RenderElementProps) {
-  return <span {...props.attributes}>{...props.children}</span>;
+  return <p {...props.attributes}>{...props.children}</p>;
+}
+
+function CodeElement(props: RenderElementProps) {
+  return <code {...props.attributes}>{...props.children}</code>;
 }
 
 function SlurElement(props: RenderElementProps) {
   return (
     <span {...props.attributes} style={{ position: "relative" }}>
       {...props.children}
-      <div
+      <span
         style={{
           position: "absolute",
           left: 5,
