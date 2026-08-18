@@ -2,7 +2,7 @@
 
 ## TODO
 
-- [ ] slur/tie rendering
+- [x] slur/tie rendering
 - [ ] bug: selection breaks when adding marks
 
 

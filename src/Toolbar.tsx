@@ -1,4 +1,4 @@
-import { Editor } from "slate";
+import { Editor, Transforms } from "slate";
 import { useSlate } from "slate-react";
 
 export default function Toolbar() {
@@ -17,6 +17,14 @@ export default function Toolbar() {
     const newValue = (marks.beam ?? 0) + value;
     if (newValue < 0) return;
     Editor.addMark(editor, "beam", newValue);
+  }
+
+  function addSlur() {
+    if (!editor.selection) return;
+    Transforms.wrapNodes(editor, { type: "slur", children: [] }, {
+      at: editor.selection,
+      split: true,
+    });
   }
 
   function clear() {
@@ -38,7 +46,7 @@ export default function Toolbar() {
       <button onClick={() => handleOctave(-1)}>Oct-</button>
       <button onClick={() => handleBeam(1)}>Line+</button>
       <button onClick={() => handleBeam(-1)}>Line-</button>
-      <button>Slur/Tie</button>
+      <button onClick={addSlur}>Slur/Tie</button>
       <button onClick={clear}>Clear</button>
     </div>
   );
