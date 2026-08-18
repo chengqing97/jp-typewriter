@@ -45,6 +45,37 @@ export default function Toolbar() {
     Editor.removeMark(editor, "octave");
   }
 
+  function open() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json,application/json";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      const value = JSON.parse(text);
+      Transforms.removeNodes(editor, {
+        at: {
+          anchor: Editor.start(editor, []),
+          focus: Editor.end(editor, []),
+        },
+      });
+      Transforms.insertNodes(editor, value, { at: [0] });
+    };
+    input.click();
+  }
+
+  function save() {
+    const json = JSON.stringify(editor.children, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "jianpu.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div
       style={{
@@ -64,6 +95,9 @@ export default function Toolbar() {
       <button onClick={() => handleBeam(-1)}>Line-</button>
       <button onClick={addSlur}>Slur/Tie</button>
       <button onClick={clear}>Clear</button>
+      <div style={{ flex: 1 }} />
+      <button onClick={open}>Open</button>
+      <button onClick={save}>Save</button>
     </div>
   );
 }

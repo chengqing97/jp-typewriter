@@ -64,18 +64,7 @@ export default function App() {
   }, []);
 
   return (
-    <Slate
-      editor={editor}
-      initialValue={initialValue}
-      onChange={(value) => {
-        const isAstChange = editor.operations.some(
-          (op) => "set_selection" !== op.type,
-        );
-        if (isAstChange) {
-          console.log(JSON.stringify(value));
-        }
-      }}
-    >
+    <Slate editor={editor} initialValue={initialValue}>
       <div
         style={{
           height: "100vh",
@@ -116,7 +105,7 @@ function ParagraphElement(props: RenderElementProps) {
 }
 
 function CodeElement(props: RenderElementProps) {
-  return <code {...props.attributes}>{...props.children}</code>;
+  return <pre {...props.attributes}>{...props.children}</pre>;
 }
 
 function SlurElement(props: RenderElementProps) {

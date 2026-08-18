@@ -92,7 +92,7 @@ h2 {
     font-size: 20px;
   }
 }
-p {
+p, pre {
   margin: 0;
 }
 
