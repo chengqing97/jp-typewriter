@@ -131,9 +131,8 @@ export default function App() {
           (op) => "set_selection" !== op.type,
         );
         if (isAstChange) {
-          const content = JSON.stringify(value, null, " ");
+          const content = JSON.stringify(value);
           localStorage.setItem("content", content);
-          console.log(content);
         }
       }}
     >
@@ -153,8 +152,9 @@ export default function App() {
           style={{
             height: "100%",
             width: "100%",
-            padding: 20,
+            padding: 50,
             textAlign: "left",
+            lineHeight: 1.1,
             boxSizing: "border-box",
             userSelect: "none",
           }}

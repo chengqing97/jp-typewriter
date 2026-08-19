@@ -6,6 +6,13 @@
 - [x] bug: cannot toggle off slur
 - [x] bug: selection breaks when adding marks
 - [x] bug: cannot use arrow no navigate in and out a mark
+- [ ] bug: unable to render octave after add mark when no selection
+- [ ] triplet
+- [ ] dynamic slur height
+- [ ] music symbols
+- [ ] music font
+- [ ] highlights and font colors
+- [ ] headings
 
 # React + TypeScript + Vite
 

@@ -49,12 +49,12 @@ export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
     setRects(newRects);
   }, [leaf.text]);
 
-  if ((!leaf.beam && !leaf.octave) || leaf.text == " ") {
-  return (
-    <span {...attributes}>
-      {children}
-    </span>
-  );
+  if (!leaf.beam && !leaf.octave) {
+    return (
+      <span {...attributes}>
+        {children}
+      </span>
+    );
   }
 
   return (
@@ -80,28 +80,29 @@ export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
               width: rect.width,
             }}
           >
-            {octaveArray.map((_, i) => (
-              <span
-                key={i}
-                style={{
-                  position: "absolute",
-                  height: 2,
-                  width: 2,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  backgroundColor: "black",
-                  borderRadius: 2,
-                  ...((leaf.octave ?? 0) > 0
-                    ? {
-                      bottom: 18 + (4 * i),
-                    }
-                    : {
-                      top: 20 + (4 * i) + (2 * (leaf.beam ?? 0)),
-                    }),
-                }}
-              />
-            ))}
-            {beamArray.map((_, i) => (
+            {/^[a-zA-Z1-9]/.test(rect.char) &&
+              octaveArray.map((_, i) => (
+                <span
+                  key={i}
+                  style={{
+                    position: "absolute",
+                    height: 2,
+                    width: 2,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    backgroundColor: "black",
+                    borderRadius: 2,
+                    ...((leaf.octave ?? 0) > 0
+                      ? {
+                        bottom: rect.height - 2 + (4 * i),
+                      }
+                      : {
+                        top: 20 + (4 * i) + (2 * (leaf.beam ?? 0)),
+                      }),
+                  }}
+                />
+              ))}
+            {/^[a-zA-Z0-9]/.test(rect.char) && beamArray.map((_, i) => (
               <span
                 key={i}
                 style={{
@@ -109,7 +110,7 @@ export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
                   height: 1,
                   left: 0,
                   right: 0,
-                  top: 18 + (2 * i),
+                  top: rect.height - 2 + (2 * i),
                   backgroundColor: "black",
                 }}
               />

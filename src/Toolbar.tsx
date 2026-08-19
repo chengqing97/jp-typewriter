@@ -44,14 +44,17 @@ export default function Toolbar() {
   }
 
   function save() {
+    const filename = prompt("Enter file name:", "Jianpu");
+    if (!filename) return;
     const json = JSON.stringify(editor.children, null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "jianpu.json";
+    a.download = filename + ".json";
     a.click();
     URL.revokeObjectURL(url);
+    
   }
 
   return (
