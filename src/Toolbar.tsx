@@ -1,5 +1,7 @@
 import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
+import { CustomEditor } from "./App";
+import type { HTMLAttributes } from "react";
 
 export default function Toolbar() {
   const editor = useSlate();
@@ -13,30 +15,6 @@ export default function Toolbar() {
       editor,
       { type: match ? "paragraph" : "code" },
       { match: (n) => Element.isElement(n) && Editor.isBlock(editor, n) },
-    );
-  }
-
-  function handleOctave(value: -1 | 1) {
-    const marks = Editor.marks(editor);
-    if (!marks) return;
-    const newValue = (marks.octave ?? 0) + value;
-    Editor.addMark(editor, "octave", newValue);
-  }
-
-  function handleBeam(value: -1 | 1) {
-    const marks = Editor.marks(editor);
-    if (!marks) return;
-    const newValue = (marks.beam ?? 0) + value;
-    if (newValue < 0) return;
-    Editor.addMark(editor, "beam", newValue);
-  }
-
-  function addSlur() {
-    if (!editor.selection) return;
-    Transforms.wrapNodes(
-      editor,
-      { type: "slur", children: [] },
-      { at: editor.selection, split: true },
     );
   }
 
@@ -86,18 +64,32 @@ export default function Toolbar() {
         gap: 10,
       }}
     >
-      <button onClick={toggleMono}>Mono</button>
-      <button onClick={editor.undo}>Undo</button>
-      <button onClick={editor.redo}>Redo</button>
-      <button onClick={() => handleOctave(1)}>Oct+</button>
-      <button onClick={() => handleOctave(-1)}>Oct-</button>
-      <button onClick={() => handleBeam(1)}>Line+</button>
-      <button onClick={() => handleBeam(-1)}>Line-</button>
-      <button onClick={addSlur}>Slur/Tie</button>
-      <button onClick={clear}>Clear</button>
+      <ToolbarButton onClick={toggleMono}>Mono</ToolbarButton>
+      <ToolbarButton onClick={editor.undo}>Undo</ToolbarButton>
+      <ToolbarButton onClick={editor.redo}>Redo</ToolbarButton>
+      <ToolbarButton onClick={() => CustomEditor.octaveUp(editor)}>
+        Oct+
+      </ToolbarButton>
+      <ToolbarButton onClick={() => CustomEditor.octaveDown(editor)}>
+        Oct-
+      </ToolbarButton>
+      <ToolbarButton onClick={() => CustomEditor.beamUp(editor)}>
+        Line+
+      </ToolbarButton>
+      <ToolbarButton onClick={() => CustomEditor.beamDown(editor)}>
+        Line-
+      </ToolbarButton>
+      <ToolbarButton onClick={() => CustomEditor.addSlur(editor)}>
+        Slur/Tie
+      </ToolbarButton>
+      <ToolbarButton onClick={clear}>Clear</ToolbarButton>
       <div style={{ flex: 1 }} />
-      <button onClick={open}>Open</button>
-      <button onClick={save}>Save</button>
+      <ToolbarButton onClick={open}>Open</ToolbarButton>
+      <ToolbarButton onClick={save}>Save</ToolbarButton>
     </div>
   );
+}
+
+function ToolbarButton(props: HTMLAttributes<HTMLButtonElement>) {
+  return <button onMouseDown={(e) => e.preventDefault()} {...props} />;
 }

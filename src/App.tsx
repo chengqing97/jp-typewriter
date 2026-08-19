@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
-import { createEditor, Editor, Transforms } from "slate";
+import { useCallback, useMemo, useState } from "react";
+import { createEditor, Editor, Element, Transforms } from "slate";
 import {
   Editable,
   type RenderElementProps,
@@ -11,6 +11,7 @@ import type { BaseEditor, Descendant } from "slate";
 import { ReactEditor } from "slate-react";
 import Toolbar from "./Toolbar";
 import { HistoryEditor, withHistory } from "slate-history";
+import { Leaf } from "./Leaf";
 
 type CustomText = {
   text: string;
@@ -31,16 +32,79 @@ declare module "slate" {
   }
 }
 
-const initialValue: Descendant[] = [
+const defaultValue: Descendant[] = [
   {
     type: "paragraph",
     children: [{ text: "A line of text in a paragraph." }],
   },
 ];
 
+export const CustomEditor = {
+  octaveUp(editor: Editor) {
+    const marks = Editor.marks(editor);
+    if (!marks) return;
+    const newValue = (marks.octave ?? 0) + 1;
+    Editor.addMark(editor, "octave", newValue);
+  },
+
+  octaveDown(editor: Editor) {
+    const marks = Editor.marks(editor);
+    if (!marks) return;
+    const newValue = (marks.octave ?? 0) - 1;
+    Editor.addMark(editor, "octave", newValue);
+  },
+
+  beamUp(editor: Editor) {
+    const marks = Editor.marks(editor);
+    if (!marks) return;
+    const newValue = (marks.beam ?? 0) + 1;
+    Editor.addMark(editor, "beam", newValue);
+  },
+
+  beamDown(editor: Editor) {
+    const marks = Editor.marks(editor);
+    if (!marks) return;
+    const newValue = (marks.beam ?? 0) - 1;
+    if (newValue < 0) return;
+    Editor.addMark(editor, "beam", newValue);
+  },
+
+  addSlur(editor: Editor) {
+    if (!editor.selection) return;
+
+    const [match] = Editor.nodes(editor, {
+      match: (n) => Element.isElement(n) && n.type === "slur",
+    });
+
+    if (match) {
+      Transforms.unwrapNodes(editor, {
+        at: editor.selection,
+        match: (n) => Element.isElement(n) && n.type === "slur",
+      });
+    } else {
+      Transforms.wrapNodes(
+        editor,
+        { type: "slur", children: [] },
+        { at: editor.selection, split: true },
+      );
+    }
+  },
+};
+
 export default function App() {
   const [editor] = useState(() =>
     withSlur(withReact(withHistory(createEditor())))
+  );
+
+  const initialValue = useMemo(
+    () => {
+      const jsonString = localStorage.getItem("content");
+      if (!jsonString) {
+        return defaultValue;
+      }
+      return JSON.parse(jsonString);
+    },
+    [],
   );
 
   const renderElement = useCallback((props: RenderElementProps) => {
@@ -55,16 +119,24 @@ export default function App() {
   }, []);
 
   const renderLeaf = useCallback((props: RenderLeafProps) => {
-    return (
-      <span {...props.attributes} style={{ position: "relative" }}>
-        {props.children}
-        <JianpuFormatting leaf={props.leaf} />
-      </span>
-    );
+    return <Leaf {...props} />;
   }, []);
 
   return (
-    <Slate editor={editor} initialValue={initialValue}>
+    <Slate
+      editor={editor}
+      initialValue={initialValue}
+      onChange={(value) => {
+        const isAstChange = editor.operations.some(
+          (op) => "set_selection" !== op.type,
+        );
+        if (isAstChange) {
+          const content = JSON.stringify(value, null, " ");
+          localStorage.setItem("content", content);
+          console.log(content);
+        }
+      }}
+    >
       <div
         style={{
           height: "100vh",
@@ -84,6 +156,7 @@ export default function App() {
             padding: 20,
             textAlign: "left",
             boxSizing: "border-box",
+            userSelect: "none",
           }}
           onKeyDown={(e) => {
             if (e.ctrlKey && e.key == "a") {
@@ -92,6 +165,27 @@ export default function App() {
                 anchor: Editor.start(editor, []),
                 focus: Editor.end(editor, []),
               });
+              return;
+            }
+            if (e.altKey && e.key == "ArrowUp") {
+              e.preventDefault();
+              CustomEditor.octaveUp(editor);
+              return;
+            }
+            if (e.altKey && e.key == "ArrowDown") {
+              e.preventDefault();
+              CustomEditor.octaveDown(editor);
+              return;
+            }
+            if (e.altKey && e.key == "ArrowRight") {
+              e.preventDefault();
+              CustomEditor.beamUp(editor);
+              return;
+            }
+            if (e.altKey && e.key == "ArrowLeft") {
+              e.preventDefault();
+              CustomEditor.beamDown(editor);
+              return;
             }
           }}
         />
@@ -115,10 +209,10 @@ function SlurElement(props: RenderElementProps) {
       <span
         style={{
           position: "absolute",
-          left: 5,
-          right: 5,
-          height: 5,
-          bottom: 18,
+          left: 7,
+          right: 7,
+          height: 10,
+          bottom: 10,
           borderTop: "1px solid black",
           borderRadius: 5,
         }}
@@ -131,71 +225,4 @@ function withSlur(editor: Editor) {
   const { isInline } = editor;
   editor.isInline = (e) => e.type === "slur" ? true : isInline(e);
   return editor;
-}
-
-function JianpuFormatting({ leaf }: { leaf: CustomText }) {
-  const octaveArray = Array.from({ length: Math.abs(leaf.octave ?? 0) });
-  const beamArray = Array.from({ length: leaf.beam ?? 0 });
-
-  return (
-    <span
-      style={{
-        position: "absolute",
-        left: 0,
-        pointerEvents: "none",
-        userSelect: "none",
-      }}
-    >
-      {[...leaf.text].map((char, i) => (
-        <span
-          key={i}
-          style={{
-            position: "relative",
-            color: "pink",
-          }}
-        >
-          <span
-            style={{
-              visibility: "hidden",
-            }}
-          >
-            {char}
-          </span>
-          {char != " " && octaveArray.map((_, i) => (
-            <span
-              key={i}
-              style={{
-                position: "absolute",
-                height: 2,
-                width: 2,
-                left: "50%",
-                transform: "translateX(-50%)",
-                backgroundColor: "black",
-                ...((leaf.octave ?? 0) > 0
-                  ? {
-                    bottom: 16 + (4 * i),
-                  }
-                  : {
-                    top: 20 + (4 * i) + (2 * (leaf.beam ?? 0)),
-                  }),
-              }}
-            />
-          ))}
-          {char != " " && beamArray.map((_, i) => (
-            <span
-              key={i}
-              style={{
-                position: "absolute",
-                height: 1,
-                left: 0,
-                right: 0,
-                top: 20 + (2 * i),
-                backgroundColor: "black",
-              }}
-            />
-          ))}
-        </span>
-      ))}
-    </span>
-  );
 }

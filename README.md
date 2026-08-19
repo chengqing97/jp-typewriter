@@ -3,8 +3,9 @@
 ## TODO
 
 - [x] slur/tie rendering
-- [ ] bug: selection breaks when adding marks
-
+- [x] bug: cannot toggle off slur
+- [x] bug: selection breaks when adding marks
+- [x] bug: cannot use arrow no navigate in and out a mark
 
 # React + TypeScript + Vite
 
