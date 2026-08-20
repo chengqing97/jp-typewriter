@@ -69,7 +69,7 @@ export const CustomEditor = {
     Editor.addMark(editor, "beam", newValue);
   },
 
-  addSlur(editor: Editor) {
+  toggleSlur(editor: Editor) {
     if (!editor.selection) return;
 
     const [match] = Editor.nodes(editor, {
@@ -138,7 +138,7 @@ export default function App() {
     >
       <div
         style={{
-          height: "100vh",
+          minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
         }}
@@ -185,6 +185,11 @@ export default function App() {
             if (e.altKey && e.key == "ArrowLeft") {
               e.preventDefault();
               CustomEditor.beamDown(editor);
+              return;
+            }
+            if (e.altKey && e.key == "s") {
+              e.preventDefault();
+              CustomEditor.toggleSlur(editor);
               return;
             }
           }}

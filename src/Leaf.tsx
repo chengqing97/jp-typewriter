@@ -94,15 +94,15 @@ export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
                     borderRadius: 2,
                     ...((leaf.octave ?? 0) > 0
                       ? {
-                        bottom: rect.height - 2 + (4 * i),
+                        bottom: rect.height - 4 + (4 * i),
                       }
                       : {
-                        top: 20 + (4 * i) + (2 * (leaf.beam ?? 0)),
+                        top: rect.height - 3 + (4 * i) + (2 * (leaf.beam ?? 0)),
                       }),
                   }}
                 />
               ))}
-            {/^[a-zA-Z0-9]/.test(rect.char) && beamArray.map((_, i) => (
+            {!/\s/.test(rect.char) && beamArray.map((_, i) => (
               <span
                 key={i}
                 style={{
@@ -110,7 +110,7 @@ export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
                   height: 1,
                   left: 0,
                   right: 0,
-                  top: rect.height - 2 + (2 * i),
+                  top: rect.height - 3 + (2 * i),
                   backgroundColor: "black",
                 }}
               />

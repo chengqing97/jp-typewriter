@@ -54,7 +54,6 @@ export default function Toolbar() {
     a.download = filename + ".json";
     a.click();
     URL.revokeObjectURL(url);
-    
   }
 
   return (
@@ -82,7 +81,7 @@ export default function Toolbar() {
       <ToolbarButton onClick={() => CustomEditor.beamDown(editor)}>
         Line-
       </ToolbarButton>
-      <ToolbarButton onClick={() => CustomEditor.addSlur(editor)}>
+      <ToolbarButton onClick={() => CustomEditor.toggleSlur(editor)}>
         Slur/Tie
       </ToolbarButton>
       <ToolbarButton onClick={clear}>Clear</ToolbarButton>
