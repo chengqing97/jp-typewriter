@@ -50,11 +50,7 @@ export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
   }, [leaf.text]);
 
   if (!leaf.beam && !leaf.octave) {
-    return (
-      <span {...attributes}>
-        {children}
-      </span>
-    );
+    return <span {...attributes}>{children}</span>;
   }
 
   return (
@@ -94,27 +90,28 @@ export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
                     borderRadius: 2,
                     ...((leaf.octave ?? 0) > 0
                       ? {
-                        bottom: rect.height - 4 + (4 * i),
-                      }
+                          bottom: rect.height - 4 + 4 * i,
+                        }
                       : {
-                        top: rect.height - 3 + (4 * i) + (2 * (leaf.beam ?? 0)),
-                      }),
+                          top: rect.height - 3 + 4 * i + 2 * (leaf.beam ?? 0),
+                        }),
                   }}
                 />
               ))}
-            {!/\s/.test(rect.char) && beamArray.map((_, i) => (
-              <span
-                key={i}
-                style={{
-                  position: "absolute",
-                  height: 1,
-                  left: 0,
-                  right: 0,
-                  top: rect.height - 3 + (2 * i),
-                  backgroundColor: "black",
-                }}
-              />
-            ))}
+            {!/\s/.test(rect.char) &&
+              beamArray.map((_, i) => (
+                <span
+                  key={i}
+                  style={{
+                    position: "absolute",
+                    height: 1,
+                    left: 0,
+                    right: 0,
+                    top: rect.height - 3 + 2 * i,
+                    backgroundColor: "black",
+                  }}
+                />
+              ))}
           </span>
         ))}
       </span>
@@ -123,10 +120,7 @@ export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
 }
 
 function findTextNode(element: HTMLElement): Text | null {
-  const walker = document.createTreeWalker(
-    element,
-    NodeFilter.SHOW_TEXT,
-  );
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
 
   return walker.nextNode() as Text | null;
 }

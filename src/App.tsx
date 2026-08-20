@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { createEditor, Editor, Element, Transforms } from "slate";
+import { createEditor, Editor, Transforms } from "slate";
 import {
   Editable,
   type RenderElementProps,
@@ -7,30 +7,11 @@ import {
   Slate,
   withReact,
 } from "slate-react";
-import type { BaseEditor, Descendant } from "slate";
-import { ReactEditor } from "slate-react";
+import type { Descendant } from "slate";
 import Toolbar from "./Toolbar";
-import { HistoryEditor, withHistory } from "slate-history";
+import { withHistory } from "slate-history";
 import { Leaf } from "./Leaf";
-
-type CustomText = {
-  text: string;
-  octave?: number;
-  beam?: number;
-  slur?: number;
-};
-
-type ParagraphElement = { type: "paragraph"; children: CustomText[] };
-type CodeElement = { type: "code"; children: CustomText[] };
-type SlurElement = { type: "slur"; children: CustomText[] };
-
-declare module "slate" {
-  interface CustomTypes {
-    Editor: BaseEditor & ReactEditor & HistoryEditor;
-    Element: ParagraphElement | CodeElement | SlurElement;
-    Text: CustomText;
-  }
-}
+import { CustomEditor } from "./CustomEditor";
 
 const defaultValue: Descendant[] = [
   {
@@ -39,73 +20,18 @@ const defaultValue: Descendant[] = [
   },
 ];
 
-export const CustomEditor = {
-  octaveUp(editor: Editor) {
-    const marks = Editor.marks(editor);
-    if (!marks) return;
-    const newValue = (marks.octave ?? 0) + 1;
-    Editor.addMark(editor, "octave", newValue);
-  },
-
-  octaveDown(editor: Editor) {
-    const marks = Editor.marks(editor);
-    if (!marks) return;
-    const newValue = (marks.octave ?? 0) - 1;
-    Editor.addMark(editor, "octave", newValue);
-  },
-
-  beamUp(editor: Editor) {
-    const marks = Editor.marks(editor);
-    if (!marks) return;
-    const newValue = (marks.beam ?? 0) + 1;
-    Editor.addMark(editor, "beam", newValue);
-  },
-
-  beamDown(editor: Editor) {
-    const marks = Editor.marks(editor);
-    if (!marks) return;
-    const newValue = (marks.beam ?? 0) - 1;
-    if (newValue < 0) return;
-    Editor.addMark(editor, "beam", newValue);
-  },
-
-  toggleSlur(editor: Editor) {
-    if (!editor.selection) return;
-
-    const [match] = Editor.nodes(editor, {
-      match: (n) => Element.isElement(n) && n.type === "slur",
-    });
-
-    if (match) {
-      Transforms.unwrapNodes(editor, {
-        at: editor.selection,
-        match: (n) => Element.isElement(n) && n.type === "slur",
-      });
-    } else {
-      Transforms.wrapNodes(
-        editor,
-        { type: "slur", children: [] },
-        { at: editor.selection, split: true },
-      );
-    }
-  },
-};
-
 export default function App() {
   const [editor] = useState(() =>
-    withSlur(withReact(withHistory(createEditor())))
+    withSlur(withReact(withHistory(createEditor()))),
   );
 
-  const initialValue = useMemo(
-    () => {
-      const jsonString = localStorage.getItem("content");
-      if (!jsonString) {
-        return defaultValue;
-      }
-      return JSON.parse(jsonString);
-    },
-    [],
-  );
+  const initialValue = useMemo(() => {
+    const jsonString = localStorage.getItem("content");
+    if (!jsonString) {
+      return defaultValue;
+    }
+    return JSON.parse(jsonString);
+  }, []);
 
   const renderElement = useCallback((props: RenderElementProps) => {
     switch (props.element.type) {
@@ -152,6 +78,7 @@ export default function App() {
           renderLeaf={renderLeaf}
           spellCheck={false}
           style={{
+            flex: 1,
             width: 800,
             maxWidth: "100%",
             padding: 45,
@@ -234,6 +161,6 @@ function SlurElement(props: RenderElementProps) {
 
 function withSlur(editor: Editor) {
   const { isInline } = editor;
-  editor.isInline = (e) => e.type === "slur" ? true : isInline(e);
+  editor.isInline = (e) => (e.type === "slur" ? true : isInline(e));
   return editor;
 }

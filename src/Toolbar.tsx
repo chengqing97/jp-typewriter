@@ -1,8 +1,8 @@
 import "./Toolbar.css";
 import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
-import { CustomEditor } from "./App";
 import type { HTMLAttributes } from "react";
+import { CustomEditor } from "./CustomEditor";
 
 export default function Toolbar() {
   const editor = useSlate();
@@ -82,6 +82,9 @@ export default function Toolbar() {
           <ToolbarButton onClick={() => CustomEditor.toggleSlur(editor)}>
             Slur/Tie
           </ToolbarButton>
+          <ToolbarButton onClick={() => CustomEditor.toggleSuperscript(editor)}>
+            Sup
+          </ToolbarButton>
           <ToolbarButton onClick={clear}>Clear</ToolbarButton>
           <div style={{ flex: 1 }} />
           <ToolbarButton onClick={open}>Open</ToolbarButton>
@@ -89,12 +92,13 @@ export default function Toolbar() {
         </div>
         <div className="row">
           <ToolbarButton onClick={() => insertText("𝄆")}>𝄆</ToolbarButton>
-          <ToolbarButton onClick={() => insertText("𝄇")}>𝄇</ToolbarButton>
-          <ToolbarButton onClick={() => insertText("𝄂")}>𝄂</ToolbarButton>
           <ToolbarButton onClick={() => insertText("𝄋")}>𝄋</ToolbarButton>
           <ToolbarButton onClick={() => insertText("𝄌")}>𝄌</ToolbarButton>
           <ToolbarButton onClick={() => insertText("𝄍")}>𝄍</ToolbarButton>
           <ToolbarButton onClick={() => insertText("𝄎")}>𝄎</ToolbarButton>
+          <ToolbarButton onClick={() => insertText("𝄏")}>𝄏</ToolbarButton>
+          <ToolbarButton onClick={() => insertText("𝄇")}>𝄇</ToolbarButton>
+          <ToolbarButton onClick={() => insertText("𝄂")}>𝄂</ToolbarButton>
         </div>
       </div>
     </div>
