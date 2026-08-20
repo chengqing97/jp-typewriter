@@ -1,3 +1,4 @@
+import "./Toolbar.css";
 import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
 import { CustomEditor } from "./App";
@@ -7,10 +8,9 @@ export default function Toolbar() {
   const editor = useSlate();
 
   function toggleMono() {
-    const [match] = Editor.nodes(
-      editor,
-      { match: (n) => Element.isElement(n) && n.type === "code" },
-    );
+    const [match] = Editor.nodes(editor, {
+      match: (n) => Element.isElement(n) && n.type === "code",
+    });
     Transforms.setNodes(
       editor,
       { type: match ? "paragraph" : "code" },
@@ -61,33 +61,9 @@ export default function Toolbar() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        backgroundColor: "white",
-        justifyContent: "center",
-        width: "100%",
-      }}
-    >
-      <div
-        style={{
-          width: 800,
-          maxWidth: "100%",
-          display: "flex",
-          flexDirection: "column",
-          boxSizing: "border-box",
-          padding: "10px 15px",
-          gap: 10,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            boxSizing: "border-box",
-            gap: 10,
-          }}
-        >
+    <div className="container">
+      <div className="column">
+        <div className="row">
           <ToolbarButton onClick={toggleMono}>Mono</ToolbarButton>
           <ToolbarButton onClick={editor.undo}>Undo</ToolbarButton>
           <ToolbarButton onClick={editor.redo}>Redo</ToolbarButton>
@@ -111,14 +87,7 @@ export default function Toolbar() {
           <ToolbarButton onClick={open}>Open</ToolbarButton>
           <ToolbarButton onClick={save}>Save</ToolbarButton>
         </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            boxSizing: "border-box",
-            gap: 10,
-          }}
-        >
+        <div className="row">
           <ToolbarButton onClick={() => insertText("𝄆")}>𝄆</ToolbarButton>
           <ToolbarButton onClick={() => insertText("𝄇")}>𝄇</ToolbarButton>
           <ToolbarButton onClick={() => insertText("𝄂")}>𝄂</ToolbarButton>
