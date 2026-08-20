@@ -141,6 +141,8 @@ export default function App() {
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
+          backgroundColor: "whitesmoke",
+          alignItems: "center",
         }}
       >
         <Toolbar />
@@ -150,13 +152,17 @@ export default function App() {
           renderLeaf={renderLeaf}
           spellCheck={false}
           style={{
-            height: "100%",
-            width: "100%",
-            padding: 50,
+            width: 800,
+            maxWidth: "100%",
+            padding: 45,
+            margin: 50,
+            outline: "none",
+            backgroundColor: "white",
             textAlign: "left",
             lineHeight: 1.1,
             boxSizing: "border-box",
             userSelect: "none",
+            borderRadius: 7,
           }}
           onKeyDown={(e) => {
             if (e.ctrlKey && e.key == "a") {

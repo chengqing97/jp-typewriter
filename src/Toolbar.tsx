@@ -56,38 +56,78 @@ export default function Toolbar() {
     URL.revokeObjectURL(url);
   }
 
+  function insertText(text: string) {
+    Transforms.insertText(editor, text);
+  }
+
   return (
     <div
       style={{
         display: "flex",
-        flexDirection: "row",
-        boxSizing: "border-box",
-        padding: 20,
-        gap: 10,
+        backgroundColor: "white",
+        justifyContent: "center",
+        width: "100%",
       }}
     >
-      <ToolbarButton onClick={toggleMono}>Mono</ToolbarButton>
-      <ToolbarButton onClick={editor.undo}>Undo</ToolbarButton>
-      <ToolbarButton onClick={editor.redo}>Redo</ToolbarButton>
-      <ToolbarButton onClick={() => CustomEditor.octaveUp(editor)}>
-        Oct+
-      </ToolbarButton>
-      <ToolbarButton onClick={() => CustomEditor.octaveDown(editor)}>
-        Oct-
-      </ToolbarButton>
-      <ToolbarButton onClick={() => CustomEditor.beamUp(editor)}>
-        Line+
-      </ToolbarButton>
-      <ToolbarButton onClick={() => CustomEditor.beamDown(editor)}>
-        Line-
-      </ToolbarButton>
-      <ToolbarButton onClick={() => CustomEditor.toggleSlur(editor)}>
-        Slur/Tie
-      </ToolbarButton>
-      <ToolbarButton onClick={clear}>Clear</ToolbarButton>
-      <div style={{ flex: 1 }} />
-      <ToolbarButton onClick={open}>Open</ToolbarButton>
-      <ToolbarButton onClick={save}>Save</ToolbarButton>
+      <div
+        style={{
+          width: 800,
+          maxWidth: "100%",
+          display: "flex",
+          flexDirection: "column",
+          boxSizing: "border-box",
+          padding: "10px 15px",
+          gap: 10,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            boxSizing: "border-box",
+            gap: 10,
+          }}
+        >
+          <ToolbarButton onClick={toggleMono}>Mono</ToolbarButton>
+          <ToolbarButton onClick={editor.undo}>Undo</ToolbarButton>
+          <ToolbarButton onClick={editor.redo}>Redo</ToolbarButton>
+          <ToolbarButton onClick={() => CustomEditor.octaveUp(editor)}>
+            Oct+
+          </ToolbarButton>
+          <ToolbarButton onClick={() => CustomEditor.octaveDown(editor)}>
+            Oct-
+          </ToolbarButton>
+          <ToolbarButton onClick={() => CustomEditor.beamUp(editor)}>
+            Line+
+          </ToolbarButton>
+          <ToolbarButton onClick={() => CustomEditor.beamDown(editor)}>
+            Line-
+          </ToolbarButton>
+          <ToolbarButton onClick={() => CustomEditor.toggleSlur(editor)}>
+            Slur/Tie
+          </ToolbarButton>
+          <ToolbarButton onClick={clear}>Clear</ToolbarButton>
+          <div style={{ flex: 1 }} />
+          <ToolbarButton onClick={open}>Open</ToolbarButton>
+          <ToolbarButton onClick={save}>Save</ToolbarButton>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            boxSizing: "border-box",
+            gap: 10,
+          }}
+        >
+          <ToolbarButton onClick={() => insertText("𝄆")}>𝄆</ToolbarButton>
+          <ToolbarButton onClick={() => insertText("𝄇")}>𝄇</ToolbarButton>
+          <ToolbarButton onClick={() => insertText("𝄂")}>𝄂</ToolbarButton>
+          <ToolbarButton onClick={() => insertText("𝄋")}>𝄋</ToolbarButton>
+          <ToolbarButton onClick={() => insertText("𝄌")}>𝄌</ToolbarButton>
+          <ToolbarButton onClick={() => insertText("𝄍")}>𝄍</ToolbarButton>
+          <ToolbarButton onClick={() => insertText("𝄎")}>𝄎</ToolbarButton>
+        </div>
+      </div>
     </div>
   );
 }
