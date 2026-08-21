@@ -107,7 +107,7 @@ export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
                     height: 1,
                     left: 0,
                     right: 0,
-                    top: rect.height - 3 + 2 * i,
+                    top: rect.height - 2 + 2 * i,
                     backgroundColor: "black",
                   }}
                 />

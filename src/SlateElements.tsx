@@ -21,7 +21,6 @@ export function CodeElement(props: RenderElementProps) {
       {...props.attributes}
       style={{
         margin: 0,
-
         fontFamily: "ui-monospace, Consolas, monospace",
       }}
     >

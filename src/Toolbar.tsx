@@ -79,14 +79,15 @@ export default function Toolbar(props: Props) {
 
     const pdf = new jsPDF({
       orientation: width > height ? "landscape" : "portrait",
-      unit: "px",
-      format: [width, height],
+      unit: "mm",
+      format: "a4",
+      compress: true,
     });
 
-    const img = canvas.toDataURL("image/png");
+    const img = canvas.toDataURL("image/jpeg", 0.8);
     const title = CustomEditor.getTitle(editor);
 
-    pdf.addImage(img, "PNG", 0, 0, width, height);
+    pdf.addImage(img, "PNG", 0, 0, 210, 297);
     pdf.save(title + ".pdf");
   }
 
