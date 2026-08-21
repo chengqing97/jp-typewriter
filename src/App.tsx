@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
+import styles from "./App.module.css";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { createEditor, Editor, Transforms } from "slate";
 import {
   Editable,
@@ -12,6 +13,12 @@ import Toolbar from "./Toolbar";
 import { withHistory } from "slate-history";
 import { Leaf } from "./Leaf";
 import { CustomEditor } from "./CustomEditor";
+import {
+  CodeElement,
+  ParagraphElement,
+  SlurElement,
+  withSlur,
+} from "./SlateElements";
 
 const defaultValue: Descendant[] = [
   {
@@ -21,6 +28,7 @@ const defaultValue: Descendant[] = [
 ];
 
 export default function App() {
+  const editableRef = useRef<HTMLDivElement>(null);
   const [editor] = useState(() =>
     withSlur(withReact(withHistory(createEditor()))),
   );
@@ -62,35 +70,14 @@ export default function App() {
         }
       }}
     >
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          backgroundColor: "whitesmoke",
-          alignItems: "center",
-        }}
-      >
-        <Toolbar />
-
+      <Toolbar editableRef={editableRef} />
+      <div className={styles.layout}>
         <Editable
+          ref={editableRef}
+          className={styles.editable}
           renderElement={renderElement}
           renderLeaf={renderLeaf}
           spellCheck={false}
-          style={{
-            flex: 1,
-            width: 800,
-            maxWidth: "100%",
-            padding: 45,
-            margin: 50,
-            outline: "none",
-            backgroundColor: "white",
-            textAlign: "left",
-            lineHeight: 1.1,
-            boxSizing: "border-box",
-            userSelect: "none",
-            borderRadius: 7,
-          }}
           onKeyDown={(e) => {
             if (e.ctrlKey && e.key == "a") {
               e.preventDefault();
@@ -130,37 +117,4 @@ export default function App() {
       </div>
     </Slate>
   );
-}
-
-function ParagraphElement(props: RenderElementProps) {
-  return <p {...props.attributes}>{...props.children}</p>;
-}
-
-function CodeElement(props: RenderElementProps) {
-  return <pre {...props.attributes}>{...props.children}</pre>;
-}
-
-function SlurElement(props: RenderElementProps) {
-  return (
-    <span {...props.attributes} style={{ position: "relative" }}>
-      {...props.children}
-      <span
-        style={{
-          position: "absolute",
-          left: 7,
-          right: 7,
-          height: 10,
-          bottom: 10,
-          borderTop: "1px solid black",
-          borderRadius: 5,
-        }}
-      />
-    </span>
-  );
-}
-
-function withSlur(editor: Editor) {
-  const { isInline } = editor;
-  editor.isInline = (e) => (e.type === "slur" ? true : isInline(e));
-  return editor;
 }

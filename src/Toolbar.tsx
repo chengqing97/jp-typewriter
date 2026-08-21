@@ -1,10 +1,16 @@
-import "./Toolbar.css";
+import styles from "./Toolbar.module.css";
 import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
-import type { HTMLAttributes } from "react";
+import type { HTMLAttributes, RefObject } from "react";
 import { CustomEditor } from "./CustomEditor";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
-export default function Toolbar() {
+type Props = {
+  editableRef: RefObject<HTMLDivElement | null>;
+};
+
+export default function Toolbar(props: Props) {
   const editor = useSlate();
 
   function toggleMono() {
@@ -21,6 +27,10 @@ export default function Toolbar() {
   function clear() {
     Editor.removeMark(editor, "beam");
     Editor.removeMark(editor, "octave");
+  }
+
+  function insertText(text: string) {
+    Transforms.insertText(editor, text);
   }
 
   function open() {
@@ -44,40 +54,60 @@ export default function Toolbar() {
   }
 
   function save() {
-    const filename = prompt("Enter file name:", "Jianpu");
-    if (!filename) return;
+    const title = CustomEditor.getTitle(editor);
     const json = JSON.stringify(editor.children, null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = filename + ".json";
+    a.download = title + ".json";
     a.click();
     URL.revokeObjectURL(url);
   }
 
-  function insertText(text: string) {
-    Transforms.insertText(editor, text);
+  async function exportPDF() {
+    const div = props.editableRef.current;
+    if (!div) return;
+
+    const canvas = await html2canvas(div, {
+      scale: 2,
+      useCORS: true,
+    });
+
+    const width = div.offsetWidth;
+    const height = div.offsetHeight;
+
+    const pdf = new jsPDF({
+      orientation: width > height ? "landscape" : "portrait",
+      unit: "px",
+      format: [width, height],
+    });
+
+    const img = canvas.toDataURL("image/png");
+    const title = CustomEditor.getTitle(editor);
+
+    pdf.addImage(img, "PNG", 0, 0, width, height);
+    pdf.save(title + ".pdf");
   }
 
   return (
-    <div className="container">
-      <div className="column">
-        <div className="row">
+    <div className={styles.container}>
+      <div className={styles.column}>
+        <div className={styles.row}>
           <ToolbarButton onClick={toggleMono}>Mono</ToolbarButton>
           <ToolbarButton onClick={editor.undo}>Undo</ToolbarButton>
           <ToolbarButton onClick={editor.redo}>Redo</ToolbarButton>
-          <ToolbarButton onClick={() => CustomEditor.octaveUp(editor)}>
-            Oct+
-          </ToolbarButton>
           <ToolbarButton onClick={() => CustomEditor.octaveDown(editor)}>
             Oct-
           </ToolbarButton>
-          <ToolbarButton onClick={() => CustomEditor.beamUp(editor)}>
-            Line+
+          <ToolbarButton onClick={() => CustomEditor.octaveUp(editor)}>
+            Oct+
           </ToolbarButton>
           <ToolbarButton onClick={() => CustomEditor.beamDown(editor)}>
             Line-
+          </ToolbarButton>
+          <ToolbarButton onClick={() => CustomEditor.beamUp(editor)}>
+            Line+
           </ToolbarButton>
           <ToolbarButton onClick={() => CustomEditor.toggleSlur(editor)}>
             Slur/Tie
@@ -86,11 +116,8 @@ export default function Toolbar() {
             Sup
           </ToolbarButton>
           <ToolbarButton onClick={clear}>Clear</ToolbarButton>
-          <div style={{ flex: 1 }} />
-          <ToolbarButton onClick={open}>Open</ToolbarButton>
-          <ToolbarButton onClick={save}>Save</ToolbarButton>
         </div>
-        <div className="row">
+        <div className={styles.row}>
           <ToolbarButton onClick={() => insertText("𝄆")}>𝄆</ToolbarButton>
           <ToolbarButton onClick={() => insertText("𝄋")}>𝄋</ToolbarButton>
           <ToolbarButton onClick={() => insertText("𝄌")}>𝄌</ToolbarButton>
@@ -99,6 +126,10 @@ export default function Toolbar() {
           <ToolbarButton onClick={() => insertText("𝄏")}>𝄏</ToolbarButton>
           <ToolbarButton onClick={() => insertText("𝄇")}>𝄇</ToolbarButton>
           <ToolbarButton onClick={() => insertText("𝄂")}>𝄂</ToolbarButton>
+          <div style={{ width: 20 }} />
+          <ToolbarButton onClick={open}>Open</ToolbarButton>
+          <ToolbarButton onClick={save}>Save</ToolbarButton>
+          <ToolbarButton onClick={exportPDF}>Export</ToolbarButton>
         </div>
       </div>
     </div>
@@ -106,5 +137,11 @@ export default function Toolbar() {
 }
 
 function ToolbarButton(props: HTMLAttributes<HTMLButtonElement>) {
-  return <button onMouseDown={(e) => e.preventDefault()} {...props} />;
+  return (
+    <button
+      className={styles.button}
+      onMouseDown={(e) => e.preventDefault()}
+      {...props}
+    />
+  );
 }

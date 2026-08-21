@@ -1,0 +1,22 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: whitesmoke;
+  align-items: center;
+  padding: 50px;
+  padding-top: 130px;
+}
+
+.editable {
+  min-width: 595px;
+  min-height: 842px;
+  padding: 45px;
+  outline: none;
+  background-color: white;
+  text-align: left;
+  line-height: 1.1;
+  box-sizing: border-box;
+  user-select: none;
+  border-radius: 7px;
+}

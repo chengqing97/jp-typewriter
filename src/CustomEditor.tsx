@@ -1,4 +1,4 @@
-import { Editor, Element, Transforms } from "slate";
+import { Editor, Element, Transforms, Node } from "slate";
 
 export const CustomEditor = {
   octaveUp(editor: Editor) {
@@ -50,6 +50,7 @@ export const CustomEditor = {
       );
     }
   },
+
   toggleSuperscript(editor: Editor) {
     const marks = Editor.marks(editor);
     if (marks?.superscript) {
@@ -57,5 +58,13 @@ export const CustomEditor = {
     } else {
       Editor.addMark(editor, "superscript", true);
     }
+  },
+
+  getTitle(editor: Editor) {
+    const firstNonEmptyLine = editor.children.find(
+      (node) => Node.string(node).trim() !== "",
+    );
+    const text = firstNonEmptyLine ? Node.string(firstNonEmptyLine) : "";
+    return text;
   },
 };
