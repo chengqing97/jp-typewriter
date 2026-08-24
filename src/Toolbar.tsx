@@ -5,6 +5,21 @@ import type { HTMLAttributes, RefObject } from "react";
 import { CustomEditor } from "./CustomEditor";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import {
+  LuUndo2,
+  LuRedo2,
+  LuUnderline,
+  LuArrowDownToDot,
+  LuArrowUpFromDot,
+  LuRemoveFormatting,
+  LuRainbow,
+  LuSave,
+  LuFolder,
+  LuType,
+  LuPlus,
+  LuMinus,
+  LuDownload,
+} from "react-icons/lu";
 
 type Props = {
   editableRef: RefObject<HTMLDivElement | null>;
@@ -95,28 +110,45 @@ export default function Toolbar(props: Props) {
     <div className={styles.container}>
       <div className={styles.column}>
         <div className={styles.row}>
-          <ToolbarButton onClick={toggleMono}>Mono</ToolbarButton>
-          <ToolbarButton onClick={editor.undo}>Undo</ToolbarButton>
-          <ToolbarButton onClick={editor.redo}>Redo</ToolbarButton>
-          <ToolbarButton onClick={() => CustomEditor.octaveDown(editor)}>
-            Oct-
+          <ToolbarButton onClick={toggleMono}>
+            <LuType />
+          </ToolbarButton>
+          <ToolbarButton onClick={editor.undo}>
+            <LuUndo2 />
+          </ToolbarButton>
+          <ToolbarButton onClick={editor.redo}>
+            <LuRedo2 />
           </ToolbarButton>
           <ToolbarButton onClick={() => CustomEditor.octaveUp(editor)}>
-            Oct+
+            <LuArrowUpFromDot />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => CustomEditor.octaveDown(editor)}>
+            <LuArrowDownToDot />
           </ToolbarButton>
           <ToolbarButton onClick={() => CustomEditor.beamDown(editor)}>
-            Line-
+            <LuUnderline />
+            <LuMinus size={12} />
           </ToolbarButton>
           <ToolbarButton onClick={() => CustomEditor.beamUp(editor)}>
-            Line+
+            <LuUnderline />
+            <LuPlus size={12} />
           </ToolbarButton>
           <ToolbarButton onClick={() => CustomEditor.toggleSlur(editor)}>
-            Slur/Tie
+            <LuRainbow />
           </ToolbarButton>
-          <ToolbarButton onClick={() => CustomEditor.toggleSuperscript(editor)}>
-            Sup
+          <ToolbarButton onClick={clear}>
+            <LuRemoveFormatting />
           </ToolbarButton>
-          <ToolbarButton onClick={clear}>Clear</ToolbarButton>
+          <div style={{ width: 20 }} />
+          <ToolbarButton onClick={open}>
+            <LuFolder />
+          </ToolbarButton>
+          <ToolbarButton onClick={save}>
+            <LuSave />
+          </ToolbarButton>
+          <ToolbarButton onClick={exportPDF}>
+            <LuDownload />
+          </ToolbarButton>
         </div>
         <div className={styles.row}>
           <ToolbarButton onClick={() => insertText("𝄆")}>𝄆</ToolbarButton>
@@ -127,10 +159,6 @@ export default function Toolbar(props: Props) {
           <ToolbarButton onClick={() => insertText("𝄏")}>𝄏</ToolbarButton>
           <ToolbarButton onClick={() => insertText("𝄇")}>𝄇</ToolbarButton>
           <ToolbarButton onClick={() => insertText("𝄂")}>𝄂</ToolbarButton>
-          <div style={{ width: 20 }} />
-          <ToolbarButton onClick={open}>Open</ToolbarButton>
-          <ToolbarButton onClick={save}>Save</ToolbarButton>
-          <ToolbarButton onClick={exportPDF}>Export</ToolbarButton>
         </div>
       </div>
     </div>

@@ -8,9 +8,10 @@
 - [ ] bug: unable to render octave after add mark when no selection
 - [x] slur/tie rendering
 - [x] music symbols
+- [x] music font
+- [ ] superscript
 - [ ] triplet
 - [ ] dynamic slur height
-- [ ] music font
 - [ ] highlights and font colors
 - [ ] headings
 

@@ -49,10 +49,6 @@ export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
     setRects(newRects);
   }, [leaf.text]);
 
-  if (!leaf.beam && !leaf.octave) {
-    return <span {...attributes}>{children}</span>;
-  }
-
   return (
     <span ref={ref} {...attributes} style={{ position: "relative" }}>
       {children}
@@ -90,7 +86,7 @@ export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
                     borderRadius: 2,
                     ...((leaf.octave ?? 0) > 0
                       ? {
-                          bottom: rect.height - 4 + 4 * i,
+                          bottom: rect.height - 2 + 4 * i,
                         }
                       : {
                           top: rect.height - 3 + 4 * i + 2 * (leaf.beam ?? 0),
@@ -98,7 +94,7 @@ export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
                   }}
                 />
               ))}
-            {!/\s/.test(rect.char) &&
+            {!/[\s\|\-\𝄍\𝄎\𝄏]/.test(rect.char) &&
               beamArray.map((_, i) => (
                 <span
                   key={i}

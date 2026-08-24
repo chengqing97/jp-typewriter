@@ -2,31 +2,11 @@ import { Editor } from "slate";
 import type { RenderElementProps } from "slate-react";
 
 export function ParagraphElement(props: RenderElementProps) {
-  return (
-    <p
-      {...props.attributes}
-      style={{
-        margin: 0,
-        fontFamily: "system-ui, 'Segoe UI', Roboto, sans-serif",
-      }}
-    >
-      {...props.children}
-    </p>
-  );
+  return <p {...props.attributes}>{...props.children}</p>;
 }
 
 export function CodeElement(props: RenderElementProps) {
-  return (
-    <pre
-      {...props.attributes}
-      style={{
-        margin: 0,
-        fontFamily: "ui-monospace, Consolas, monospace",
-      }}
-    >
-      {...props.children}
-    </pre>
-  );
+  return <pre {...props.attributes}>{...props.children}</pre>;
 }
 
 export function SlurElement(props: RenderElementProps) {

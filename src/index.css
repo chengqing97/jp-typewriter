@@ -1,6 +1,20 @@
+@import url("https://fonts.googleapis.com/css2?family=LXGW+WenKai+Mono+TC&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap");
+
+:root {
+  font-family: Noto Sans;
+}
+
 body {
   margin: 0;
 }
+
+p,
+pre {
+  margin: 0;
+  font-family: LXGW WenKai Mono TC;
+  line-height: 1.15;
+}
+
 /**
 :root {
   --text: #6b6375;
