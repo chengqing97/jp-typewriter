@@ -27,6 +27,8 @@ const defaultValue: Descendant[] = [
   },
 ];
 
+const A4_RATIO = 210 / 297;
+
 export default function App() {
   const editableRef = useRef<HTMLDivElement>(null);
   const [editor] = useState(() =>
@@ -56,10 +58,30 @@ export default function App() {
     return <Leaf {...props} />;
   }, []);
 
+  const resizePaper = useCallback(() => {
+    requestAnimationFrame(() => {
+      const editable = editableRef.current;
+      if (!editable) return;
+
+      editable.style.height = "auto";
+      editable.style.width = "auto";
+
+      const h = editable.scrollHeight;
+      const w = editable.scrollWidth;
+
+      if (w / h > A4_RATIO) {
+        editable.style.height = w / A4_RATIO + "px";
+      } else {
+        editable.style.width = h * A4_RATIO + "px";
+      }
+    });
+  }, []);
+
   return (
     <Slate
       editor={editor}
       initialValue={initialValue}
+      onValueChange={resizePaper}
       onChange={(value) => {
         const isAstChange = editor.operations.some(
           (op) => "set_selection" !== op.type,

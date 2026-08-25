@@ -1,16 +1,19 @@
 .layout {
-  min-height: 100svh;
   display: flex;
-  flex-direction: column;
   background-color: whitesmoke;
   align-items: center;
+  justify-content: center;
   padding: 50px;
   padding-top: 130px;
   box-sizing: border-box;
+  min-height: 100svh;
+  height: fit-content;
+  min-width: 100vw;
+  width: fit-content;
 }
 
 .editable {
-  min-width: 60vh;
+  min-height: 800px;
   aspect-ratio: 210/297;
   padding: 45px;
   outline: none;
