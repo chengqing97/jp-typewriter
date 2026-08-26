@@ -8,11 +8,42 @@ body {
   margin: 0;
 }
 
+h1,
+h2,
+h3,
+input,
 p,
 pre {
   margin: 0;
   font-family: LXGW WenKai Mono TC;
   line-height: 1.15;
+}
+
+button {
+  background-color: whitesmoke;
+  border-radius: 10px;
+  border: none;
+  padding: 5px 10px;
+  color: rgb(40 40 40);
+  font-family: LXGW WenKai Mono TC;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button:hover {
+  background-color: gainsboro;
+  cursor: pointer;
+}
+
+button:disabled {
+  color: grey;
+}
+
+button:disabled:hover {
+  background-color: whitesmoke;
+  cursor: default;
 }
 
 /**

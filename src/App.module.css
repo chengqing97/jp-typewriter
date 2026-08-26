@@ -1,25 +1,26 @@
 .layout {
   display: flex;
-  background-color: whitesmoke;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 50px;
-  padding-top: 130px;
-  box-sizing: border-box;
-  min-height: 100svh;
-  height: fit-content;
-  min-width: 100vw;
-  width: fit-content;
+  height: 100svh;
+  width: 100svw;
+  gap: 20px;
 }
 
-.editable {
-  min-height: 800px;
-  aspect-ratio: 210/297;
-  padding: 45px;
-  outline: none;
-  background-color: white;
-  line-height: 1.1;
-  box-sizing: border-box;
-  user-select: none;
-  border-radius: 7px;
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+input {
+  width: 200px;
+  padding: 5px;
+}
+
+p {
+  font-size: 14px;
 }

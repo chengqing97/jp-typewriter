@@ -25,18 +25,3 @@
   box-sizing: border-box;
   gap: 10px;
 }
-
-.button {
-  background-color: whitesmoke;
-  border-radius: 10px;
-  border: none;
-  padding: 5px 10px;
-  color: rgb(40 40 40);
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-}
-
-.button:hover {
-  background-color: gainsboro;
-}

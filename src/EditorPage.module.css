@@ -1,0 +1,25 @@
+.layout {
+  display: flex;
+  background-color: whitesmoke;
+  align-items: center;
+  justify-content: center;
+  padding: 50px;
+  padding-top: 130px;
+  box-sizing: border-box;
+  min-height: 100svh;
+  height: fit-content;
+  min-width: 100vw;
+  width: fit-content;
+}
+
+.editable {
+  min-height: 800px;
+  aspect-ratio: 210/297;
+  padding: 45px;
+  outline: none;
+  background-color: white;
+  line-height: 1.1;
+  box-sizing: border-box;
+  user-select: none;
+  border-radius: 7px;
+}

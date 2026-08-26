@@ -1,142 +1,111 @@
 import styles from "./App.module.css";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { createEditor, Editor, Transforms } from "slate";
+import { useState } from "react";
 import {
-  Editable,
-  type RenderElementProps,
-  type RenderLeafProps,
-  Slate,
-  withReact,
-} from "slate-react";
-import type { Descendant } from "slate";
-import Toolbar from "./Toolbar";
-import { withHistory } from "slate-history";
-import { Leaf } from "./Leaf";
-import { CustomEditor } from "./CustomEditor";
-import {
-  CodeElement,
-  ParagraphElement,
-  SlurElement,
-  withSlur,
-} from "./SlateElements";
-
-const defaultValue: Descendant[] = [
-  {
-    type: "paragraph",
-    children: [{ text: "A line of text in a paragraph." }],
-  },
-];
-
-const A4_RATIO = 210 / 297;
+  AppwriteException,
+  ID,
+  useAppwrite,
+  useAuth,
+} from "@appwrite.io/react";
+import EditorPage from "./EditorPage";
 
 export default function App() {
-  const editableRef = useRef<HTMLDivElement>(null);
-  const [editor] = useState(() =>
-    withSlur(withReact(withHistory(createEditor()))),
-  );
+  const { user, isLoading } = useAuth();
 
-  const initialValue = useMemo(() => {
-    const jsonString = localStorage.getItem("content");
-    if (!jsonString) {
-      return defaultValue;
-    }
-    return JSON.parse(jsonString);
-  }, []);
+  if (isLoading)
+    return (
+      <div className={styles.layout}>
+        <p>Loading...</p>
+      </div>
+    );
 
-  const renderElement = useCallback((props: RenderElementProps) => {
-    switch (props.element.type) {
-      case "paragraph":
-        return <ParagraphElement {...props} />;
-      case "code":
-        return <CodeElement {...props} />;
-      case "slur":
-        return <SlurElement {...props} />;
-    }
-  }, []);
+  if (user) {
+    return <EditorPage />;
+  }
 
-  const renderLeaf = useCallback((props: RenderLeafProps) => {
-    return <Leaf {...props} />;
-  }, []);
+  return <LoginPage />;
+}
 
-  const resizePaper = useCallback(() => {
-    requestAnimationFrame(() => {
-      const editable = editableRef.current;
-      if (!editable) return;
+function LoginPage() {
+  const { account } = useAppwrite();
+  const { error, refresh } = useAuth();
+  const [email, setEmail] = useState("");
+  const [secret, setSecret] = useState("");
+  const [userId, setUserId] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
 
-      editable.style.height = "auto";
-      editable.style.width = "auto";
-
-      const h = editable.scrollHeight;
-      const w = editable.scrollWidth;
-
-      if (w / h > A4_RATIO) {
-        editable.style.height = w / A4_RATIO + "px";
+  async function sendOTP() {
+    setSending(true);
+    try {
+      const token = await account.createEmailToken({
+        userId: ID.unique(),
+        email,
+      });
+      setMessage("Sent!");
+      setUserId(token.userId);
+    } catch (e) {
+      if (e instanceof AppwriteException) {
+        setMessage(e.message);
       } else {
-        editable.style.width = h * A4_RATIO + "px";
+        setMessage("Failed to send OTP.");
       }
-    });
-  }, []);
+      console.error(e);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function login() {
+    setLoggingIn(true);
+    try {
+      await account.createSession({ userId, secret });
+      refresh();
+    } catch (e) {
+      if (e instanceof AppwriteException) {
+        setMessage(e.message);
+      } else {
+        setMessage("Failed to login.");
+      }
+      console.error(e);
+    } finally {
+      setLoggingIn(false);
+    }
+  }
 
   return (
-    <Slate
-      editor={editor}
-      initialValue={initialValue}
-      onValueChange={resizePaper}
-      onChange={(value) => {
-        const isAstChange = editor.operations.some(
-          (op) => "set_selection" !== op.type,
-        );
-        if (isAstChange) {
-          const content = JSON.stringify(value);
-          localStorage.setItem("content", content);
-        }
-      }}
-    >
-      <Toolbar editableRef={editableRef} />
-      <div className={styles.layout}>
-        <Editable
-          ref={editableRef}
-          className={styles.editable}
-          renderElement={renderElement}
-          renderLeaf={renderLeaf}
-          spellCheck={false}
-          onKeyDown={(e) => {
-            if (e.ctrlKey && e.key == "a") {
-              e.preventDefault();
-              Transforms.select(editor, {
-                anchor: Editor.start(editor, []),
-                focus: Editor.end(editor, []),
-              });
-              return;
-            }
-            if (e.altKey && e.key == "ArrowUp") {
-              e.preventDefault();
-              CustomEditor.octaveUp(editor);
-              return;
-            }
-            if (e.altKey && e.key == "ArrowDown") {
-              e.preventDefault();
-              CustomEditor.octaveDown(editor);
-              return;
-            }
-            if (e.altKey && e.key == "ArrowRight") {
-              e.preventDefault();
-              CustomEditor.beamUp(editor);
-              return;
-            }
-            if (e.altKey && e.key == "ArrowLeft") {
-              e.preventDefault();
-              CustomEditor.beamDown(editor);
-              return;
-            }
-            if (e.altKey && e.key == "s") {
-              e.preventDefault();
-              CustomEditor.toggleSlur(editor);
-              return;
-            }
-          }}
-        />
+    <div className={styles.layout}>
+      <h1>Login</h1>
+      <input
+        placeholder="Email"
+        type="email"
+        value={email}
+        onChange={(e) => {
+          setMessage("");
+          setEmail(e.target.value);
+        }}
+      />
+      <input
+        placeholder="OTP"
+        value={secret}
+        onChange={(e) => {
+          setMessage("");
+          setSecret(e.target.value);
+        }}
+      />
+      <div className={styles.row}>
+        <button onClick={sendOTP} disabled={!email || sending}>
+          Send OTP
+        </button>
+        <button
+          onClick={login}
+          disabled={secret.length < 6 || !email || !userId || loggingIn}
+        >
+          Login
+        </button>
       </div>
-    </Slate>
+      <p>{message}</p>
+      {error && <p style={{ color: "red" }}>{error.message}</p>}
+    </div>
   );
 }

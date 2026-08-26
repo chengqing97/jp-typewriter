@@ -1,7 +1,7 @@
 import styles from "./Toolbar.module.css";
 import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
-import type { HTMLAttributes, RefObject } from "react";
+import { useState, type HTMLAttributes, type RefObject } from "react";
 import { CustomEditor } from "./CustomEditor";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -20,6 +20,7 @@ import {
   LuMinus,
   LuDownload,
 } from "react-icons/lu";
+import DocsMenu from "./DocsMenu";
 
 type Props = {
   editableRef: RefObject<HTMLDivElement | null>;
@@ -27,6 +28,7 @@ type Props = {
 
 export default function Toolbar(props: Props) {
   const editor = useSlate();
+  const [currentDoc, setCurrentDoc] = useState<string | null>(null);
 
   function toggleMono() {
     const [match] = Editor.nodes(editor, {
@@ -48,7 +50,7 @@ export default function Toolbar(props: Props) {
     Transforms.insertText(editor, text);
   }
 
-  function open() {
+  function uploadJSON() {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".json,application/json";
@@ -68,7 +70,7 @@ export default function Toolbar(props: Props) {
     input.click();
   }
 
-  function save() {
+  function downloadJSON() {
     const title = CustomEditor.getTitle(editor);
     const json = JSON.stringify(editor.children, null, 2);
     const blob = new Blob([json], { type: "application/json" });
@@ -78,6 +80,41 @@ export default function Toolbar(props: Props) {
     a.download = title + ".json";
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function save() {
+    try {
+      if (!currentDoc) {
+        const id = await db.docs.add({
+          id: crypto.randomUUID(),
+          title: CustomEditor.getTitle(editor),
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          content: editor.children,
+        });
+        setCurrentDoc(id);
+      } else {
+        await db.docs.update(currentDoc, {
+          title: CustomEditor.getTitle(editor),
+          updatedAt: Date.now(),
+          content: editor.children,
+        });
+      }
+      window.alert("Saved!");
+    } catch (e) {
+      window.alert(e);
+    }
+  }
+
+  function open(doc: Doc) {
+    Transforms.removeNodes(editor, {
+      at: {
+        anchor: Editor.start(editor, []),
+        focus: Editor.end(editor, []),
+      },
+    });
+    Transforms.insertNodes(editor, doc.content, { at: [0] });
+    setCurrentDoc(doc.id);
   }
 
   async function exportPDF() {
@@ -140,7 +177,7 @@ export default function Toolbar(props: Props) {
             <LuRemoveFormatting />
           </ToolbarButton>
           <div style={{ width: 20 }} />
-          <ToolbarButton onClick={open}>
+          <ToolbarButton onClick={uploadJSON}>
             <LuFolder />
           </ToolbarButton>
           <ToolbarButton onClick={save}>
@@ -161,6 +198,7 @@ export default function Toolbar(props: Props) {
           <ToolbarButton onClick={() => insertText("𝄂")}>𝄂</ToolbarButton>
         </div>
       </div>
+      <DocsMenu onOpen={open} />
     </div>
   );
 }
