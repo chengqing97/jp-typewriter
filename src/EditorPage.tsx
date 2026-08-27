@@ -1,5 +1,5 @@
 import styles from "./EditorPage.module.css";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { createEditor, Editor, Transforms } from "slate";
 import {
   Editable,
@@ -19,10 +19,11 @@ import {
   SlurElement,
   withSlur,
 } from "./SlateElements";
+import { useEditorContext } from "./useEditorContext";
 
 const defaultValue: Descendant[] = [
   {
-    type: "paragraph",
+    type: "code",
     children: [{ text: "A line of text in a paragraph." }],
   },
 ];
@@ -30,7 +31,7 @@ const defaultValue: Descendant[] = [
 const A4_RATIO = 210 / 297;
 
 export default function EditorPage() {
-  const editableRef = useRef<HTMLDivElement>(null);
+  const { editableRef } = useEditorContext();
   const [editor] = useState(() =>
     withSlur(withReact(withHistory(createEditor()))),
   );
@@ -92,7 +93,7 @@ export default function EditorPage() {
         }
       }}
     >
-      <Toolbar editableRef={editableRef} />
+      <Toolbar />
       <div className={styles.layout}>
         <Editable
           ref={editableRef}

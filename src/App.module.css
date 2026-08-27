@@ -1,26 +1,8 @@
-.layout {
+.center {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100svh;
   width: 100svw;
-  gap: 20px;
-}
-
-.row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-input {
-  width: 200px;
-  padding: 5px;
-}
-
-p {
-  font-size: 14px;
 }

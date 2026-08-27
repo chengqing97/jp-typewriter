@@ -1,6 +1,7 @@
 import type { BaseEditor } from "slate";
 import { HistoryEditor } from "slate-history";
 import { ReactEditor } from "slate-react";
+import { Model } from "@appwrite.io/react";
 
 export type CustomText = {
   text: string;
@@ -32,3 +33,8 @@ declare module "slate" {
     Text: CustomText;
   }
 }
+
+export type JianpuDoc = Models.Row & {
+  title: string;
+  content: string;
+};

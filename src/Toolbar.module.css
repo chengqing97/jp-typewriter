@@ -6,17 +6,12 @@
   position: fixed;
   box-shadow: rgba(0 0 0 / 2%) 0 2px 5px;
   z-index: 10;
-}
-
-.column {
-  width: 800px;
-  max-width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
   box-sizing: border-box;
   padding: 10px;
   gap: 5px;
+  align-items: center;
 }
 
 .row {

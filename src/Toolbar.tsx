@@ -1,7 +1,7 @@
 import styles from "./Toolbar.module.css";
 import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
-import { useState, type HTMLAttributes, type RefObject } from "react";
+import { type HTMLAttributes } from "react";
 import { CustomEditor } from "./CustomEditor";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -18,17 +18,20 @@ import {
   LuType,
   LuPlus,
   LuMinus,
-  LuDownload,
+  LuPrinter,
+  LuCodeXml,
 } from "react-icons/lu";
-import DocsMenu from "./DocsMenu";
+import { ID, Permission, Role, useAppwrite, useUser } from "@appwrite.io/react";
+import type { JianpuDoc } from "./types";
+import { useEditorContext } from "./useEditorContext";
+import { DATABASE_ID } from "./constants";
+import { SideMenuButton } from "./SideMenu";
 
-type Props = {
-  editableRef: RefObject<HTMLDivElement | null>;
-};
-
-export default function Toolbar(props: Props) {
+export default function Toolbar() {
   const editor = useSlate();
-  const [currentDoc, setCurrentDoc] = useState<string | null>(null);
+  const { user } = useUser();
+  const { tablesDB } = useAppwrite();
+  const { editableRef, currentDoc } = useEditorContext();
 
   function toggleMono() {
     const [match] = Editor.nodes(editor, {
@@ -83,42 +86,31 @@ export default function Toolbar(props: Props) {
   }
 
   async function save() {
+    if (!user) return;
     try {
-      if (!currentDoc) {
-        const id = await db.docs.add({
-          id: crypto.randomUUID(),
+      const response = await tablesDB.upsertRow<JianpuDoc>({
+        databaseId: DATABASE_ID,
+        tableId: "documents",
+        rowId: currentDoc?.$id ?? ID.unique(),
+        data: {
           title: CustomEditor.getTitle(editor),
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          content: editor.children,
-        });
-        setCurrentDoc(id);
-      } else {
-        await db.docs.update(currentDoc, {
-          title: CustomEditor.getTitle(editor),
-          updatedAt: Date.now(),
-          content: editor.children,
-        });
-      }
+          content: JSON.stringify(editor.children),
+        },
+        permissions: [
+          Permission.read(Role.user(user.$id)),
+          Permission.update(Role.user(user.$id)),
+          Permission.delete(Role.user(user.$id)),
+        ],
+      });
       window.alert("Saved!");
+      console.log("saved", response);
     } catch (e) {
       window.alert(e);
     }
   }
 
-  function open(doc: Doc) {
-    Transforms.removeNodes(editor, {
-      at: {
-        anchor: Editor.start(editor, []),
-        focus: Editor.end(editor, []),
-      },
-    });
-    Transforms.insertNodes(editor, doc.content, { at: [0] });
-    setCurrentDoc(doc.id);
-  }
-
   async function exportPDF() {
-    const div = props.editableRef.current;
+    const div = editableRef.current;
     if (!div) return;
 
     const canvas = await html2canvas(div, {
@@ -145,60 +137,61 @@ export default function Toolbar(props: Props) {
 
   return (
     <div className={styles.container}>
-      <div className={styles.column}>
-        <div className={styles.row}>
-          <ToolbarButton onClick={toggleMono}>
-            <LuType />
-          </ToolbarButton>
-          <ToolbarButton onClick={editor.undo}>
-            <LuUndo2 />
-          </ToolbarButton>
-          <ToolbarButton onClick={editor.redo}>
-            <LuRedo2 />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => CustomEditor.octaveUp(editor)}>
-            <LuArrowUpFromDot />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => CustomEditor.octaveDown(editor)}>
-            <LuArrowDownToDot />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => CustomEditor.beamDown(editor)}>
-            <LuUnderline />
-            <LuMinus size={12} />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => CustomEditor.beamUp(editor)}>
-            <LuUnderline />
-            <LuPlus size={12} />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => CustomEditor.toggleSlur(editor)}>
-            <LuRainbow />
-          </ToolbarButton>
-          <ToolbarButton onClick={clear}>
-            <LuRemoveFormatting />
-          </ToolbarButton>
-          <div style={{ width: 20 }} />
-          <ToolbarButton onClick={uploadJSON}>
-            <LuFolder />
-          </ToolbarButton>
-          <ToolbarButton onClick={save}>
-            <LuSave />
-          </ToolbarButton>
-          <ToolbarButton onClick={exportPDF}>
-            <LuDownload />
-          </ToolbarButton>
-        </div>
-        <div className={styles.row}>
-          <ToolbarButton onClick={() => insertText("𝄆")}>𝄆</ToolbarButton>
-          <ToolbarButton onClick={() => insertText("𝄋")}>𝄋</ToolbarButton>
-          <ToolbarButton onClick={() => insertText("𝄌")}>𝄌</ToolbarButton>
-          <ToolbarButton onClick={() => insertText("𝄍")}>𝄍</ToolbarButton>
-          <ToolbarButton onClick={() => insertText("𝄎")}>𝄎</ToolbarButton>
-          <ToolbarButton onClick={() => insertText("𝄏")}>𝄏</ToolbarButton>
-          <ToolbarButton onClick={() => insertText("𝄇")}>𝄇</ToolbarButton>
-          <ToolbarButton onClick={() => insertText("𝄂")}>𝄂</ToolbarButton>
-        </div>
+      <div className={styles.row}>
+        <ToolbarButton onClick={toggleMono}>
+          <LuType />
+        </ToolbarButton>
+        <ToolbarButton onClick={editor.undo}>
+          <LuUndo2 />
+        </ToolbarButton>
+        <ToolbarButton onClick={editor.redo}>
+          <LuRedo2 />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => CustomEditor.octaveUp(editor)}>
+          <LuArrowUpFromDot />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => CustomEditor.octaveDown(editor)}>
+          <LuArrowDownToDot />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => CustomEditor.beamDown(editor)}>
+          <LuUnderline />
+          <LuMinus size={12} />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => CustomEditor.beamUp(editor)}>
+          <LuUnderline />
+          <LuPlus size={12} />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => CustomEditor.toggleSlur(editor)}>
+          <LuRainbow />
+        </ToolbarButton>
+        <ToolbarButton onClick={clear}>
+          <LuRemoveFormatting />
+        </ToolbarButton>
+        <div style={{ width: 20 }} />
+        <ToolbarButton onClick={downloadJSON}>
+          <LuCodeXml />
+        </ToolbarButton>
+        <ToolbarButton onClick={uploadJSON}>
+          <LuFolder />
+        </ToolbarButton>
+        <ToolbarButton onClick={save}>
+          <LuSave />
+        </ToolbarButton>
+        <ToolbarButton onClick={exportPDF}>
+          <LuPrinter />
+        </ToolbarButton>
       </div>
-      <DocsMenu onOpen={open} />
+      <div className={styles.row}>
+        <ToolbarButton onClick={() => insertText("𝄆")}>𝄆</ToolbarButton>
+        <ToolbarButton onClick={() => insertText("𝄋")}>𝄋</ToolbarButton>
+        <ToolbarButton onClick={() => insertText("𝄌")}>𝄌</ToolbarButton>
+        <ToolbarButton onClick={() => insertText("𝄍")}>𝄍</ToolbarButton>
+        <ToolbarButton onClick={() => insertText("𝄎")}>𝄎</ToolbarButton>
+        <ToolbarButton onClick={() => insertText("𝄏")}>𝄏</ToolbarButton>
+        <ToolbarButton onClick={() => insertText("𝄇")}>𝄇</ToolbarButton>
+        <ToolbarButton onClick={() => insertText("𝄂")}>𝄂</ToolbarButton>
+      </div>
+      <SideMenuButton />
     </div>
   );
 }

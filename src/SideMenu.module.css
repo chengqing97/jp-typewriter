@@ -41,8 +41,19 @@
   cursor: pointer;
   user-select: none;
   font-family: LXGW WenKai Mono TC;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 .menuItem:hover {
   background-color: whitesmoke;
+}
+
+.dot {
+  height: 5px;
+  width: 5px;
+  border-radius: 5px;
+  background-color: black;
+  margin-right: 15px;
 }
