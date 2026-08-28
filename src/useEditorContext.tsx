@@ -10,7 +10,7 @@ import {
 } from "react";
 import type { JianpuDoc } from "./types";
 import { useAppwrite } from "@appwrite.io/react";
-import { DATABASE_ID } from "./constants";
+import { DATABASE_ID, DEFAULT_TITLE } from "./constants";
 
 type EditorContextValue = {
   editableRef: RefObject<HTMLDivElement | null>;
@@ -18,6 +18,8 @@ type EditorContextValue = {
   setCurrentDoc: Dispatch<JianpuDoc | null>;
   docs: JianpuDoc[];
   getDocs: () => void;
+  title: string;
+  setTitle: Dispatch<string>;
 };
 
 export const EditorContext = createContext<EditorContextValue | null>(null);
@@ -27,25 +29,28 @@ export function EditorContextProvider(props: PropsWithChildren) {
   const { tablesDB } = useAppwrite();
   const [currentDoc, setCurrentDoc] = useState<JianpuDoc | null>(null);
   const [docs, setDocs] = useState<JianpuDoc[]>([]);
+  const [title, setTitle] = useState("");
 
   useEffect(() => {
-    const docString = localStorage.getItem("currentDoc");
-    if (docString) {
-      setCurrentDoc(JSON.parse(docString));
+    const prevDoc = localStorage.getItem("currentDoc");
+    if (prevDoc) {
+      setCurrentDoc(JSON.parse(prevDoc));
     }
+  }, []);
+
+  useEffect(() => {
+    getDocs();
   }, []);
 
   useEffect(() => {
     if (currentDoc) {
       localStorage.setItem("currentDoc", JSON.stringify(currentDoc));
+      setTitle(currentDoc.title);
     } else {
       localStorage.removeItem("currentDoc");
+      setTitle(DEFAULT_TITLE);
     }
   }, [currentDoc]);
-
-  useEffect(() => {
-    getDocs();
-  }, []);
 
   async function getDocs() {
     try {
@@ -61,7 +66,15 @@ export function EditorContextProvider(props: PropsWithChildren) {
 
   return (
     <EditorContext.Provider
-      value={{ editableRef, currentDoc, setCurrentDoc, docs, getDocs }}
+      value={{
+        editableRef,
+        currentDoc,
+        setCurrentDoc,
+        docs,
+        getDocs,
+        title,
+        setTitle,
+      }}
     >
       {props.children}
     </EditorContext.Provider>

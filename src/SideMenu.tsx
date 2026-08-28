@@ -58,7 +58,7 @@ type SideMenuProps = {
 function SideMenu(props: SideMenuProps) {
   const editor = useSlate();
   const { signOut } = useAuth();
-  const { currentDoc, setCurrentDoc } = useEditorContext();
+  const { currentDoc, setCurrentDoc, setTitle } = useEditorContext();
 
   function openDoc(doc: JianpuDoc) {
     Transforms.removeNodes(editor, {
@@ -87,6 +87,7 @@ function SideMenu(props: SideMenuProps) {
     });
     Transforms.insertNodes(editor, emptyValue, { at: [0] });
     setCurrentDoc(null);
+    setTitle("Untitled");
     props.closeMenu();
   }
 

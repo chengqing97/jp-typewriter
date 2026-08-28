@@ -1,7 +1,7 @@
 import styles from "./Toolbar.module.css";
 import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
-import { useEffect, useState, type HTMLAttributes } from "react";
+import { useState, type HTMLAttributes } from "react";
 import { CustomEditor } from "./CustomEditor";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -20,21 +20,16 @@ import {
 import { ID, Permission, Role, useAppwrite, useUser } from "@appwrite.io/react";
 import type { JianpuDoc } from "./types";
 import { useEditorContext } from "./useEditorContext";
-import { DATABASE_ID } from "./constants";
+import { DATABASE_ID, DEFAULT_TITLE } from "./constants";
 import { SideMenuButton } from "./SideMenu";
 
 export default function Toolbar() {
   const editor = useSlate();
   const { user } = useUser();
   const { tablesDB } = useAppwrite();
-  const { editableRef, currentDoc, getDocs, setCurrentDoc } =
+  const { editableRef, currentDoc, getDocs, setCurrentDoc, title, setTitle } =
     useEditorContext();
-  const [title, setTitle] = useState("");
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    setTitle(currentDoc?.title ?? "Untitled");
-  }, [currentDoc?.title]);
 
   function toggleMono() {
     const [match] = Editor.nodes(editor, {
@@ -148,7 +143,12 @@ export default function Toolbar() {
           className={styles.title}
           value={title}
           onChange={(e) => setTitle(e.currentTarget.value)}
-          onFocus={() => setTitle(CustomEditor.getTitle(editor))}
+          onFocus={() => {
+            const derivedTitle = CustomEditor.getTitle(editor);
+            if (title === DEFAULT_TITLE && derivedTitle.trim() !== "") {
+              setTitle(derivedTitle);
+            }
+          }}
         />
         <TextButton className={styles.textButton} onClick={save}>
           {saved ? "Saved!" : "Save"}
