@@ -6,6 +6,7 @@
 - [x] bug: selection breaks when adding marks
 - [x] bug: cannot use arrow no navigate in and out a mark
 - [ ] bug: unable to render octave after add mark when no selection
+- [ ] bug: additional line is added when opening songs
 - [x] slur/tie rendering
 - [x] music symbols
 - [x] music font

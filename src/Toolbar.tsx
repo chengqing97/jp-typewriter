@@ -77,12 +77,16 @@ export default function Toolbar() {
         },
       });
       Transforms.insertNodes(editor, value, { at: [0] });
+      localStorage.setItem("currentDoc", text);
+      setCurrentDoc(null);
+      setTitle(file.name.split(".")[0]);
+      setSaveState("unsaved");
     };
     input.click();
   }
 
   function downloadJSON() {
-    const title = CustomEditor.getTitle(editor);
+    const title = currentDoc?.title ?? CustomEditor.getTitle(editor);
     const json = JSON.stringify(editor.children, null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -140,7 +144,7 @@ export default function Toolbar() {
     });
 
     const img = canvas.toDataURL("image/jpeg", 0.8);
-    const title = CustomEditor.getTitle(editor);
+    const title = currentDoc?.title ?? CustomEditor.getTitle(editor);
 
     pdf.addImage(img, "PNG", 0, 0, 210, 297);
     pdf.save(title + ".pdf");

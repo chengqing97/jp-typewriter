@@ -62,10 +62,6 @@ export function EditorContextProvider(props: PropsWithChildren) {
           ? "saved"
           : "unsaved",
       );
-    } else {
-      localStorage.removeItem("currentDoc");
-      setTitle(DEFAULT_TITLE);
-      setSaveState("init");
     }
   }, [currentDoc]);
 
@@ -96,8 +92,10 @@ export function EditorContextProvider(props: PropsWithChildren) {
       },
     });
     Transforms.insertNodes(editor, emptyValue, { at: [0] });
+    localStorage.removeItem("currentDoc");
     setCurrentDoc(null);
-    setTitle("Untitled");
+    setTitle(DEFAULT_TITLE);
+    setSaveState("init");
   }
   return (
     <EditorContext.Provider
