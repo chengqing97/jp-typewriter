@@ -24,7 +24,7 @@
 .floatingContainer {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   background-color: white;
   box-shadow: rgba(0 0 0 / 10%) 0 1px 5px;
@@ -33,6 +33,16 @@
   box-sizing: border-box;
   padding: 4px 10px;
   border-radius: 10px;
+  max-width: 90vw;
+  overflow-x: scroll;
+  scrollbar-width: thin;
+}
+
+.buttonGroup {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
 }
 
 .title {
@@ -67,8 +77,7 @@
 
 .line {
   height: 20px;
-  width: 1px;
-  background-color: grey;
+  border-left: 1px solid grey;
   opacity: 70%;
   margin: 0 15px;
   box-shadow: rgba(0 0 0 / 20%) 0 0 3px;

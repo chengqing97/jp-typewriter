@@ -1,7 +1,7 @@
 import styles from "./Toolbar.module.css";
 import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
-import { type HTMLAttributes } from "react";
+import { useEffect, useState, type HTMLAttributes } from "react";
 import { CustomEditor } from "./CustomEditor";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -27,7 +27,14 @@ export default function Toolbar() {
   const editor = useSlate();
   const { user } = useUser();
   const { tablesDB } = useAppwrite();
-  const { editableRef, currentDoc } = useEditorContext();
+  const { editableRef, currentDoc, getDocs, setCurrentDoc } =
+    useEditorContext();
+  const [title, setTitle] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setTitle(currentDoc?.title ?? "Untitled");
+  }, [currentDoc?.title]);
 
   function toggleMono() {
     const [match] = Editor.nodes(editor, {
@@ -89,7 +96,7 @@ export default function Toolbar() {
         tableId: "documents",
         rowId: currentDoc?.$id ?? ID.unique(),
         data: {
-          title: CustomEditor.getTitle(editor),
+          title: title,
           content: JSON.stringify(editor.children),
         },
         permissions: [
@@ -98,8 +105,10 @@ export default function Toolbar() {
           Permission.delete(Role.user(user.$id)),
         ],
       });
-      window.alert("Saved!");
-      console.log("saved", response);
+      getDocs();
+      setCurrentDoc(response);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1000);
     } catch (e) {
       window.alert(e);
     }
@@ -135,63 +144,71 @@ export default function Toolbar() {
     <div className={styles.layout}>
       <div className={styles.fixedContainer}>
         <SideMenuButton />
-        <input className={styles.title} defaultValue="Untitled" />
+        <input
+          className={styles.title}
+          value={title}
+          onChange={(e) => setTitle(e.currentTarget.value)}
+          onFocus={() => setTitle(CustomEditor.getTitle(editor))}
+        />
         <TextButton className={styles.textButton} onClick={save}>
-          Save
+          {saved ? "Saved!" : "Save"}
         </TextButton>
-        <TextButton className={styles.textButton} onClick={() => {}}>
-          Save As
+        <TextButton className={styles.textButton} onClick={uploadJSON}>
+          Upload
         </TextButton>
         <TextButton className={styles.textButton} onClick={downloadJSON}>
           Download
-        </TextButton>
-        <TextButton className={styles.textButton} onClick={uploadJSON}>
-          Import
         </TextButton>
         <TextButton className={styles.textButton} onClick={exportPDF}>
           Export
         </TextButton>
       </div>
       <div className={styles.floatingContainer}>
-        <IconButton onClick={toggleMono}>
-          <LuType />
-        </IconButton>
-        <IconButton onClick={editor.undo}>
-          <LuUndo2 />
-        </IconButton>
-        <IconButton onClick={editor.redo}>
-          <LuRedo2 />
-        </IconButton>
+        <div className={styles.buttonGroup}>
+          <IconButton onClick={toggleMono}>
+            <LuType />
+          </IconButton>
+          <IconButton onClick={editor.undo}>
+            <LuUndo2 />
+          </IconButton>
+          <IconButton onClick={editor.redo}>
+            <LuRedo2 />
+          </IconButton>
+        </div>
         <div className={styles.line} />
-        <IconButton onClick={() => CustomEditor.octaveUp(editor)}>
-          <LuArrowUpFromDot />
-        </IconButton>
-        <IconButton onClick={() => CustomEditor.octaveDown(editor)}>
-          <LuArrowDownToDot />
-        </IconButton>
-        <IconButton onClick={() => CustomEditor.beamDown(editor)}>
-          <LuUnderline />
-          <LuMinus size={12} />
-        </IconButton>
-        <IconButton onClick={() => CustomEditor.beamUp(editor)}>
-          <LuUnderline />
-          <LuPlus size={12} />
-        </IconButton>
-        <IconButton onClick={() => CustomEditor.toggleSlur(editor)}>
-          <LuRainbow />
-        </IconButton>
-        <IconButton onClick={clear}>
-          <LuRemoveFormatting />
-        </IconButton>
+        <div className={styles.buttonGroup}>
+          <IconButton onClick={() => CustomEditor.octaveUp(editor)}>
+            <LuArrowUpFromDot />
+          </IconButton>
+          <IconButton onClick={() => CustomEditor.octaveDown(editor)}>
+            <LuArrowDownToDot />
+          </IconButton>
+          <IconButton onClick={() => CustomEditor.beamDown(editor)}>
+            <LuUnderline />
+            <LuMinus size={12} />
+          </IconButton>
+          <IconButton onClick={() => CustomEditor.beamUp(editor)}>
+            <LuUnderline />
+            <LuPlus size={12} />
+          </IconButton>
+          <IconButton onClick={() => CustomEditor.toggleSlur(editor)}>
+            <LuRainbow />
+          </IconButton>
+          <IconButton onClick={clear}>
+            <LuRemoveFormatting />
+          </IconButton>
+        </div>
         <div className={styles.line} />
-        <IconButton onClick={() => insertText("𝄆")}>𝄆</IconButton>
-        <IconButton onClick={() => insertText("𝄋")}>𝄋</IconButton>
-        <IconButton onClick={() => insertText("𝄌")}>𝄌</IconButton>
-        <IconButton onClick={() => insertText("𝄍")}>𝄍</IconButton>
-        <IconButton onClick={() => insertText("𝄎")}>𝄎</IconButton>
-        <IconButton onClick={() => insertText("𝄏")}>𝄏</IconButton>
-        <IconButton onClick={() => insertText("𝄇")}>𝄇</IconButton>
-        <IconButton onClick={() => insertText("𝄂")}>𝄂</IconButton>
+        <div className={styles.buttonGroup}>
+          <IconButton onClick={() => insertText("𝄆")}>𝄆</IconButton>
+          <IconButton onClick={() => insertText("𝄋")}>𝄋</IconButton>
+          <IconButton onClick={() => insertText("𝄌")}>𝄌</IconButton>
+          <IconButton onClick={() => insertText("𝄍")}>𝄍</IconButton>
+          <IconButton onClick={() => insertText("𝄎")}>𝄎</IconButton>
+          <IconButton onClick={() => insertText("𝄏")}>𝄏</IconButton>
+          <IconButton onClick={() => insertText("𝄇")}>𝄇</IconButton>
+          <IconButton onClick={() => insertText("𝄂")}>𝄂</IconButton>
+        </div>
       </div>
     </div>
   );

@@ -1,9 +1,8 @@
 import styles from "./SideMenu.module.css";
 import { useEffect, useRef, useState, type Ref } from "react";
 import { LuMenu } from "react-icons/lu";
-import { useAppwrite, useAuth } from "@appwrite.io/react";
+import { useAuth } from "@appwrite.io/react";
 import type { JianpuDoc } from "./types";
-import { DATABASE_ID } from "./constants";
 import { Editor, Transforms, type Descendant } from "slate";
 import { useSlate } from "slate-react";
 import { useEditorContext } from "./useEditorContext";
@@ -11,9 +10,8 @@ import { useEditorContext } from "./useEditorContext";
 export function SideMenuButton() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { tablesDB } = useAppwrite();
+  const { docs } = useEditorContext();
   const [showMenu, setShowMenu] = useState(false);
-  const [docs, setDocs] = useState<JianpuDoc[]>([]);
 
   useEffect(() => {
     function onMouseDown(event: MouseEvent) {
@@ -28,21 +26,6 @@ export function SideMenuButton() {
     return () => {
       document.removeEventListener("mousedown", onMouseDown);
     };
-  }, []);
-
-  useEffect(() => {
-    async function getDocs() {
-      try {
-        const result = await tablesDB.listRows<JianpuDoc>({
-          databaseId: DATABASE_ID,
-          tableId: "documents",
-        });
-        setDocs(result.rows);
-      } catch (e) {
-        window.alert(e);
-      }
-    }
-    getDocs();
   }, []);
 
   return (
@@ -125,6 +108,6 @@ function SideMenu(props: SideMenuProps) {
       <button onClick={() => signOut.signOut()} disabled={signOut.isPending}>
         Logout
       </button>
-  </div>
+    </div>
   );
 }
