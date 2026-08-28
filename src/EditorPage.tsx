@@ -120,12 +120,12 @@ export default function EditorPage() {
               CustomEditor.octaveDown(editor);
               return;
             }
-            if (e.altKey && e.key == "ArrowRight") {
+            if (e.altKey && e.key == "ArrowLeft") {
               e.preventDefault();
               CustomEditor.beamUp(editor);
               return;
             }
-            if (e.altKey && e.key == "ArrowLeft") {
+            if (e.altKey && e.key == "ArrowRight") {
               e.preventDefault();
               CustomEditor.beamDown(editor);
               return;
