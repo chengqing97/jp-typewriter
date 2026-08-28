@@ -1,12 +1,12 @@
 import {
   createContext,
-  type RefObject,
   useRef,
-  type PropsWithChildren,
   useContext,
   useState,
-  type Dispatch,
   useEffect,
+  type Dispatch,
+  type PropsWithChildren,
+  type RefObject,
 } from "react";
 import type { JianpuDoc, SaveState } from "./types";
 import { useAppwrite } from "@appwrite.io/react";
@@ -17,7 +17,7 @@ type EditorContextValue = {
   editableRef: RefObject<HTMLDivElement | null>;
   currentDoc: JianpuDoc | null;
   setCurrentDoc: Dispatch<JianpuDoc | null>;
-  docs: JianpuDoc[];
+  docs: JianpuDoc[] | null;
   getDocs: () => void;
   title: string;
   setTitle: Dispatch<string>;
@@ -32,19 +32,25 @@ export function EditorContextProvider(props: PropsWithChildren) {
   const editableRef = useRef<HTMLDivElement>(null);
   const { tablesDB } = useAppwrite();
   const [currentDoc, setCurrentDoc] = useState<JianpuDoc | null>(null);
-  const [docs, setDocs] = useState<JianpuDoc[]>([]);
+  const [docs, setDocs] = useState<JianpuDoc[] | null>(null);
   const [title, setTitle] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("init");
 
   useEffect(() => {
-    const prevDoc = localStorage.getItem("currentDoc");
-    if (prevDoc) {
-      setCurrentDoc(JSON.parse(prevDoc));
-    }
-  }, []);
-
-  useEffect(() => {
-    getDocs();
+    (async () => {
+      const prevContent = localStorage.getItem("currentDoc");
+      if (prevContent) {
+        const prevDoc = JSON.parse(prevContent);
+        setCurrentDoc(prevDoc);
+        const docs = await getDocs();
+        if (!docs) return;
+        const latestDoc = docs.find((doc) => doc.$id === prevDoc.$id);
+        if (!latestDoc) return;
+        setCurrentDoc(latestDoc);
+      } else {
+        getDocs();
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -70,6 +76,7 @@ export function EditorContextProvider(props: PropsWithChildren) {
         tableId: "documents",
       });
       setDocs(rows);
+      return rows;
     } catch (e) {
       window.alert(e);
     }

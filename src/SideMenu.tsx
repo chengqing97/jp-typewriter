@@ -51,7 +51,7 @@ export function SideMenuButton() {
 
 type SideMenuProps = {
   ref: Ref<HTMLDivElement>;
-  docs: JianpuDoc[];
+  docs: JianpuDoc[] | null;
   closeMenu: () => void;
 };
 
@@ -88,16 +88,20 @@ function SideMenu(props: SideMenuProps) {
         + New
       </button>
       <div style={{ height: 10 }} />
-      {props.docs.map((doc) => (
-        <div
-          key={doc.$id}
-          className={styles.menuItem}
-          onClick={() => openDoc(doc)}
-        >
-          {doc.$id == currentDoc?.$id && <div className={styles.dot} />}
-          {doc.title}
-        </div>
-      ))}
+      {props.docs === null ? (
+        <p>Loading...</p>
+      ) : (
+        props.docs.map((doc) => (
+          <div
+            key={doc.$id}
+            className={styles.menuItem}
+            onClick={() => openDoc(doc)}
+          >
+            {doc.$id == currentDoc?.$id && <div className={styles.dot} />}
+            {doc.title}
+          </div>
+        ))
+      )}
       <div style={{ flex: 1 }} />
       <div className={styles.accountRow}>
         <p className={styles.emailText}>{user!.email}</p>

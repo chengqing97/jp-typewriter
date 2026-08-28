@@ -31,6 +31,7 @@ export default function Toolbar() {
   const {
     editableRef,
     currentDoc,
+    docs,
     getDocs,
     setCurrentDoc,
     title,
@@ -184,6 +185,8 @@ export default function Toolbar() {
             Delete
           </TextButton>
         )}
+        <div style={{ flex: 1 }} />
+        {docs === null ? <p className={styles.statusText}>Loading</p> : null}
       </div>
       <div className={styles.floatingContainer}>
         <div className={styles.buttonGroup}>
