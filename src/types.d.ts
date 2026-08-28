@@ -39,3 +39,5 @@ export interface JianpuDoc extends Models.Row {
   title: string;
   content: string;
 }
+
+export type SaveState = "init" | "saved" | "unsaved" | "saving";

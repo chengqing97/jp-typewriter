@@ -8,7 +8,7 @@ import {
   type Dispatch,
   useEffect,
 } from "react";
-import type { JianpuDoc } from "./types";
+import type { JianpuDoc, SaveState } from "./types";
 import { useAppwrite } from "@appwrite.io/react";
 import { DATABASE_ID, DEFAULT_TITLE } from "./constants";
 import { Editor, Transforms, type Descendant } from "slate";
@@ -22,6 +22,8 @@ type EditorContextValue = {
   title: string;
   setTitle: Dispatch<string>;
   newDoc: (editor: Editor) => void;
+  saveState: SaveState;
+  setSaveState: Dispatch<SaveState>;
 };
 
 const EditorContext = createContext<EditorContextValue | null>(null);
@@ -32,6 +34,7 @@ export function EditorContextProvider(props: PropsWithChildren) {
   const [currentDoc, setCurrentDoc] = useState<JianpuDoc | null>(null);
   const [docs, setDocs] = useState<JianpuDoc[]>([]);
   const [title, setTitle] = useState("");
+  const [saveState, setSaveState] = useState<SaveState>("init");
 
   useEffect(() => {
     const prevDoc = localStorage.getItem("currentDoc");
@@ -48,9 +51,15 @@ export function EditorContextProvider(props: PropsWithChildren) {
     if (currentDoc) {
       localStorage.setItem("currentDoc", JSON.stringify(currentDoc));
       setTitle(currentDoc.title);
+      setSaveState(
+        currentDoc.content === localStorage.getItem("content")
+          ? "saved"
+          : "unsaved",
+      );
     } else {
       localStorage.removeItem("currentDoc");
       setTitle(DEFAULT_TITLE);
+      setSaveState("init");
     }
   }, [currentDoc]);
 
@@ -94,6 +103,8 @@ export function EditorContextProvider(props: PropsWithChildren) {
         title,
         setTitle,
         newDoc,
+        saveState,
+        setSaveState,
       }}
     >
       {props.children}

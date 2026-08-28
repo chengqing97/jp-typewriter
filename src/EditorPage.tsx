@@ -1,5 +1,5 @@
 import styles from "./EditorPage.module.css";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createEditor, Editor, Transforms } from "slate";
 import {
   Editable,
@@ -31,7 +31,8 @@ const defaultValue: Descendant[] = [
 const A4_RATIO = 210 / 297;
 
 export default function EditorPage() {
-  const { editableRef } = useEditorContext();
+  const { editableRef, currentDoc, setSaveState } = useEditorContext();
+
   const [editor] = useState(() =>
     withSlur(withReact(withHistory(createEditor()))),
   );
@@ -78,19 +79,19 @@ export default function EditorPage() {
     });
   }, []);
 
+  useEffect(() => {
+    resizePaper();
+  }, []);
+
   return (
     <Slate
       editor={editor}
       initialValue={initialValue}
-      onValueChange={resizePaper}
-      onChange={(value) => {
-        const isAstChange = editor.operations.some(
-          (op) => "set_selection" !== op.type,
-        );
-        if (isAstChange) {
-          const content = JSON.stringify(value);
-          localStorage.setItem("content", content);
-        }
+      onValueChange={(value) => {
+        resizePaper();
+        const content = JSON.stringify(value);
+        localStorage.setItem("content", content);
+        setSaveState(content === currentDoc?.content ? "saved" : "unsaved");
       }}
     >
       <Toolbar />

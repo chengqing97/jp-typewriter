@@ -1,7 +1,7 @@
 import styles from "./Toolbar.module.css";
 import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
-import { useState, type HTMLAttributes } from "react";
+import { useState, type ButtonHTMLAttributes } from "react";
 import { CustomEditor } from "./CustomEditor";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -18,7 +18,7 @@ import {
   LuMinus,
 } from "react-icons/lu";
 import { ID, Permission, Role, useAppwrite, useUser } from "@appwrite.io/react";
-import type { JianpuDoc } from "./types";
+import type { JianpuDoc, SaveState } from "./types";
 import { useEditorContext } from "./useEditorContext";
 import { DATABASE_ID, DEFAULT_TITLE } from "./constants";
 import { SideMenuButton } from "./SideMenu";
@@ -28,9 +28,16 @@ export default function Toolbar() {
   const editor = useSlate();
   const { user } = useUser();
   const { tablesDB } = useAppwrite();
-  const { editableRef, currentDoc, getDocs, setCurrentDoc, title, setTitle } =
-    useEditorContext();
-  const [saved, setSaved] = useState(false);
+  const {
+    editableRef,
+    currentDoc,
+    getDocs,
+    setCurrentDoc,
+    title,
+    setTitle,
+    saveState,
+    setSaveState,
+  } = useEditorContext();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   function toggleMono() {
@@ -87,6 +94,7 @@ export default function Toolbar() {
 
   async function save() {
     if (!user) return;
+    setSaveState("saving");
     try {
       const response = await tablesDB.upsertRow<JianpuDoc>({
         databaseId: DATABASE_ID,
@@ -104,10 +112,10 @@ export default function Toolbar() {
       });
       getDocs();
       setCurrentDoc(response);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1000);
+      setSaveState("saved");
     } catch (e) {
       window.alert(e);
+      setSaveState("unsaved");
     }
   }
 
@@ -152,8 +160,12 @@ export default function Toolbar() {
             }
           }}
         />
-        <TextButton className={styles.textButton} onClick={save}>
-          {saved ? "Saved!" : "Save"}
+        <TextButton
+          className={styles.textButton}
+          onClick={save}
+          disabled={saveState == "saved" || saveState == "saving"}
+        >
+          {getSaveButtonText(saveState)}
         </TextButton>
         <TextButton className={styles.textButton} onClick={uploadJSON}>
           Upload
@@ -226,7 +238,7 @@ export default function Toolbar() {
     </div>
   );
 }
-function TextButton(props: HTMLAttributes<HTMLButtonElement>) {
+function TextButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       className={styles.textButton}
@@ -236,7 +248,7 @@ function TextButton(props: HTMLAttributes<HTMLButtonElement>) {
   );
 }
 
-function IconButton(props: HTMLAttributes<HTMLButtonElement>) {
+function IconButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       className={styles.iconButton}
@@ -244,4 +256,17 @@ function IconButton(props: HTMLAttributes<HTMLButtonElement>) {
       {...props}
     />
   );
+}
+
+function getSaveButtonText(saveState: SaveState) {
+  switch (saveState) {
+    case "init":
+      return "Save";
+    case "unsaved":
+      return "Save*";
+    case "saved":
+      return "Saved";
+    case "saving":
+      return "Saving";
+  }
 }
