@@ -11,6 +11,7 @@ import {
 import type { JianpuDoc } from "./types";
 import { useAppwrite } from "@appwrite.io/react";
 import { DATABASE_ID, DEFAULT_TITLE } from "./constants";
+import { Editor, Transforms, type Descendant } from "slate";
 
 type EditorContextValue = {
   editableRef: RefObject<HTMLDivElement | null>;
@@ -20,9 +21,10 @@ type EditorContextValue = {
   getDocs: () => void;
   title: string;
   setTitle: Dispatch<string>;
+  newDoc: (editor: Editor) => void;
 };
 
-export const EditorContext = createContext<EditorContextValue | null>(null);
+const EditorContext = createContext<EditorContextValue | null>(null);
 
 export function EditorContextProvider(props: PropsWithChildren) {
   const editableRef = useRef<HTMLDivElement>(null);
@@ -64,6 +66,23 @@ export function EditorContextProvider(props: PropsWithChildren) {
     }
   }
 
+  function newDoc(editor: Editor) {
+    const emptyValue: Descendant[] = [
+      {
+        type: "code",
+        children: [{ text: "" }],
+      },
+    ];
+    Transforms.removeNodes(editor, {
+      at: {
+        anchor: Editor.start(editor, []),
+        focus: Editor.end(editor, []),
+      },
+    });
+    Transforms.insertNodes(editor, emptyValue, { at: [0] });
+    setCurrentDoc(null);
+    setTitle("Untitled");
+  }
   return (
     <EditorContext.Provider
       value={{
@@ -74,6 +93,7 @@ export function EditorContextProvider(props: PropsWithChildren) {
         getDocs,
         title,
         setTitle,
+        newDoc,
       }}
     >
       {props.children}

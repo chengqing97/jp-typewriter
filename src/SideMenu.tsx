@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type Ref } from "react";
 import { LuMenu } from "react-icons/lu";
 import { useAuth } from "@appwrite.io/react";
 import type { JianpuDoc } from "./types";
-import { Editor, Transforms, type Descendant } from "slate";
+import { Editor, Transforms } from "slate";
 import { useSlate } from "slate-react";
 import { useEditorContext } from "./useEditorContext";
 
@@ -58,7 +58,7 @@ type SideMenuProps = {
 function SideMenu(props: SideMenuProps) {
   const editor = useSlate();
   const { signOut } = useAuth();
-  const { currentDoc, setCurrentDoc, setTitle } = useEditorContext();
+  const { currentDoc, setCurrentDoc, newDoc } = useEditorContext();
 
   function openDoc(doc: JianpuDoc) {
     Transforms.removeNodes(editor, {
@@ -72,28 +72,16 @@ function SideMenu(props: SideMenuProps) {
     props.closeMenu();
   }
 
-  function newDoc() {
-    const emptyValue: Descendant[] = [
-      {
-        type: "code",
-        children: [{ text: "" }],
-      },
-    ];
-    Transforms.removeNodes(editor, {
-      at: {
-        anchor: Editor.start(editor, []),
-        focus: Editor.end(editor, []),
-      },
-    });
-    Transforms.insertNodes(editor, emptyValue, { at: [0] });
-    setCurrentDoc(null);
-    setTitle("Untitled");
-    props.closeMenu();
-  }
-
   return (
     <div ref={props.ref} className={styles.menuBody}>
-      <button onClick={newDoc}>+ New</button>
+      <button
+        onClick={() => {
+          newDoc(editor);
+          props.closeMenu();
+        }}
+      >
+        + New
+      </button>
       <div style={{ height: 10 }} />
       {props.docs.map((doc) => (
         <div

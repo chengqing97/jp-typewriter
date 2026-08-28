@@ -1,0 +1,37 @@
+.layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0 0 0 / 0.2);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+}
+
+.dialogBody {
+  padding: 20px;
+  border-radius: 10px;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.buttonRow {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.text {
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.button {
+  min-width: 50px;
+}

@@ -22,6 +22,7 @@ import type { JianpuDoc } from "./types";
 import { useEditorContext } from "./useEditorContext";
 import { DATABASE_ID, DEFAULT_TITLE } from "./constants";
 import { SideMenuButton } from "./SideMenu";
+import DeleteDialog from "./DeleteDialog";
 
 export default function Toolbar() {
   const editor = useSlate();
@@ -30,6 +31,7 @@ export default function Toolbar() {
   const { editableRef, currentDoc, getDocs, setCurrentDoc, title, setTitle } =
     useEditorContext();
   const [saved, setSaved] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   function toggleMono() {
     const [match] = Editor.nodes(editor, {
@@ -162,6 +164,14 @@ export default function Toolbar() {
         <TextButton className={styles.textButton} onClick={exportPDF}>
           Export
         </TextButton>
+        {currentDoc && (
+          <TextButton
+            className={styles.textButton}
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            Delete
+          </TextButton>
+        )}
       </div>
       <div className={styles.floatingContainer}>
         <div className={styles.buttonGroup}>
@@ -210,6 +220,9 @@ export default function Toolbar() {
           <IconButton onClick={() => insertText("𝄂")}>𝄂</IconButton>
         </div>
       </div>
+      {showDeleteDialog && (
+        <DeleteDialog onDismiss={() => setShowDeleteDialog(false)} />
+      )}
     </div>
   );
 }
