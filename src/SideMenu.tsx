@@ -57,7 +57,7 @@ type SideMenuProps = {
 
 function SideMenu(props: SideMenuProps) {
   const editor = useSlate();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { currentDoc, setCurrentDoc, newDoc } = useEditorContext();
 
   function openDoc(doc: JianpuDoc) {
@@ -70,6 +70,11 @@ function SideMenu(props: SideMenuProps) {
     Transforms.insertNodes(editor, JSON.parse(doc.content), { at: [0] });
     setCurrentDoc(doc);
     props.closeMenu();
+  }
+
+  function logout() {
+    localStorage.clear();
+    signOut.signOut();
   }
 
   return (
@@ -94,9 +99,13 @@ function SideMenu(props: SideMenuProps) {
         </div>
       ))}
       <div style={{ flex: 1 }} />
-      <button onClick={() => signOut.signOut()} disabled={signOut.isPending}>
-        Logout
-      </button>
+      <div className={styles.accountRow}>
+        <p className={styles.emailText}>{user!.email}</p>
+        <div style={{ flex: 1 }} />
+        <button onClick={logout} disabled={signOut.isPending}>
+          Logout
+        </button>
+      </div>
     </div>
   );
 }

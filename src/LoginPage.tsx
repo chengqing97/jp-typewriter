@@ -31,8 +31,8 @@ export default function LoginPage() {
         setMessage(e.message);
       } else {
         setMessage("Failed to send OTP.");
+        console.error(e);
       }
-      console.error(e);
     } finally {
       setSending(false);
     }
@@ -48,8 +48,8 @@ export default function LoginPage() {
         setMessage(e.message);
       } else {
         setMessage("Failed to login.");
+        console.error(e);
       }
-      console.error(e);
     } finally {
       setLoggingIn(false);
     }
