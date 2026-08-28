@@ -1,38 +1,25 @@
 .button {
-  position: absolute;
-  left: 20px;
-  top: 20px;
-  height: 40px;
-  width: 40px;
-  background-color: whitesmoke;
-  border-radius: 10px;
-  border: none;
-  color: rgb(40 40 40);
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.button:hover {
-  background-color: gainsboro;
+  height: 32px;
+  width: 32px;
+  padding: 0;
 }
 
 .menuBody {
-  position: absolute;
-  left: 20px;
-  top: 100px;
-  height: 700px;
+  position: fixed;
+  top: 60px;
+  left: 10px;
+  bottom: 10px;
   width: 300px;
   background-color: white;
   border-radius: 10px;
-  box-shadow: rgba(0 0 0 / 5%) 2px 2px 5px;
+  box-shadow: rgba(0 0 0 / 20%) 1px 1px 4px;
   z-index: 11;
   border: grainsboro solid 1px;
   padding: 20px;
   display: flex;
   gap: 5px;
   flex-direction: column;
+  align-items: flex-start;
 }
 
 .menuItem {

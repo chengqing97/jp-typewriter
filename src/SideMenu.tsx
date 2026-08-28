@@ -9,7 +9,7 @@ import { useSlate } from "slate-react";
 import { useEditorContext } from "./useEditorContext";
 
 export function SideMenuButton() {
-  const buttonRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { tablesDB } = useAppwrite();
   const [showMenu, setShowMenu] = useState(false);
@@ -47,13 +47,13 @@ export function SideMenuButton() {
 
   return (
     <>
-      <div
+      <button
         ref={buttonRef}
         className={styles.button}
         onClick={() => setShowMenu(!showMenu)}
       >
         <LuMenu />
-      </div>
+      </button>
 
       {showMenu && (
         <SideMenu
@@ -125,6 +125,6 @@ function SideMenu(props: SideMenuProps) {
       <button onClick={() => signOut.signOut()} disabled={signOut.isPending}>
         Logout
       </button>
-    </div>
+  </div>
   );
 }

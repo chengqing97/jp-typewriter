@@ -20,7 +20,7 @@ pre {
 }
 
 button {
-  background-color: whitesmoke;
+  background-color: rgb(240 240 240);
   border-radius: 10px;
   border: none;
   padding: 5px 10px;
@@ -31,16 +31,13 @@ button {
   align-items: center;
   justify-content: center;
 }
-
 button:hover {
   background-color: gainsboro;
   cursor: pointer;
 }
-
 button:disabled {
   color: grey;
 }
-
 button:disabled:hover {
   background-color: whitesmoke;
   cursor: default;

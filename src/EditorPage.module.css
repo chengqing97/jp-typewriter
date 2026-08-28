@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   padding: 50px;
-  padding-top: 130px;
+  padding-top: 115px;
   box-sizing: border-box;
   min-height: 100svh;
   height: fit-content;
@@ -22,4 +22,5 @@
   box-sizing: border-box;
   user-select: none;
   border-radius: 7px;
+  box-shadow: rgba(0 0 0 / 4%) 0 1px 5px;
 }

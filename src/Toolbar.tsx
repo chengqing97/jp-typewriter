@@ -13,13 +13,9 @@ import {
   LuArrowUpFromDot,
   LuRemoveFormatting,
   LuRainbow,
-  LuSave,
-  LuFolder,
   LuType,
   LuPlus,
   LuMinus,
-  LuPrinter,
-  LuCodeXml,
 } from "react-icons/lu";
 import { ID, Permission, Role, useAppwrite, useUser } from "@appwrite.io/react";
 import type { JianpuDoc } from "./types";
@@ -136,70 +132,84 @@ export default function Toolbar() {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.row}>
-        <ToolbarButton onClick={toggleMono}>
+    <div className={styles.layout}>
+      <div className={styles.fixedContainer}>
+        <SideMenuButton />
+        <input className={styles.title} defaultValue="Untitled" />
+        <TextButton className={styles.textButton} onClick={save}>
+          Save
+        </TextButton>
+        <TextButton className={styles.textButton} onClick={() => {}}>
+          Save As
+        </TextButton>
+        <TextButton className={styles.textButton} onClick={downloadJSON}>
+          Download
+        </TextButton>
+        <TextButton className={styles.textButton} onClick={uploadJSON}>
+          Import
+        </TextButton>
+        <TextButton className={styles.textButton} onClick={exportPDF}>
+          Export
+        </TextButton>
+      </div>
+      <div className={styles.floatingContainer}>
+        <IconButton onClick={toggleMono}>
           <LuType />
-        </ToolbarButton>
-        <ToolbarButton onClick={editor.undo}>
+        </IconButton>
+        <IconButton onClick={editor.undo}>
           <LuUndo2 />
-        </ToolbarButton>
-        <ToolbarButton onClick={editor.redo}>
+        </IconButton>
+        <IconButton onClick={editor.redo}>
           <LuRedo2 />
-        </ToolbarButton>
-        <ToolbarButton onClick={() => CustomEditor.octaveUp(editor)}>
+        </IconButton>
+        <div className={styles.line} />
+        <IconButton onClick={() => CustomEditor.octaveUp(editor)}>
           <LuArrowUpFromDot />
-        </ToolbarButton>
-        <ToolbarButton onClick={() => CustomEditor.octaveDown(editor)}>
+        </IconButton>
+        <IconButton onClick={() => CustomEditor.octaveDown(editor)}>
           <LuArrowDownToDot />
-        </ToolbarButton>
-        <ToolbarButton onClick={() => CustomEditor.beamDown(editor)}>
+        </IconButton>
+        <IconButton onClick={() => CustomEditor.beamDown(editor)}>
           <LuUnderline />
           <LuMinus size={12} />
-        </ToolbarButton>
-        <ToolbarButton onClick={() => CustomEditor.beamUp(editor)}>
+        </IconButton>
+        <IconButton onClick={() => CustomEditor.beamUp(editor)}>
           <LuUnderline />
           <LuPlus size={12} />
-        </ToolbarButton>
-        <ToolbarButton onClick={() => CustomEditor.toggleSlur(editor)}>
+        </IconButton>
+        <IconButton onClick={() => CustomEditor.toggleSlur(editor)}>
           <LuRainbow />
-        </ToolbarButton>
-        <ToolbarButton onClick={clear}>
+        </IconButton>
+        <IconButton onClick={clear}>
           <LuRemoveFormatting />
-        </ToolbarButton>
-        <div style={{ width: 20 }} />
-        <ToolbarButton onClick={downloadJSON}>
-          <LuCodeXml />
-        </ToolbarButton>
-        <ToolbarButton onClick={uploadJSON}>
-          <LuFolder />
-        </ToolbarButton>
-        <ToolbarButton onClick={save}>
-          <LuSave />
-        </ToolbarButton>
-        <ToolbarButton onClick={exportPDF}>
-          <LuPrinter />
-        </ToolbarButton>
+        </IconButton>
+        <div className={styles.line} />
+        <IconButton onClick={() => insertText("𝄆")}>𝄆</IconButton>
+        <IconButton onClick={() => insertText("𝄋")}>𝄋</IconButton>
+        <IconButton onClick={() => insertText("𝄌")}>𝄌</IconButton>
+        <IconButton onClick={() => insertText("𝄍")}>𝄍</IconButton>
+        <IconButton onClick={() => insertText("𝄎")}>𝄎</IconButton>
+        <IconButton onClick={() => insertText("𝄏")}>𝄏</IconButton>
+        <IconButton onClick={() => insertText("𝄇")}>𝄇</IconButton>
+        <IconButton onClick={() => insertText("𝄂")}>𝄂</IconButton>
       </div>
-      <div className={styles.row}>
-        <ToolbarButton onClick={() => insertText("𝄆")}>𝄆</ToolbarButton>
-        <ToolbarButton onClick={() => insertText("𝄋")}>𝄋</ToolbarButton>
-        <ToolbarButton onClick={() => insertText("𝄌")}>𝄌</ToolbarButton>
-        <ToolbarButton onClick={() => insertText("𝄍")}>𝄍</ToolbarButton>
-        <ToolbarButton onClick={() => insertText("𝄎")}>𝄎</ToolbarButton>
-        <ToolbarButton onClick={() => insertText("𝄏")}>𝄏</ToolbarButton>
-        <ToolbarButton onClick={() => insertText("𝄇")}>𝄇</ToolbarButton>
-        <ToolbarButton onClick={() => insertText("𝄂")}>𝄂</ToolbarButton>
-      </div>
-      <SideMenuButton />
     </div>
   );
 }
-
-function ToolbarButton(props: HTMLAttributes<HTMLButtonElement>) {
+function TextButton(props: HTMLAttributes<HTMLButtonElement>) {
   return (
     <button
-      className={styles.button}
+      className={styles.textButton}
+      onMouseDown={(e) => e.preventDefault()}
+      {...props}
+    />
+  );
+}
+
+function IconButton(props: HTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      className={styles.iconButton}
       onMouseDown={(e) => e.preventDefault()}
       {...props}
     />
