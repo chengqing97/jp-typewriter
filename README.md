@@ -10,7 +10,7 @@
 - [x] slur/tie rendering
 - [x] music symbols
 - [x] music font
-- [ ] superscript
+- [x] superscript
 - [ ] triplet
 - [ ] dynamic slur height
 - [ ] highlights and font colors

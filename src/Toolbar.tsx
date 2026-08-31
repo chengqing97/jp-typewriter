@@ -16,6 +16,7 @@ import {
   LuType,
   LuPlus,
   LuMinus,
+  LuSuperscript,
 } from "react-icons/lu";
 import { ID, Permission, Role, useAppwrite, useUser } from "@appwrite.io/react";
 import type { JianpuDoc, SaveState } from "./types";
@@ -222,6 +223,9 @@ export default function Toolbar() {
           </IconButton>
           <IconButton onClick={() => CustomEditor.toggleSlur(editor)}>
             <LuRainbow />
+          </IconButton>
+          <IconButton onClick={() => CustomEditor.toggleSuperscript(editor)}>
+            <LuSuperscript />
           </IconButton>
           <IconButton onClick={clear}>
             <LuRemoveFormatting />
