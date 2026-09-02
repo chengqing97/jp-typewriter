@@ -11,14 +11,14 @@ import {
 import type { Descendant } from "slate";
 import Toolbar from "./Toolbar";
 import { withHistory } from "slate-history";
-import { Leaf } from "./Leaf";
+import { CustomLeaf } from "./CustomLeaf";
 import { CustomEditor } from "./CustomEditor";
 import {
   CodeElement,
   ParagraphElement,
   SlurElement,
   withSlur,
-} from "./SlateElements";
+} from "./CustomElements";
 import { useEditorContext } from "./useEditorContext";
 
 const defaultValue: Descendant[] = [
@@ -57,7 +57,7 @@ export default function EditorPage() {
   }, []);
 
   const renderLeaf = useCallback((props: RenderLeafProps) => {
-    return <Leaf {...props} />;
+    return <CustomLeaf {...props} />;
   }, []);
 
   const resizePaper = useCallback(() => {
@@ -103,14 +103,6 @@ export default function EditorPage() {
           renderLeaf={renderLeaf}
           spellCheck={false}
           onKeyDown={(e) => {
-            if (e.ctrlKey && e.key == "a") {
-              e.preventDefault();
-              Transforms.select(editor, {
-                anchor: Editor.start(editor, []),
-                focus: Editor.end(editor, []),
-              });
-              return;
-            }
             if (e.altKey && e.key == "ArrowUp") {
               e.preventDefault();
               CustomEditor.octaveUp(editor);
@@ -131,9 +123,19 @@ export default function EditorPage() {
               CustomEditor.beamDown(editor);
               return;
             }
-            if (e.altKey && e.key == "s") {
+            if (e.altKey && e.key == "a") {
               e.preventDefault();
               CustomEditor.toggleSlur(editor);
+              return;
+            }
+            if (e.altKey && e.key == "s") {
+              e.preventDefault();
+              CustomEditor.toggleSuperscript(editor);
+              return;
+            }
+            if (e.altKey && e.key == "d") {
+              e.preventDefault();
+              CustomEditor.clearFormat(editor);
               return;
             }
           }}

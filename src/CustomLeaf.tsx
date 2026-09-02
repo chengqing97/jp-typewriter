@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { RenderLeafProps } from "slate-react";
 import type { CustomText } from "./types";
+import { jianpuNote } from "./constants";
 
 type Rect = {
   x: number;
@@ -10,7 +11,7 @@ type Rect = {
   char: string;
 };
 
-export function Leaf({ attributes, children, leaf }: RenderLeafProps) {
+export function CustomLeaf({ attributes, children, leaf }: RenderLeafProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const [rects, setRects] = useState<Rect[]>([]);
 
@@ -93,7 +94,7 @@ function MusicDecoration({ leaf, rects }: MusicDecorationProps) {
             width: rect.width,
           }}
         >
-          {/^[a-ac-zA-Z1-9]/.test(rect.char) &&
+          {jianpuNote.test(rect.char) &&
             octaveArray.map((_, i) => (
               <span
                 key={i}
@@ -124,7 +125,7 @@ function MusicDecoration({ leaf, rects }: MusicDecorationProps) {
                   height: 1,
                   left: 0,
                   right: 0,
-                  top: (leaf.superscript ? 20 : 17) + 2 * i,
+                  top: (leaf.superscript ? 19.5 : 17) + 2 * i,
                   backgroundColor: "black",
                 }}
               />

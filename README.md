@@ -11,8 +11,8 @@
 - [x] music symbols
 - [x] music font
 - [x] superscript
+- [x] dynamic slur height
 - [ ] triplet
-- [ ] dynamic slur height
 - [ ] highlights and font colors
 - [ ] headings
 

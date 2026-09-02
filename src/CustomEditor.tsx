@@ -60,6 +60,11 @@ export const CustomEditor = {
     }
   },
 
+  clearFormat(editor: Editor) {
+    Editor.removeMark(editor, "beam");
+    Editor.removeMark(editor, "octave");
+  },
+
   getTitle(editor: Editor) {
     const firstNonEmptyLine = editor.children.find(
       (node) => Node.string(node).trim() !== "",

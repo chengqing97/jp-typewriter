@@ -53,11 +53,6 @@ export default function Toolbar() {
     );
   }
 
-  function clear() {
-    Editor.removeMark(editor, "beam");
-    Editor.removeMark(editor, "octave");
-  }
-
   function insertText(text: string) {
     Transforms.insertText(editor, text);
   }
@@ -227,7 +222,7 @@ export default function Toolbar() {
           <IconButton onClick={() => CustomEditor.toggleSuperscript(editor)}>
             <LuSuperscript />
           </IconButton>
-          <IconButton onClick={clear}>
+          <IconButton onClick={() => CustomEditor.clearFormat(editor)}>
             <LuRemoveFormatting />
           </IconButton>
         </div>
