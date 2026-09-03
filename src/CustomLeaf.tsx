@@ -111,12 +111,12 @@ function MusicDecoration({ leaf, rects }: MusicDecorationProps) {
                         bottom: rect.height - 2 + 4 * i,
                       }
                     : {
-                        top: rect.height - 3 + 4 * i + 2 * (leaf.beam ?? 0),
+                        top: rect.height - 2 + 4 * i + 2 * (leaf.beam ?? 0),
                       }),
                 }}
               />
             ))}
-          {!/[\s\|\-\𝄍\𝄎\𝄏]/.test(rect.char) &&
+          {!/[\s\|\-𝄍𝄎𝄏𝄆𝄋𝄌𝄇𝄂]/.test(rect.char) &&
             beamArray.map((_, i) => (
               <span
                 key={i}

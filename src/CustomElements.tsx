@@ -14,18 +14,29 @@ export function CodeElement(props: RenderElementProps) {
 export function SlurElement(props: RenderElementProps) {
   const charOctaveList = props.element.children.flatMap(
     ({ text, octave, superscript }) => {
-      return text
-        .split("")
-        .map((x) =>
-          jianpuNote.test(x) ? (octave ?? 0) + (superscript ? 0.5 : 0) : null,
-        );
+      return text.split("").map((char) => {
+        return jianpuNote.test(char)
+          ? Math.max(octave ?? 0, 0) + (superscript ? 0.5 : 0)
+          : null;
+      });
     },
   );
 
   const length = charOctaveList.length;
 
   function getSlurStyle(): CSSProperties {
-    if (length > 2 && charOctaveList.slice(1, -1).every((x) => x === null)) {
+    if (length === 1) {
+      // Fermata
+      return {
+        left: -1,
+        right: -1,
+        height: 14,
+        bottom: 9,
+      };
+    } else if (
+      length > 2 &&
+      charOctaveList.slice(1, -1).every((x) => x === null)
+    ) {
       // Tie
       return {
         left: 7,

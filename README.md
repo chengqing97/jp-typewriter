@@ -12,9 +12,11 @@
 - [x] music font
 - [x] superscript
 - [x] dynamic slur height
-- [ ] triplet
+- [ ] dynamic line height
+- [ ] pages
 - [ ] highlights and font colors
 - [ ] headings
+- [ ] triplet
 
 # React + TypeScript + Vite
 

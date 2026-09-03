@@ -1,6 +1,6 @@
 import styles from "./EditorPage.module.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createEditor, Editor, Transforms } from "slate";
+import { createEditor, Range } from "slate";
 import {
   Editable,
   type RenderElementProps,
@@ -103,37 +103,39 @@ export default function EditorPage() {
           renderLeaf={renderLeaf}
           spellCheck={false}
           onKeyDown={(e) => {
-            if (e.altKey && e.key == "ArrowUp") {
+            if (!editor.selection) return;
+            if (Range.isCollapsed(editor.selection)) return;
+            if (e.ctrlKey && e.key == "ArrowUp") {
               e.preventDefault();
               CustomEditor.octaveUp(editor);
               return;
             }
-            if (e.altKey && e.key == "ArrowDown") {
+            if (e.ctrlKey && e.key == "ArrowDown") {
               e.preventDefault();
               CustomEditor.octaveDown(editor);
               return;
             }
-            if (e.altKey && e.key == "ArrowLeft") {
+            if (e.ctrlKey && e.key == "ArrowLeft") {
               e.preventDefault();
               CustomEditor.beamUp(editor);
               return;
             }
-            if (e.altKey && e.key == "ArrowRight") {
+            if (e.ctrlKey && e.key == "ArrowRight") {
               e.preventDefault();
               CustomEditor.beamDown(editor);
               return;
             }
-            if (e.altKey && e.key == "a") {
+            if (e.ctrlKey && e.key == "a") {
               e.preventDefault();
               CustomEditor.toggleSlur(editor);
               return;
             }
-            if (e.altKey && e.key == "s") {
+            if (e.ctrlKey && e.key == "s") {
               e.preventDefault();
               CustomEditor.toggleSuperscript(editor);
               return;
             }
-            if (e.altKey && e.key == "d") {
+            if (e.ctrlKey && e.key == "d") {
               e.preventDefault();
               CustomEditor.clearFormat(editor);
               return;

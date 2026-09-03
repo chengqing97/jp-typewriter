@@ -235,6 +235,7 @@ export default function Toolbar() {
           <IconButton onClick={() => insertText("𝄎")}>𝄎</IconButton>
           <IconButton onClick={() => insertText("𝄏")}>𝄏</IconButton>
           <IconButton onClick={() => insertText("𝄇")}>𝄇</IconButton>
+          <IconButton onClick={() => insertText("𝄁")}>𝄁</IconButton>
           <IconButton onClick={() => insertText("𝄂")}>𝄂</IconButton>
         </div>
       </div>
