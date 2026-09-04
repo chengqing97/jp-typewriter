@@ -39,6 +39,7 @@ export default function Toolbar() {
     setTitle,
     saveState,
     setSaveState,
+    newDoc,
   } = useEditorContext();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -160,6 +161,12 @@ export default function Toolbar() {
               setTitle(derivedTitle);
             }
           }}
+          onKeyUp={(e) => {
+            if (e.code == "Enter" && !e.nativeEvent.isComposing) {
+              save();
+              e.currentTarget.blur();
+            }
+          }}
         />
         <TextButton
           className={styles.textButton}
@@ -167,6 +174,12 @@ export default function Toolbar() {
           disabled={saveState == "saved" || saveState == "saving"}
         >
           {getSaveButtonText(saveState)}
+        </TextButton>
+        <TextButton
+          className={styles.textButton}
+          onClick={() => newDoc(editor)}
+        >
+          New
         </TextButton>
         <TextButton className={styles.textButton} onClick={uploadJSON}>
           Upload

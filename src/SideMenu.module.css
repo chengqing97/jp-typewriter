@@ -9,33 +9,67 @@
   top: 60px;
   left: 10px;
   bottom: 10px;
-  width: 300px;
+  width: 360px;
   background-color: white;
   border-radius: 10px;
   box-shadow: rgba(0 0 0 / 20%) 1px 1px 4px;
   z-index: 11;
   border: grainsboro solid 1px;
-  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
 
+.topRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 20px 10px 10px 20px;
+  width: 100%;
+}
+
+.sortButton {
+  background-color: transparent;
+  font-size: 14px;
+}
+
+.sortButton:hover {
+  background-color: rgb(240 240 240);
+}
+
+.scrollable {
+  flex: 1;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  padding: 15px;
+  padding-top: 10px;
+  width: 100%;
+}
+
 .menuItem {
   border-radius: 10px;
-  padding: 5px;
+  padding: 5px 10px;
   cursor: pointer;
   user-select: none;
-  font-family: LXGW WenKai Mono TC;
-  font-size: 15px;
   display: flex;
   flex-direction: row;
   align-items: center;
   align-self: stretch;
+  margin-bottom: 5px;
 }
 
 .menuItem:hover {
   background-color: whitesmoke;
+}
+
+.itemText {
+  font-family: Arial;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
 }
 
 .dot {
@@ -58,4 +92,5 @@
   align-items: center;
   width: 100%;
   overflow: hidden;
+  padding: 20px;
 }

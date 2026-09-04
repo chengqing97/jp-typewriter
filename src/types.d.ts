@@ -3,6 +3,7 @@ import { HistoryEditor } from "slate-history";
 import { ReactEditor } from "slate-react";
 import { Model } from "@appwrite.io/react";
 import type { Models } from "appwrite";
+import type { sortMethods } from "./constants";
 
 export type CustomText = {
   text: string;

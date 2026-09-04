@@ -1,16 +1,16 @@
 import styles from "./SideMenu.module.css";
 import { useEffect, useRef, useState, type Ref } from "react";
-import { LuMenu } from "react-icons/lu";
+import { LuArrowDown, LuMenu } from "react-icons/lu";
 import { useAuth } from "@appwrite.io/react";
 import type { JianpuDoc } from "./types";
 import { Editor, Transforms } from "slate";
 import { useSlate } from "slate-react";
 import { useEditorContext } from "./useEditorContext";
+import { sortMethods } from "./constants";
 
 export function SideMenuButton() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { docs } = useEditorContext();
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
@@ -39,11 +39,7 @@ export function SideMenuButton() {
       </button>
 
       {showMenu && (
-        <SideMenu
-          ref={menuRef}
-          docs={docs}
-          closeMenu={() => setShowMenu(false)}
-        />
+        <SideMenu ref={menuRef} closeMenu={() => setShowMenu(false)} />
       )}
     </>
   );
@@ -51,14 +47,20 @@ export function SideMenuButton() {
 
 type SideMenuProps = {
   ref: Ref<HTMLDivElement>;
-  docs: JianpuDoc[] | null;
   closeMenu: () => void;
 };
 
 function SideMenu(props: SideMenuProps) {
   const editor = useSlate();
   const { user, signOut } = useAuth();
-  const { currentDoc, setCurrentDoc, newDoc } = useEditorContext();
+  const {
+    currentDoc,
+    setCurrentDoc,
+    newDoc,
+    docs,
+    currentSortIndex,
+    changeOrder,
+  } = useEditorContext();
 
   function openDoc(doc: JianpuDoc) {
     Transforms.removeNodes(editor, {
@@ -79,30 +81,37 @@ function SideMenu(props: SideMenuProps) {
 
   return (
     <div ref={props.ref} className={styles.menuBody}>
-      <button
-        onClick={() => {
-          newDoc(editor);
-          props.closeMenu();
-        }}
-      >
-        + New
-      </button>
-      <div style={{ height: 10 }} />
-      {props.docs === null ? (
-        <p>Loading...</p>
-      ) : (
-        props.docs.map((doc) => (
-          <div
-            key={doc.$id}
-            className={styles.menuItem}
-            onClick={() => openDoc(doc)}
-          >
-            {doc.$id == currentDoc?.$id && <div className={styles.dot} />}
-            {doc.title}
-          </div>
-        ))
-      )}
-      <div style={{ flex: 1 }} />
+      <div className={styles.topRow}>
+        <button
+          onClick={() => {
+            newDoc(editor);
+            props.closeMenu();
+          }}
+        >
+          + New
+        </button>
+        <div style={{ flex: 1 }} />
+        <button className={styles.sortButton} onClick={changeOrder}>
+          {sortMethods[currentSortIndex].name}
+          <LuArrowDown />
+        </button>
+      </div>
+      <div className={styles.scrollable}>
+        {docs === null ? (
+          <p>Loading...</p>
+        ) : (
+          docs.map((doc) => (
+            <div
+              key={doc.$id}
+              className={styles.menuItem}
+              onClick={() => openDoc(doc)}
+            >
+              {doc.$id == currentDoc?.$id && <div className={styles.dot} />}
+              <span className={styles.itemText}>{doc.title}</span>
+            </div>
+          ))
+        )}
+      </div>
       <div className={styles.accountRow}>
         <p className={styles.emailText}>{user!.email}</p>
         <div style={{ flex: 1 }} />

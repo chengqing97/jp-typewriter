@@ -10,7 +10,7 @@ import {
 } from "react";
 import type { JianpuDoc, SaveState } from "./types";
 import { useAppwrite } from "@appwrite.io/react";
-import { DATABASE_ID, DEFAULT_TITLE } from "./constants";
+import { DATABASE_ID, DEFAULT_TITLE, sortMethods } from "./constants";
 import { Editor, Transforms, type Descendant } from "slate";
 
 type EditorContextValue = {
@@ -24,6 +24,8 @@ type EditorContextValue = {
   newDoc: (editor: Editor) => void;
   saveState: SaveState;
   setSaveState: Dispatch<SaveState>;
+  currentSortIndex: number;
+  changeOrder: () => void;
 };
 
 const EditorContext = createContext<EditorContextValue | null>(null);
@@ -35,6 +37,7 @@ export function EditorContextProvider(props: PropsWithChildren) {
   const [docs, setDocs] = useState<JianpuDoc[] | null>(null);
   const [title, setTitle] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("init");
+  const [currentSortIndex, setCurrentSortIndex] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -65,17 +68,27 @@ export function EditorContextProvider(props: PropsWithChildren) {
     }
   }, [currentDoc]);
 
-  async function getDocs() {
+  async function getDocs(sortIndex?: number) {
     try {
       const { rows } = await tablesDB.listRows<JianpuDoc>({
         databaseId: DATABASE_ID,
         tableId: "documents",
+        queries: [sortMethods[sortIndex ?? currentSortIndex].query],
       });
       setDocs(rows);
       return rows;
     } catch (e) {
       window.alert(e);
     }
+  }
+
+  function changeOrder() {
+    let nextIndex = currentSortIndex + 1;
+    if (nextIndex >= sortMethods.length) {
+      nextIndex = 0;
+    }
+    getDocs(nextIndex);
+    setCurrentSortIndex(nextIndex);
   }
 
   function newDoc(editor: Editor) {
@@ -110,6 +123,8 @@ export function EditorContextProvider(props: PropsWithChildren) {
         newDoc,
         saveState,
         setSaveState,
+        currentSortIndex,
+        changeOrder,
       }}
     >
       {props.children}
