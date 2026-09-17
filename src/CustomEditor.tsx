@@ -89,6 +89,10 @@ export const CustomEditor = {
           children: [{ text }],
         },
       ];
+      editor.history = {
+        undos: [],
+        redos: [],
+      };
     });
   },
 };

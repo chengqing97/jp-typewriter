@@ -8,7 +8,25 @@ export function ParagraphElement(props: RenderElementProps) {
 }
 
 export function CodeElement(props: RenderElementProps) {
-  return <pre {...props.attributes}>{...props.children}</pre>;
+  const paddingTop = Math.max(
+    Math.max(
+      ...props.element.children.map((x) => 4 * Math.max(x.octave || 0), 0),
+    ) - 2,
+    0,
+  );
+  const paddingBottom = Math.max(
+    Math.max(
+      ...props.element.children.map(
+        (x) => Math.abs(Math.min(x.octave || 0, 0)) * 4 + (x.beam || 0) * 2,
+      ),
+    ) - 2,
+    0,
+  );
+  return (
+    <pre {...props.attributes} style={{ paddingTop, paddingBottom }}>
+      {...props.children}
+    </pre>
+  );
 }
 
 export function SlurElement(props: RenderElementProps) {

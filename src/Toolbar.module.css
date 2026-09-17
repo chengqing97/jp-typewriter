@@ -34,7 +34,7 @@
   padding: 4px 10px;
   border-radius: 10px;
   max-width: 98vw;
-  overflow-x: scroll;
+  overflow-x: auto;
   scrollbar-width: thin;
 }
 

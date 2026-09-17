@@ -223,10 +223,16 @@ export default function Toolbar() {
           <IconButton onClick={toggleMono}>
             <LuType />
           </IconButton>
-          <IconButton onClick={editor.undo}>
+          <IconButton
+            disabled={editor.history.undos.length == 0}
+            onClick={editor.undo}
+          >
             <LuUndo2 />
           </IconButton>
-          <IconButton onClick={editor.redo}>
+          <IconButton
+            disabled={editor.history.redos.length == 0}
+            onClick={editor.redo}
+          >
             <LuRedo2 />
           </IconButton>
         </div>

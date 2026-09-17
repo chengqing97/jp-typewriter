@@ -50,7 +50,11 @@ export function CustomLeaf({ attributes, children, leaf }: RenderLeafProps) {
 
   if (leaf.superscript) {
     return (
-      <sup ref={ref} {...attributes} style={{ position: "relative" }}>
+      <sup
+        ref={ref}
+        {...attributes}
+        style={{ position: "relative", lineHeight: 0 }}
+      >
         {children}
         <MusicDecoration leaf={leaf} rects={rects} />
       </sup>

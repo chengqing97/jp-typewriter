@@ -13,7 +13,7 @@
 - [x] superscript
 - [x] dynamic slur height
 - [x] song list paging
-- [ ] dynamic line height
+- [x] dynamic line height
 - [ ] pages
 - [ ] highlights and font colors
 - [ ] headings
