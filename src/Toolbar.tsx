@@ -24,6 +24,7 @@ import { useEditorContext } from "./useEditorContext";
 import { DATABASE_ID, DEFAULT_TITLE } from "./constants";
 import { SideMenuButton } from "./SideMenu";
 import DeleteDialog from "./DeleteDialog";
+import { sortDocs } from "./utils/sortDocs";
 
 export default function Toolbar() {
   const editor = useSlate();
@@ -32,14 +33,15 @@ export default function Toolbar() {
   const {
     editableRef,
     currentDoc,
-    docs,
-    getDocs,
-    setCurrentDoc,
+    loadState,
     title,
+    docs,
+    setDocs,
+    setCurrentDoc,
     setTitle,
     saveState,
     setSaveState,
-    newDoc,
+    currentSortIndex,
   } = useEditorContext();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -66,14 +68,7 @@ export default function Toolbar() {
       const file = input.files?.[0];
       if (!file) return;
       const text = await file.text();
-      const value = JSON.parse(text);
-      Transforms.removeNodes(editor, {
-        at: {
-          anchor: Editor.start(editor, []),
-          focus: Editor.end(editor, []),
-        },
-      });
-      Transforms.insertNodes(editor, value, { at: [0] });
+      CustomEditor.setChildren(editor, JSON.parse(text));
       localStorage.setItem("currentDoc", text);
       setCurrentDoc(null);
       setTitle(file.name.split(".")[0]);
@@ -112,7 +107,24 @@ export default function Toolbar() {
           Permission.delete(Role.user(user.$id)),
         ],
       });
-      getDocs();
+      setDocs((docs) => {
+        if (!docs) return null;
+        let updated = false;
+        const updatedDocs = docs.map((doc) => {
+          if (doc.$id == response.$id) {
+            updated = true;
+            return response;
+          } else {
+            return doc;
+          }
+        });
+        if (updated) {
+          return updatedDocs;
+        } else {
+          updatedDocs.push(response);
+          return sortDocs(updatedDocs, currentSortIndex);
+        }
+      });
       setCurrentDoc(response);
       setSaveState("saved");
     } catch (e) {
@@ -154,7 +166,14 @@ export default function Toolbar() {
         <input
           className={styles.title}
           value={title}
-          onChange={(e) => setTitle(e.currentTarget.value)}
+          onChange={(e) => {
+            setTitle(e.currentTarget.value);
+            if (e.currentTarget.value == currentDoc?.title) {
+              setSaveState("saved");
+            } else {
+              setSaveState("unsaved");
+            }
+          }}
           onFocus={() => {
             const derivedTitle = CustomEditor.getTitle(editor);
             if (title === DEFAULT_TITLE && derivedTitle.trim() !== "") {
@@ -171,24 +190,22 @@ export default function Toolbar() {
         <TextButton
           className={styles.textButton}
           onClick={save}
-          disabled={saveState == "saved" || saveState == "saving"}
+          disabled={
+            saveState == "saved" ||
+            saveState == "saving" ||
+            loadState != "loaded"
+          }
         >
           {getSaveButtonText(saveState)}
-        </TextButton>
-        <TextButton
-          className={styles.textButton}
-          onClick={() => newDoc(editor)}
-        >
-          New
         </TextButton>
         <TextButton className={styles.textButton} onClick={uploadJSON}>
           Upload
         </TextButton>
         <TextButton className={styles.textButton} onClick={downloadJSON}>
-          Download
+          Inspect
         </TextButton>
         <TextButton className={styles.textButton} onClick={exportPDF}>
-          Export
+          Download
         </TextButton>
         {currentDoc && (
           <TextButton

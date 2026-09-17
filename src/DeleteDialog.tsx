@@ -12,7 +12,7 @@ type Props = {
 export default function DeleteDialog(props: Props) {
   const editor = useSlate();
   const { tablesDB } = useAppwrite();
-  const { currentDoc, newDoc, getDocs } = useEditorContext();
+  const { currentDoc, newDoc, setDocs } = useEditorContext();
   const [deleting, setDeleting] = useState(false);
 
   async function deleteDoc() {
@@ -24,7 +24,9 @@ export default function DeleteDialog(props: Props) {
         tableId: "documents",
         rowId: currentDoc.$id,
       });
-      getDocs();
+      setDocs((docs) =>
+        docs === null ? null : docs.filter((doc) => doc.$id !== currentDoc.$id),
+      );
       newDoc(editor);
     } catch (e) {
       window.alert(e);

@@ -7,25 +7,29 @@ import {
   type Dispatch,
   type PropsWithChildren,
   type RefObject,
+  type SetStateAction,
 } from "react";
-import type { JianpuDoc, SaveState } from "./types";
+import type { DocListItem, JianpuDoc, LoadState, SaveState } from "./types";
+import { DATABASE_ID, DEFAULT_TITLE } from "./constants";
+import { Editor } from "slate";
+import { CustomEditor } from "./CustomEditor";
 import { useAppwrite } from "@appwrite.io/react";
-import { DATABASE_ID, DEFAULT_TITLE, sortMethods } from "./constants";
-import { Editor, Transforms, type Descendant } from "slate";
 
 type EditorContextValue = {
   editableRef: RefObject<HTMLDivElement | null>;
   currentDoc: JianpuDoc | null;
   setCurrentDoc: Dispatch<JianpuDoc | null>;
-  docs: JianpuDoc[] | null;
-  getDocs: () => void;
+  docs: DocListItem[] | null;
+  setDocs: Dispatch<SetStateAction<DocListItem[] | null>>;
   title: string;
   setTitle: Dispatch<string>;
   newDoc: (editor: Editor) => void;
   saveState: SaveState;
   setSaveState: Dispatch<SaveState>;
   currentSortIndex: number;
-  changeOrder: () => void;
+  setCurrentSortIndex: Dispatch<number>;
+  loadState: LoadState;
+  setLoadState: Dispatch<LoadState>;
 };
 
 const EditorContext = createContext<EditorContextValue | null>(null);
@@ -34,9 +38,10 @@ export function EditorContextProvider(props: PropsWithChildren) {
   const editableRef = useRef<HTMLDivElement>(null);
   const { tablesDB } = useAppwrite();
   const [currentDoc, setCurrentDoc] = useState<JianpuDoc | null>(null);
-  const [docs, setDocs] = useState<JianpuDoc[] | null>(null);
+  const [docs, setDocs] = useState<DocListItem[] | null>(null);
   const [title, setTitle] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("init");
+  const [loadState, setLoadState] = useState<LoadState>("loaded");
   const [currentSortIndex, setCurrentSortIndex] = useState(0);
 
   useEffect(() => {
@@ -45,13 +50,16 @@ export function EditorContextProvider(props: PropsWithChildren) {
       if (prevContent) {
         const prevDoc = JSON.parse(prevContent);
         setCurrentDoc(prevDoc);
-        const docs = await getDocs();
-        if (!docs) return;
-        const latestDoc = docs.find((doc) => doc.$id === prevDoc.$id);
-        if (!latestDoc) return;
-        setCurrentDoc(latestDoc);
-      } else {
-        getDocs();
+        const latestDoc = await tablesDB.getRow<JianpuDoc>({
+          databaseId: DATABASE_ID,
+          tableId: "documents",
+          rowId: prevDoc.$id,
+        });
+        setSaveState(
+          latestDoc.content === localStorage.getItem("content")
+            ? "saved"
+            : "unsaved",
+        );
       }
     })();
   }, []);
@@ -60,51 +68,13 @@ export function EditorContextProvider(props: PropsWithChildren) {
     if (currentDoc) {
       localStorage.setItem("currentDoc", JSON.stringify(currentDoc));
       setTitle(currentDoc.title);
-      setSaveState(
-        currentDoc.content === localStorage.getItem("content")
-          ? "saved"
-          : "unsaved",
-      );
+    } else {
+      setTitle(DEFAULT_TITLE);
     }
   }, [currentDoc]);
 
-  async function getDocs(sortIndex?: number) {
-    try {
-      const { rows } = await tablesDB.listRows<JianpuDoc>({
-        databaseId: DATABASE_ID,
-        tableId: "documents",
-        queries: [sortMethods[sortIndex ?? currentSortIndex].query],
-      });
-      setDocs(rows);
-      return rows;
-    } catch (e) {
-      window.alert(e);
-    }
-  }
-
-  function changeOrder() {
-    let nextIndex = currentSortIndex + 1;
-    if (nextIndex >= sortMethods.length) {
-      nextIndex = 0;
-    }
-    getDocs(nextIndex);
-    setCurrentSortIndex(nextIndex);
-  }
-
   function newDoc(editor: Editor) {
-    const emptyValue: Descendant[] = [
-      {
-        type: "code",
-        children: [{ text: "" }],
-      },
-    ];
-    Transforms.removeNodes(editor, {
-      at: {
-        anchor: Editor.start(editor, []),
-        focus: Editor.end(editor, []),
-      },
-    });
-    Transforms.insertNodes(editor, emptyValue, { at: [0] });
+    CustomEditor.setText(editor, "");
     localStorage.removeItem("currentDoc");
     setCurrentDoc(null);
     setTitle(DEFAULT_TITLE);
@@ -117,14 +87,16 @@ export function EditorContextProvider(props: PropsWithChildren) {
         currentDoc,
         setCurrentDoc,
         docs,
-        getDocs,
+        setDocs,
         title,
         setTitle,
         newDoc,
         saveState,
         setSaveState,
         currentSortIndex,
-        changeOrder,
+        setCurrentSortIndex,
+        loadState,
+        setLoadState,
       }}
     >
       {props.children}

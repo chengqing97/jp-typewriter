@@ -1,16 +1,20 @@
 import styles from "./SideMenu.module.css";
 import { useEffect, useRef, useState, type Ref } from "react";
-import { LuArrowDown, LuMenu } from "react-icons/lu";
-import { useAuth } from "@appwrite.io/react";
-import type { JianpuDoc } from "./types";
-import { Editor, Transforms } from "slate";
+import { LuArrowDown, LuMenu, LuSearch } from "react-icons/lu";
+import { Query, useAppwrite, useAuth } from "@appwrite.io/react";
+import type { DocListItem, JianpuDoc } from "./types";
+import { Editor } from "slate";
 import { useSlate } from "slate-react";
 import { useEditorContext } from "./useEditorContext";
-import { sortMethods } from "./constants";
+import { DATABASE_ID, sortMethods } from "./constants";
+import { sortDocs } from "./utils/sortDocs";
+import { CustomEditor } from "./CustomEditor";
 
 export function SideMenuButton() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { tablesDB } = useAppwrite();
+  const { setDocs } = useEditorContext();
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
@@ -26,6 +30,22 @@ export function SideMenuButton() {
     return () => {
       document.removeEventListener("mousedown", onMouseDown);
     };
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { rows } = await tablesDB.listRows<JianpuDoc>({
+          databaseId: DATABASE_ID,
+          tableId: "documents",
+          queries: [Query.limit(1000), Query.orderAsc("title")],
+        });
+        setDocs(rows);
+        return rows;
+      } catch (e) {
+        window.alert(e);
+      }
+    })();
   }, []);
 
   return (
@@ -52,26 +72,67 @@ type SideMenuProps = {
 
 function SideMenu(props: SideMenuProps) {
   const editor = useSlate();
+  const { tablesDB } = useAppwrite();
   const { user, signOut } = useAuth();
   const {
     currentDoc,
     setCurrentDoc,
     newDoc,
     docs,
+    setDocs,
     currentSortIndex,
-    changeOrder,
+    setCurrentSortIndex,
+    setLoadState,
+    setSaveState,
   } = useEditorContext();
+  const [searchResults, setSearchResults] = useState<DocListItem[] | null>(
+    null,
+  );
 
-  function openDoc(doc: JianpuDoc) {
-    Transforms.removeNodes(editor, {
-      at: {
-        anchor: Editor.start(editor, []),
-        focus: Editor.end(editor, []),
-      },
-    });
-    Transforms.insertNodes(editor, JSON.parse(doc.content), { at: [0] });
-    setCurrentDoc(doc);
+  function changeOrder() {
+    let nextIndex = currentSortIndex + 1;
+    if (nextIndex >= sortMethods.length) {
+      nextIndex = 0;
+    }
+    setCurrentSortIndex(nextIndex);
+    setDocs((docs) => sortDocs(docs, nextIndex));
+  }
+
+  async function openDoc(doc: DocListItem) {
     props.closeMenu();
+    setLoadState("loading");
+    setCurrentDoc({ ...doc, content: "" });
+    CustomEditor.setText(editor, "Loading...");
+    try {
+      const result = await tablesDB.getRow<JianpuDoc>({
+        databaseId: DATABASE_ID,
+        tableId: "documents",
+        rowId: doc.$id,
+      });
+
+      Editor.withoutNormalizing(editor, () => {
+        editor.children = JSON.parse(result.content);
+      });
+      localStorage.setItem("content", result.content);
+      setCurrentDoc(result);
+      setLoadState("loaded");
+      setSaveState("saved");
+    } catch (e) {
+      CustomEditor.setText(editor, `${e}`);
+    }
+  }
+
+  async function search(text: string) {
+    if (!docs) return;
+    if (text.trim().length == 0) {
+      setSearchResults(null);
+      return;
+    }
+    setSearchResults(
+      docs.filter((doc) =>
+        doc.title.toLowerCase().includes(text.toLowerCase()),
+      ),
+    );
   }
 
   function logout() {
@@ -91,16 +152,27 @@ function SideMenu(props: SideMenuProps) {
           + New
         </button>
         <div style={{ flex: 1 }} />
+        <p className={styles.count}>{docs ? `Total ${docs.length}` : ""}</p>
+        <div style={{ flex: 1 }} />
         <button className={styles.sortButton} onClick={changeOrder}>
           {sortMethods[currentSortIndex].name}
           <LuArrowDown />
         </button>
       </div>
+
+      <LuSearch className={styles.searchIcon} />
+      <input
+        className={styles.searchBox}
+        autoFocus
+        onChange={(e) => search(e.currentTarget.value)}
+      />
       <div className={styles.scrollable}>
-        {docs === null ? (
-          <p>Loading...</p>
+        {searchResults?.length === 0 ? (
+          <p className={styles.message}>No result</p>
+        ) : docs === null ? (
+          <p className={styles.message}>Loading...</p>
         ) : (
-          docs.map((doc) => (
+          (searchResults ?? docs).map((doc) => (
             <div
               key={doc.$id}
               className={styles.menuItem}

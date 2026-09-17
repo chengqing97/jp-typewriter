@@ -5,13 +5,14 @@
 - [x] bug: cannot toggle off slur
 - [x] bug: selection breaks when adding marks
 - [x] bug: cannot use arrow no navigate in and out a mark
+- [x] bug: additional line is added when opening songs
 - [ ] bug: unable to render octave after add mark when no selection
-- [ ] bug: additional line is added when opening songs
 - [x] slur/tie rendering
 - [x] music symbols
 - [x] music font
 - [x] superscript
 - [x] dynamic slur height
+- [x] song list paging
 - [ ] dynamic line height
 - [ ] pages
 - [ ] highlights and font colors

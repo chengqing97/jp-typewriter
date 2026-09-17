@@ -36,9 +36,15 @@ declare module "slate" {
   }
 }
 
+export interface DocListItem extends Models.Row {
+  title: string;
+}
+
 export interface JianpuDoc extends Models.Row {
   title: string;
   content: string;
 }
 
 export type SaveState = "init" | "saved" | "unsaved" | "saving";
+
+export type LoadState = "loading" | "loaded" | "error";

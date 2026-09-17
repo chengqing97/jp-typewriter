@@ -18,6 +18,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  /* justify-content: stretch; */
 }
 
 .topRow {
@@ -26,6 +27,11 @@
   align-items: center;
   padding: 20px 10px 10px 20px;
   width: 100%;
+}
+
+.count {
+  color: grey;
+  margin-left: 10px;
 }
 
 .sortButton {
@@ -37,6 +43,23 @@
   background-color: rgb(240 240 240);
 }
 
+.searchIcon {
+  position: absolute;
+  top: 64px;
+  left: 30px;
+}
+
+.searchBox {
+  margin: 0 20px;
+  padding-left: 30px;
+  border-radius: 10px;
+  border: 1px solid grey;
+  box-sizing: border-box;
+  align-self: stretch;
+  width: auto;
+  outline: none;
+}
+
 .scrollable {
   flex: 1;
   overflow-y: scroll;
@@ -44,6 +67,10 @@
   padding: 15px;
   padding-top: 10px;
   width: 100%;
+}
+
+.message {
+  margin-left: 10px;
 }
 
 .menuItem {

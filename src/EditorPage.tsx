@@ -81,7 +81,7 @@ export default function EditorPage() {
 
   useEffect(() => {
     resizePaper();
-  }, []);
+  }, [currentDoc]);
 
   return (
     <Slate
@@ -101,6 +101,7 @@ export default function EditorPage() {
           className={styles.editable}
           renderElement={renderElement}
           renderLeaf={renderLeaf}
+          autoFocus
           spellCheck={false}
           onKeyDown={(e) => {
             if (!editor.selection) return;

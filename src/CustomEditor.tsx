@@ -1,4 +1,4 @@
-import { Editor, Element, Transforms, Node } from "slate";
+import { Editor, Element, Transforms, Node, type Descendant } from "slate";
 
 export const CustomEditor = {
   octaveUp(editor: Editor) {
@@ -71,5 +71,24 @@ export const CustomEditor = {
     );
     const text = firstNonEmptyLine ? Node.string(firstNonEmptyLine) : "";
     return text;
+  },
+
+  setChildren(editor: Editor, children: Descendant[]) {
+    Transforms.select(editor, Editor.start(editor, []));
+    Editor.withoutNormalizing(editor, () => {
+      editor.children = children;
+    });
+  },
+
+  setText(editor: Editor, text: string) {
+    Transforms.select(editor, Editor.start(editor, []));
+    Editor.withoutNormalizing(editor, () => {
+      editor.children = [
+        {
+          type: "code",
+          children: [{ text }],
+        },
+      ];
+    });
   },
 };
