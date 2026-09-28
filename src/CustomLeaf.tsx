@@ -120,7 +120,7 @@ function MusicDecoration({ leaf, rects }: MusicDecorationProps) {
                 }}
               />
             ))}
-          {!/[\s\|\-𝄍𝄎𝄏𝄆𝄋𝄌𝄇𝄂]/.test(rect.char) &&
+          {!/[\s\|\-\(\)𝄍𝄎𝄏𝄆𝄋𝄌𝄇𝄂]/.test(rect.char) &&
             beamArray.map((_, i) => (
               <span
                 key={i}
