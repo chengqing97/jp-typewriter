@@ -19,10 +19,13 @@ export default function DeleteDialog(props: Props) {
     if (!currentDoc) return;
     setDeleting(true);
     try {
-      await tablesDB.deleteRow({
+      await tablesDB.updateRow({
         databaseId: DATABASE_ID,
         tableId: "documents",
         rowId: currentDoc.$id,
+        data: {
+          visible: false,
+        },
       });
       setDocs((docs) =>
         docs === null ? null : docs.filter((doc) => doc.$id !== currentDoc.$id),

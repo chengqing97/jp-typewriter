@@ -38,7 +38,11 @@ export function SideMenuButton() {
         const { rows } = await tablesDB.listRows<JianpuDoc>({
           databaseId: DATABASE_ID,
           tableId: "documents",
-          queries: [Query.limit(1000), Query.orderAsc("title")],
+          queries: [
+            Query.limit(1000),
+            Query.orderAsc("title"),
+            Query.equal("visible", true),
+          ],
         });
         setDocs(rows);
         return rows;
