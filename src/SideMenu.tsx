@@ -1,6 +1,6 @@
 import styles from "./SideMenu.module.css";
 import { useEffect, useRef, useState, type Ref } from "react";
-import { LuArrowDown, LuMenu, LuSearch } from "react-icons/lu";
+import { LuArrowDown, LuMenu, LuRotateCcw, LuSearch } from "react-icons/lu";
 import { Query, useAppwrite, useAuth } from "@appwrite.io/react";
 import type { DocListItem, JianpuDoc } from "./types";
 import { Editor } from "slate";
@@ -14,7 +14,7 @@ export function SideMenuButton() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { tablesDB } = useAppwrite();
-  const { setDocs } = useEditorContext();
+  const { setDocs, currentSortIndex } = useEditorContext();
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
@@ -33,24 +33,27 @@ export function SideMenuButton() {
   }, []);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const { rows } = await tablesDB.listRows<JianpuDoc>({
-          databaseId: DATABASE_ID,
-          tableId: "documents",
-          queries: [
-            Query.limit(1000),
-            Query.orderAsc("title"),
-            Query.equal("visible", true),
-          ],
-        });
-        setDocs(rows);
-        return rows;
-      } catch (e) {
-        window.alert(e);
-      }
-    })();
+    getDocs();
   }, []);
+
+  async function getDocs() {
+    setDocs([]);
+    try {
+      const { rows } = await tablesDB.listRows<JianpuDoc>({
+        databaseId: DATABASE_ID,
+        tableId: "documents",
+        queries: [
+          Query.limit(1000),
+          Query.equal("visible", true),
+          sortMethods[currentSortIndex].query,
+        ],
+      });
+      setDocs(rows);
+      return rows;
+    } catch (e) {
+      window.alert(e);
+    }
+  }
 
   return (
     <>
@@ -63,7 +66,11 @@ export function SideMenuButton() {
       </button>
 
       {showMenu && (
-        <SideMenu ref={menuRef} closeMenu={() => setShowMenu(false)} />
+        <SideMenu
+          ref={menuRef}
+          closeMenu={() => setShowMenu(false)}
+          onReload={getDocs}
+        />
       )}
     </>
   );
@@ -72,6 +79,7 @@ export function SideMenuButton() {
 type SideMenuProps = {
   ref: Ref<HTMLDivElement>;
   closeMenu: () => void;
+  onReload: () => void;
 };
 
 function SideMenu(props: SideMenuProps) {
@@ -147,6 +155,7 @@ function SideMenu(props: SideMenuProps) {
   return (
     <div ref={props.ref} className={styles.menuBody}>
       <div className={styles.topRow}>
+        <p className={styles.count}>{docs ? `Total ${docs.length}` : ""}</p>
         <button
           onClick={() => {
             newDoc(editor);
@@ -155,8 +164,9 @@ function SideMenu(props: SideMenuProps) {
         >
           + New
         </button>
-        <div style={{ flex: 1 }} />
-        <p className={styles.count}>{docs ? `Total ${docs.length}` : ""}</p>
+        <button className={styles.reloadButton} onClick={props.onReload}>
+          <LuRotateCcw />
+        </button>
         <div style={{ flex: 1 }} />
         <button className={styles.sortButton} onClick={changeOrder}>
           {sortMethods[currentSortIndex].name}

@@ -180,7 +180,7 @@ export default function Toolbar() {
               setTitle(derivedTitle);
             }
           }}
-          onKeyUp={(e) => {
+          onKeyDown={(e) => {
             if (e.code == "Enter" && !e.nativeEvent.isComposing) {
               save();
               e.currentTarget.blur();

@@ -29,9 +29,25 @@
   width: 100%;
 }
 
+.reloadButton {
+  height: 100%;
+  background-color: transparent;
+  font-size: 14px;
+  margin-left: 5px;
+}
+
+.reloadButton:hover {
+  background-color: rgb(240 240 240);
+}
+
 .count {
   color: grey;
-  margin-left: 10px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  padding-left: 10px;
+  z-index: -1;
 }
 
 .sortButton {
