@@ -8,22 +8,8 @@ export function ParagraphElement(props: RenderElementProps) {
 }
 
 export function CodeElement(props: RenderElementProps) {
-  const paddingTop = Math.max(
-    Math.max(
-      ...props.element.children.map((x) => 4 * Math.max(x.octave || 0), 0),
-    ) - 2,
-    0,
-  );
-  const paddingBottom = Math.max(
-    Math.max(
-      ...props.element.children.map(
-        (x) => Math.abs(Math.min(x.octave || 0, 0)) * 4 + (x.beam || 0) * 2,
-      ),
-    ) - 2,
-    0,
-  );
   return (
-    <pre {...props.attributes} style={{ paddingTop, paddingBottom }}>
+    <pre {...props.attributes} style={getPadding(props)}>
       {...props.children}
     </pre>
   );
@@ -49,7 +35,7 @@ export function SlurElement(props: RenderElementProps) {
         left: -1,
         right: -1,
         height: 14,
-        bottom: 9,
+        bottom: 8,
       };
     } else if (
       length > 2 &&
@@ -74,7 +60,15 @@ export function SlurElement(props: RenderElementProps) {
   }
 
   return (
-    <span {...props.attributes} style={{ position: "relative" }}>
+    <pre
+      {...props.attributes}
+      style={{
+        position: "relative",
+        display: "inline-block",
+        marginTop: length === 1 ? 1 : 0,
+        ...getPadding(props),
+      }}
+    >
       {...props.children}
       <span
         style={{
@@ -84,7 +78,7 @@ export function SlurElement(props: RenderElementProps) {
           ...getSlurStyle(),
         }}
       />
-    </span>
+    </pre>
   );
 }
 
@@ -92,4 +86,23 @@ export function withSlur(editor: Editor) {
   const { isInline } = editor;
   editor.isInline = (e) => (e.type === "slur" ? true : isInline(e));
   return editor;
+}
+
+function getPadding(props: RenderElementProps) {
+  const { children } = props.element;
+
+  const paddingTop = Math.max(
+    Math.max(...children.map((x) => 4 * Math.max(x.octave || 0), 0)) - 2,
+    0,
+  );
+  const paddingBottom = Math.max(
+    Math.max(
+      ...children.map(
+        (x) => Math.abs(Math.min(x.octave || 0, 0)) * 4 + (x.beam || 0) * 2,
+      ),
+    ) - 2,
+    0,
+  );
+
+  return { paddingTop, paddingBottom };
 }
