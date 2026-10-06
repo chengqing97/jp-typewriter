@@ -30,6 +30,22 @@ export const CustomEditor = {
     Editor.addMark(editor, "beam", newValue);
   },
 
+  gapUp(editor: Editor) {
+    const [entry] = Editor.nodes(editor, {
+      match: (n) => Element.isElement(n),
+    });
+    const [element, path] = entry;
+    Transforms.setNodes(editor, { gap: (element.gap ?? 0) + 1 }, { at: path });
+  },
+
+  gapDown(editor: Editor) {
+    const [entry] = Editor.nodes(editor, {
+      match: (n) => Element.isElement(n),
+    });
+    const [element, path] = entry;
+    Transforms.setNodes(editor, { gap: (element.gap ?? 0) - 1 }, { at: path });
+  },
+
   toggleSlur(editor: Editor) {
     if (!editor.selection) return;
 

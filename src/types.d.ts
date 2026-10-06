@@ -16,16 +16,19 @@ export type CustomText = {
 type ParagraphElement = {
   type: "paragraph";
   children: CustomText[];
+  gap?: number;
 };
 
 type CodeElement = {
   type: "code";
   children: CustomText[];
+  gap?: number;
 };
 
 type SlurElement = {
   type: "slur";
   children: CustomText[];
+  gap?: number;
 };
 
 declare module "slate" {

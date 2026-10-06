@@ -4,12 +4,16 @@ import { jianpuNote } from "./constants";
 import type { CSSProperties } from "react";
 
 export function ParagraphElement(props: RenderElementProps) {
-  return <p {...props.attributes}>{...props.children}</p>;
+  return (
+    <p {...props.attributes} style={{ marginTop: props.element.gap }}>
+      {...props.children}
+    </p>
+  );
 }
 
 export function CodeElement(props: RenderElementProps) {
   return (
-    <pre {...props.attributes} style={getPadding(props)}>
+    <pre {...props.attributes} style={{ marginTop: props.element.gap }}>
       {...props.children}
     </pre>
   );
@@ -65,8 +69,7 @@ export function SlurElement(props: RenderElementProps) {
       style={{
         position: "relative",
         display: "inline-block",
-        marginTop: length === 1 ? 1 : 0,
-        ...getPadding(props),
+        marginTop: props.element.gap,
       }}
     >
       {...props.children}
@@ -86,23 +89,4 @@ export function withSlur(editor: Editor) {
   const { isInline } = editor;
   editor.isInline = (e) => (e.type === "slur" ? true : isInline(e));
   return editor;
-}
-
-function getPadding(props: RenderElementProps) {
-  const { children } = props.element;
-
-  const paddingTop = Math.max(
-    Math.max(...children.map((x) => 4 * Math.max(x.octave || 0), 0)) - 2,
-    0,
-  );
-  const paddingBottom = Math.max(
-    Math.max(
-      ...children.map(
-        (x) => Math.abs(Math.min(x.octave || 0, 0)) * 4 + (x.beam || 0) * 2,
-      ),
-    ) - 2,
-    0,
-  );
-
-  return { paddingTop, paddingBottom };
 }
