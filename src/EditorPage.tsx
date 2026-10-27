@@ -106,37 +106,38 @@ export default function EditorPage() {
           onKeyDown={(e) => {
             if (!editor.selection) return;
             if (Range.isCollapsed(editor.selection)) return;
-            if (e.ctrlKey && e.key == "ArrowUp") {
+            const ctrlKey = e.metaKey || e.ctrlKey;
+            if (ctrlKey && e.key == "ArrowUp") {
               e.preventDefault();
               CustomEditor.octaveUp(editor);
               return;
             }
-            if (e.ctrlKey && e.key == "ArrowDown") {
+            if (ctrlKey && e.key == "ArrowDown") {
               e.preventDefault();
               CustomEditor.octaveDown(editor);
               return;
             }
-            if (e.ctrlKey && e.key == "ArrowLeft") {
+            if (ctrlKey && e.key == "ArrowLeft") {
               e.preventDefault();
               CustomEditor.beamUp(editor);
               return;
             }
-            if (e.ctrlKey && e.key == "ArrowRight") {
+            if (ctrlKey && e.key == "ArrowRight") {
               e.preventDefault();
               CustomEditor.beamDown(editor);
               return;
             }
-            if (e.ctrlKey && e.key == "a") {
+            if (ctrlKey && e.key == "a") {
               e.preventDefault();
               CustomEditor.toggleSlur(editor);
               return;
             }
-            if (e.ctrlKey && e.key == "s") {
+            if (ctrlKey && e.key == "s") {
               e.preventDefault();
               CustomEditor.toggleSuperscript(editor);
               return;
             }
-            if (e.ctrlKey && e.key == "d") {
+            if (ctrlKey && e.key == "d") {
               e.preventDefault();
               CustomEditor.clearFormat(editor);
               return;
