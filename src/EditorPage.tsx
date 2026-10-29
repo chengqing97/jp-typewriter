@@ -104,19 +104,19 @@ export default function EditorPage() {
           autoFocus
           spellCheck={false}
           onKeyDown={(e) => {
-            if (e.ctrlKey && e.key == "=") {
+            const ctrlKey = e.metaKey || e.ctrlKey;
+            if (ctrlKey && e.key == "=") {
               e.preventDefault();
               CustomEditor.gapUp(editor);
               return;
             }
-            if (e.ctrlKey && e.key == "-") {
+            if (ctrlKey && e.key == "-") {
               e.preventDefault();
               CustomEditor.gapDown(editor);
               return;
             }
             if (!editor.selection) return;
             if (Range.isCollapsed(editor.selection)) return;
-            const ctrlKey = e.metaKey || e.ctrlKey;
             if (ctrlKey && e.key == "ArrowUp") {
               e.preventDefault();
               CustomEditor.octaveUp(editor);

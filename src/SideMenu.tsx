@@ -88,11 +88,12 @@ function SideMenu(props: SideMenuProps) {
   const { user, signOut } = useAuth();
   const {
     currentDoc,
-    setCurrentDoc,
-    newDoc,
-    docs,
-    setDocs,
     currentSortIndex,
+    docs,
+    newDoc,
+    saveState,
+    setDocs,
+    setCurrentDoc,
     setCurrentSortIndex,
     setLoadState,
     setSaveState,
@@ -111,6 +112,10 @@ function SideMenu(props: SideMenuProps) {
   }
 
   async function openDoc(doc: DocListItem) {
+    if (saveState == "unsaved") {
+      // const proceed: boolean = await promptConfirmation();
+      return;
+    }
     props.closeMenu();
     setLoadState("loading");
     setCurrentDoc({ ...doc, content: "" });
