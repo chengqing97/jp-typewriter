@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import type { RenderLeafProps } from "slate-react";
 import type { CustomText } from "./types";
 import { jianpuNote } from "./constants";
@@ -9,6 +9,13 @@ type Rect = {
   height: number;
   width: number;
   char: string;
+};
+
+const italicStyle: CSSProperties = {
+  fontFamily: "Courier Prime",
+  fontStyle: "italic",
+  letterSpacing: -1,
+  fontSize: 15,
 };
 
 export function CustomLeaf({ attributes, children, leaf }: RenderLeafProps) {
@@ -62,7 +69,14 @@ export function CustomLeaf({ attributes, children, leaf }: RenderLeafProps) {
   }
 
   return (
-    <span ref={ref} {...attributes} style={{ position: "relative" }}>
+    <span
+      ref={ref}
+      {...attributes}
+      style={{
+        position: "relative",
+        ...(leaf.italic ? italicStyle : {}),
+      }}
+    >
       {children}
       <MusicDecoration leaf={leaf} rects={rects} />
     </span>

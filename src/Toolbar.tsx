@@ -1,5 +1,5 @@
 import styles from "./Toolbar.module.css";
-import type { ButtonHTMLAttributes } from "react";
+import { useRef, type ButtonHTMLAttributes } from "react";
 import {
   LuUndo2,
   LuRedo2,
@@ -8,28 +8,26 @@ import {
   LuArrowUpFromDot,
   LuRemoveFormatting,
   LuRainbow,
-  LuType,
   LuPlus,
   LuMinus,
   LuSuperscript,
+  LuArrowUpToLine,
+  LuArrowDownToLine,
+  LuItalic,
 } from "react-icons/lu";
 import { useSlate } from "slate-react";
-import { Editor, Element, Transforms } from "slate";
+import { Transforms } from "slate";
 import { CustomEditor } from "./CustomEditor";
 
-export default function Toolbar() {
-  const editor = useSlate();
+const DRAG_THRESHOLD = 5;
 
-  function toggleMono() {
-    const [match] = Editor.nodes(editor, {
-      match: (n) => Element.isElement(n) && n.type === "code",
-    });
-    Transforms.setNodes(
-      editor,
-      { type: match ? "paragraph" : "code" },
-      { match: (n) => Element.isElement(n) && Editor.isBlock(editor, n) },
-    );
-  }
+export default function Toolbar() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const hasDragged = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+  const editor = useSlate();
 
   function insertText(text: string) {
     Transforms.insertText(editor, text);
@@ -37,11 +35,46 @@ export default function Toolbar() {
 
   return (
     <div className={styles.layout}>
-      <div className={styles.container}>
+      <div
+        ref={containerRef}
+        className={styles.container}
+        onWheel={(e) => {
+          if (e.deltaY !== 0) {
+            e.currentTarget.scrollLeft += e.deltaY;
+          }
+        }}
+        onMouseLeave={() => (isDragging.current = false)}
+        onMouseDown={(e) => {
+          isDragging.current = true;
+          hasDragged.current = false;
+          startX.current = e.pageX;
+          scrollLeft.current = containerRef.current!.scrollLeft;
+        }}
+        onMouseMove={(e) => {
+          if (!isDragging.current) return;
+
+          const distance = e.pageX - startX.current;
+
+          if (Math.abs(distance) > DRAG_THRESHOLD) {
+            hasDragged.current = true;
+          }
+
+          if (hasDragged.current) {
+            containerRef.current!.scrollLeft = scrollLeft.current - distance;
+          }
+        }}
+        onMouseUp={() => {
+          isDragging.current = false;
+        }}
+        onClickCapture={(e) => {
+          if (hasDragged.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            hasDragged.current = false;
+          }
+        }}
+      >
         <div className={styles.buttonGroup}>
-          <IconButton onClick={toggleMono}>
-            <LuType />
-          </IconButton>
           <IconButton
             disabled={editor.history.undos.length == 0}
             onClick={editor.undo}
@@ -57,11 +90,20 @@ export default function Toolbar() {
         </div>
         <div className={styles.line} />
         <div className={styles.buttonGroup}>
-          <IconButton onClick={() => CustomEditor.octaveUp(editor)}>
-            <LuArrowUpFromDot />
+          <IconButton onClick={() => CustomEditor.toggleItalic(editor)}>
+            <LuItalic />
+          </IconButton>
+          <IconButton onClick={() => CustomEditor.gapDown(editor)}>
+            <LuArrowUpToLine />
+          </IconButton>
+          <IconButton onClick={() => CustomEditor.gapUp(editor)}>
+            <LuArrowDownToLine />
           </IconButton>
           <IconButton onClick={() => CustomEditor.octaveDown(editor)}>
             <LuArrowDownToDot />
+          </IconButton>
+          <IconButton onClick={() => CustomEditor.octaveUp(editor)}>
+            <LuArrowUpFromDot />
           </IconButton>
           <IconButton onClick={() => CustomEditor.beamDown(editor)}>
             <LuUnderline />

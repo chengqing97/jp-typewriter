@@ -155,6 +155,11 @@ export default function EditorPage() {
                 CustomEditor.clearFormat(editor);
                 return;
               }
+              if (ctrlKey && e.key == "i") {
+                e.preventDefault();
+                CustomEditor.toggleItalic(editor);
+                return;
+              }
             }}
           />
         </div>

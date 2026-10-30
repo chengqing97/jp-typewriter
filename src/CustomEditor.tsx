@@ -76,6 +76,16 @@ export const CustomEditor = {
     }
   },
 
+  toggleItalic(editor: Editor) {
+    const marks = Editor.marks(editor);
+    const isActive = marks?.italic === true;
+    if (isActive) {
+      Editor.removeMark(editor, "italic");
+    } else {
+      Editor.addMark(editor, "italic", true);
+    }
+  },
+
   clearFormat(editor: Editor) {
     Editor.removeMark(editor, "beam");
     Editor.removeMark(editor, "octave");

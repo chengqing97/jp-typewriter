@@ -18,6 +18,7 @@
 - [x] dynamic line height
 - [x] confirmation dialog
 - [x] fix layout on tablet
+- [x] music font
 - [ ] pages
 - [ ] highlights and font colors
 - [ ] headings

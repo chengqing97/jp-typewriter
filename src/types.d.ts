@@ -11,6 +11,7 @@ export type CustomText = {
   beam?: number;
   slur?: number;
   superscript?: boolean;
+  italic?: boolean;
 };
 
 type ParagraphElement = {
