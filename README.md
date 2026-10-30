@@ -17,12 +17,11 @@
 - [x] song list paging
 - [x] dynamic line height
 - [x] confirmation dialog
-- [x] rename top bar
+- [x] fix layout on tablet
 - [ ] pages
 - [ ] highlights and font colors
 - [ ] headings
 - [ ] triplet
-- [ ] fix top bar on tablet
 
 # React + TypeScript + Vite
 

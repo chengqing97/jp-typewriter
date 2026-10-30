@@ -1,23 +1,9 @@
 import styles from "./TopBar.module.css";
-import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
 import { useState, type ButtonHTMLAttributes } from "react";
 import { CustomEditor } from "./CustomEditor";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import {
-  LuUndo2,
-  LuRedo2,
-  LuUnderline,
-  LuArrowDownToDot,
-  LuArrowUpFromDot,
-  LuRemoveFormatting,
-  LuRainbow,
-  LuType,
-  LuPlus,
-  LuMinus,
-  LuSuperscript,
-} from "react-icons/lu";
 import type { SaveState } from "./types";
 import { useEditorContext } from "./useEditorContext";
 import { DEFAULT_TITLE } from "./constants";
@@ -39,21 +25,6 @@ export default function TopBar() {
     save,
   } = useEditorContext();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-  function toggleMono() {
-    const [match] = Editor.nodes(editor, {
-      match: (n) => Element.isElement(n) && n.type === "code",
-    });
-    Transforms.setNodes(
-      editor,
-      { type: match ? "paragraph" : "code" },
-      { match: (n) => Element.isElement(n) && Editor.isBlock(editor, n) },
-    );
-  }
-
-  function insertText(text: string) {
-    Transforms.insertText(editor, text);
-  }
 
   function uploadJSON() {
     const input = document.createElement("input");
@@ -111,121 +82,60 @@ export default function TopBar() {
   }
 
   return (
-    <div className={styles.layout}>
-      <div className={styles.fixedContainer}>
-        <SideBarButton />
-        <input
-          className={styles.title}
-          value={title}
-          onChange={(e) => {
-            setTitle(e.currentTarget.value);
-            if (e.currentTarget.value == currentDoc?.title) {
-              setSaveState("saved");
-            } else {
-              setSaveState("unsaved");
-            }
-          }}
-          onFocus={() => {
-            const derivedTitle = CustomEditor.getTitle(editor);
-            if (title === DEFAULT_TITLE && derivedTitle.trim() !== "") {
-              setTitle(derivedTitle);
-            }
-          }}
-          onKeyDown={(e) => {
-            if (e.code == "Enter" && !e.nativeEvent.isComposing) {
-              save(editor);
-              e.currentTarget.blur();
-            }
-          }}
-        />
+    <div className={styles.container}>
+      <SideBarButton />
+      <input
+        className={styles.title}
+        value={title}
+        onChange={(e) => {
+          setTitle(e.currentTarget.value);
+          if (e.currentTarget.value == currentDoc?.title) {
+            setSaveState("saved");
+          } else {
+            setSaveState("unsaved");
+          }
+        }}
+        onFocus={() => {
+          const derivedTitle = CustomEditor.getTitle(editor);
+          if (title === DEFAULT_TITLE && derivedTitle.trim() !== "") {
+            setTitle(derivedTitle);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.code == "Enter" && !e.nativeEvent.isComposing) {
+            save(editor);
+            e.currentTarget.blur();
+          }
+        }}
+      />
+      <TextButton
+        className={styles.textButton}
+        onClick={() => save(editor)}
+        disabled={
+          saveState == "saved" || saveState == "saving" || loadState != "loaded"
+        }
+      >
+        {getSaveButtonText(saveState)}
+      </TextButton>
+      <TextButton className={styles.textButton} onClick={uploadJSON}>
+        Upload
+      </TextButton>
+      <TextButton className={styles.textButton} onClick={downloadJSON}>
+        Inspect
+      </TextButton>
+      <TextButton className={styles.textButton} onClick={exportPDF}>
+        Download
+      </TextButton>
+      {currentDoc && (
         <TextButton
           className={styles.textButton}
-          onClick={() => save(editor)}
-          disabled={
-            saveState == "saved" ||
-            saveState == "saving" ||
-            loadState != "loaded"
-          }
+          onClick={() => setShowDeleteDialog(true)}
         >
-          {getSaveButtonText(saveState)}
+          Delete
         </TextButton>
-        <TextButton className={styles.textButton} onClick={uploadJSON}>
-          Upload
-        </TextButton>
-        <TextButton className={styles.textButton} onClick={downloadJSON}>
-          Inspect
-        </TextButton>
-        <TextButton className={styles.textButton} onClick={exportPDF}>
-          Download
-        </TextButton>
-        {currentDoc && (
-          <TextButton
-            className={styles.textButton}
-            onClick={() => setShowDeleteDialog(true)}
-          >
-            Delete
-          </TextButton>
-        )}
-        <div style={{ flex: 1 }} />
-        {docs === null ? <p className={styles.statusText}>Loading</p> : null}
-      </div>
-      <div className={styles.floatingContainer}>
-        <div className={styles.buttonGroup}>
-          <IconButton onClick={toggleMono}>
-            <LuType />
-          </IconButton>
-          <IconButton
-            disabled={editor.history.undos.length == 0}
-            onClick={editor.undo}
-          >
-            <LuUndo2 />
-          </IconButton>
-          <IconButton
-            disabled={editor.history.redos.length == 0}
-            onClick={editor.redo}
-          >
-            <LuRedo2 />
-          </IconButton>
-        </div>
-        <div className={styles.line} />
-        <div className={styles.buttonGroup}>
-          <IconButton onClick={() => CustomEditor.octaveUp(editor)}>
-            <LuArrowUpFromDot />
-          </IconButton>
-          <IconButton onClick={() => CustomEditor.octaveDown(editor)}>
-            <LuArrowDownToDot />
-          </IconButton>
-          <IconButton onClick={() => CustomEditor.beamDown(editor)}>
-            <LuUnderline />
-            <LuMinus size={12} />
-          </IconButton>
-          <IconButton onClick={() => CustomEditor.beamUp(editor)}>
-            <LuUnderline />
-            <LuPlus size={12} />
-          </IconButton>
-          <IconButton onClick={() => CustomEditor.toggleSlur(editor)}>
-            <LuRainbow />
-          </IconButton>
-          <IconButton onClick={() => CustomEditor.toggleSuperscript(editor)}>
-            <LuSuperscript />
-          </IconButton>
-          <IconButton onClick={() => CustomEditor.clearFormat(editor)}>
-            <LuRemoveFormatting />
-          </IconButton>
-        </div>
-        <div className={styles.line} />
-        <div className={styles.buttonGroup}>
-          <IconButton onClick={() => insertText("𝄆")}>𝄆</IconButton>
-          <IconButton onClick={() => insertText("𝄋")}>𝄋</IconButton>
-          <IconButton onClick={() => insertText("𝄌")}>𝄌</IconButton>
-          <IconButton onClick={() => insertText("𝄍")}>𝄍</IconButton>
-          <IconButton onClick={() => insertText("𝄎")}>𝄎</IconButton>
-          <IconButton onClick={() => insertText("𝄏")}>𝄏</IconButton>
-          <IconButton onClick={() => insertText("𝄇")}>𝄇</IconButton>
-          <IconButton onClick={() => insertText("𝄁")}>𝄁</IconButton>
-          <IconButton onClick={() => insertText("𝄂")}>𝄂</IconButton>
-        </div>
-      </div>
+      )}
+      <div style={{ flex: 1 }} />
+      {docs === null ? <p className={styles.statusText}>Loading</p> : null}
       {showDeleteDialog && (
         <DeleteDialog onDismiss={() => setShowDeleteDialog(false)} />
       )}
@@ -236,16 +146,6 @@ function TextButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       className={styles.textButton}
-      onMouseDown={(e) => e.preventDefault()}
-      {...props}
-    />
-  );
-}
-
-function IconButton(props: ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      className={styles.iconButton}
       onMouseDown={(e) => e.preventDefault()}
       {...props}
     />

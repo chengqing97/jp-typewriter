@@ -20,6 +20,7 @@ import {
   withSlur,
 } from "./CustomElements";
 import { useEditorContext } from "./useEditorContext";
+import Toolbar from "./Toolbar";
 
 const defaultValue: Descendant[] = [
   {
@@ -94,66 +95,69 @@ export default function EditorPage() {
         setSaveState(content === currentDoc?.content ? "saved" : "unsaved");
       }}
     >
-      <TopBar />
       <div className={styles.layout}>
-        <Editable
-          ref={editableRef}
-          className={styles.editable}
-          renderElement={renderElement}
-          renderLeaf={renderLeaf}
-          autoFocus
-          spellCheck={false}
-          onKeyDown={(e) => {
-            const ctrlKey = e.metaKey || e.ctrlKey;
-            if (ctrlKey && e.key == "=") {
-              e.preventDefault();
-              CustomEditor.gapUp(editor);
-              return;
-            }
-            if (ctrlKey && e.key == "-") {
-              e.preventDefault();
-              CustomEditor.gapDown(editor);
-              return;
-            }
-            if (!editor.selection) return;
-            if (Range.isCollapsed(editor.selection)) return;
-            if (ctrlKey && e.key == "ArrowUp") {
-              e.preventDefault();
-              CustomEditor.octaveUp(editor);
-              return;
-            }
-            if (ctrlKey && e.key == "ArrowDown") {
-              e.preventDefault();
-              CustomEditor.octaveDown(editor);
-              return;
-            }
-            if (ctrlKey && e.key == "ArrowLeft") {
-              e.preventDefault();
-              CustomEditor.beamUp(editor);
-              return;
-            }
-            if (ctrlKey && e.key == "ArrowRight") {
-              e.preventDefault();
-              CustomEditor.beamDown(editor);
-              return;
-            }
-            if (ctrlKey && e.key == "a") {
-              e.preventDefault();
-              CustomEditor.toggleSlur(editor);
-              return;
-            }
-            if (ctrlKey && e.key == "s") {
-              e.preventDefault();
-              CustomEditor.toggleSuperscript(editor);
-              return;
-            }
-            if (ctrlKey && e.key == "d") {
-              e.preventDefault();
-              CustomEditor.clearFormat(editor);
-              return;
-            }
-          }}
-        />
+        <TopBar />
+        <Toolbar />
+        <div className={styles.body}>
+          <Editable
+            ref={editableRef}
+            className={styles.editable}
+            renderElement={renderElement}
+            renderLeaf={renderLeaf}
+            autoFocus
+            spellCheck={false}
+            onKeyDown={(e) => {
+              const ctrlKey = e.metaKey || e.ctrlKey;
+              if (ctrlKey && e.key == "=") {
+                e.preventDefault();
+                CustomEditor.gapUp(editor);
+                return;
+              }
+              if (ctrlKey && e.key == "-") {
+                e.preventDefault();
+                CustomEditor.gapDown(editor);
+                return;
+              }
+              if (!editor.selection) return;
+              if (Range.isCollapsed(editor.selection)) return;
+              if (ctrlKey && e.key == "ArrowUp") {
+                e.preventDefault();
+                CustomEditor.octaveUp(editor);
+                return;
+              }
+              if (ctrlKey && e.key == "ArrowDown") {
+                e.preventDefault();
+                CustomEditor.octaveDown(editor);
+                return;
+              }
+              if (ctrlKey && e.key == "ArrowLeft") {
+                e.preventDefault();
+                CustomEditor.beamUp(editor);
+                return;
+              }
+              if (ctrlKey && e.key == "ArrowRight") {
+                e.preventDefault();
+                CustomEditor.beamDown(editor);
+                return;
+              }
+              if (ctrlKey && e.key == "a") {
+                e.preventDefault();
+                CustomEditor.toggleSlur(editor);
+                return;
+              }
+              if (ctrlKey && e.key == "s") {
+                e.preventDefault();
+                CustomEditor.toggleSuperscript(editor);
+                return;
+              }
+              if (ctrlKey && e.key == "d") {
+                e.preventDefault();
+                CustomEditor.clearFormat(editor);
+                return;
+              }
+            }}
+          />
+        </div>
       </div>
     </Slate>
   );

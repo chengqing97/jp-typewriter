@@ -1,15 +1,19 @@
 .layout {
+  height: 100svh;
+  width: 100svw;
   display: flex;
-  background-color: whitesmoke;
-  align-items: center;
-  justify-content: center;
-  padding: 50px;
-  padding-top: 115px;
+  flex-direction: column;
+}
+
+.body {
+  flex: 1;
+  display: grid;
+  place-items: center;
   box-sizing: border-box;
-  min-height: 100svh;
-  height: fit-content;
-  min-width: 100vw;
-  width: fit-content;
+  padding: 50px;
+  padding-top: 65px;
+  background-color: whitesmoke;
+  overflow: auto;
 }
 
 .editable {
