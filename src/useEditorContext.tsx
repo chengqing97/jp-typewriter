@@ -17,7 +17,7 @@ import { ID, Permission, Role, useAppwrite, useUser } from "@appwrite.io/react";
 import { sortDocs } from "./utils/sortDocs";
 
 type EditorContextValue = {
-  editableRef: RefObject<HTMLDivElement | null>;
+  paperRef: RefObject<HTMLDivElement | null>;
   currentDoc: JianpuDoc | null;
   setCurrentDoc: Dispatch<JianpuDoc | null>;
   docs: DocListItem[] | null;
@@ -37,7 +37,7 @@ type EditorContextValue = {
 const EditorContext = createContext<EditorContextValue | null>(null);
 
 export function EditorContextProvider(props: PropsWithChildren) {
-  const editableRef = useRef<HTMLDivElement>(null);
+  const paperRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const { tablesDB } = useAppwrite();
   const [currentDoc, setCurrentDoc] = useState<JianpuDoc | null>(null);
@@ -131,7 +131,7 @@ export function EditorContextProvider(props: PropsWithChildren) {
   return (
     <EditorContext.Provider
       value={{
-        editableRef,
+        paperRef,
         currentDoc,
         setCurrentDoc,
         docs,

@@ -13,7 +13,7 @@ import DeleteDialog from "./DeleteDialog";
 export default function TopBar() {
   const editor = useSlate();
   const {
-    editableRef,
+    paperRef,
     currentDoc,
     loadState,
     title,
@@ -56,7 +56,7 @@ export default function TopBar() {
   }
 
   async function exportPDF() {
-    const div = editableRef.current;
+    const div = paperRef.current;
     if (!div) return;
 
     const canvas = await html2canvas(div, {

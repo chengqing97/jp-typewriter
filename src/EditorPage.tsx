@@ -1,5 +1,5 @@
 import styles from "./EditorPage.module.css";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createEditor, Range } from "slate";
 import {
   Editable,
@@ -32,7 +32,8 @@ const defaultValue: Descendant[] = [
 const A4_RATIO = 210 / 297;
 
 export default function EditorPage() {
-  const { editableRef, currentDoc, setSaveState } = useEditorContext();
+  const editableRef = useRef<HTMLDivElement>(null);
+  const { paperRef, currentDoc, setSaveState } = useEditorContext();
 
   const [editor] = useState(() =>
     withSlur(withReact(withHistory(createEditor()))),
@@ -64,18 +65,22 @@ export default function EditorPage() {
   const resizePaper = useCallback(() => {
     requestAnimationFrame(() => {
       const editable = editableRef.current;
-      if (!editable) return;
-
-      editable.style.height = "auto";
-      editable.style.width = "auto";
+      const paper = paperRef.current;
+      if (!editable || !paper) return;
 
       const h = editable.scrollHeight;
       const w = editable.scrollWidth;
 
       if (w / h > A4_RATIO) {
-        editable.style.height = w / A4_RATIO + "px";
+        paper.style.maxHeight = w / A4_RATIO + "px";
+        paper.style.minHeight = w / A4_RATIO + "px";
+        paper.style.maxWidth = w + "px";
+        paper.style.minWidth = w + "px";
       } else {
-        editable.style.width = h * A4_RATIO + "px";
+        paper.style.maxHeight = h + "px";
+        paper.style.minHeight = h + "px";
+        paper.style.maxWidth = h * A4_RATIO + "px";
+        paper.style.minWidth = h * A4_RATIO + "px";
       }
     });
   }, []);
@@ -99,69 +104,71 @@ export default function EditorPage() {
         <TopBar />
         <Toolbar />
         <div className={styles.body}>
-          <Editable
-            ref={editableRef}
-            className={styles.editable}
-            renderElement={renderElement}
-            renderLeaf={renderLeaf}
-            autoFocus
-            spellCheck={false}
-            onKeyDown={(e) => {
-              const ctrlKey = e.metaKey || e.ctrlKey;
-              if (ctrlKey && e.key == "=") {
-                e.preventDefault();
-                CustomEditor.gapUp(editor);
-                return;
-              }
-              if (ctrlKey && e.key == "-") {
-                e.preventDefault();
-                CustomEditor.gapDown(editor);
-                return;
-              }
-              if (!editor.selection) return;
-              if (Range.isCollapsed(editor.selection)) return;
-              if (ctrlKey && e.key == "ArrowUp") {
-                e.preventDefault();
-                CustomEditor.octaveUp(editor);
-                return;
-              }
-              if (ctrlKey && e.key == "ArrowDown") {
-                e.preventDefault();
-                CustomEditor.octaveDown(editor);
-                return;
-              }
-              if (ctrlKey && e.key == "ArrowLeft") {
-                e.preventDefault();
-                CustomEditor.beamUp(editor);
-                return;
-              }
-              if (ctrlKey && e.key == "ArrowRight") {
-                e.preventDefault();
-                CustomEditor.beamDown(editor);
-                return;
-              }
-              if (ctrlKey && e.key == "a") {
-                e.preventDefault();
-                CustomEditor.toggleSlur(editor);
-                return;
-              }
-              if (ctrlKey && e.key == "s") {
-                e.preventDefault();
-                CustomEditor.toggleSuperscript(editor);
-                return;
-              }
-              if (ctrlKey && e.key == "d") {
-                e.preventDefault();
-                CustomEditor.clearFormat(editor);
-                return;
-              }
-              if (ctrlKey && e.key == "i") {
-                e.preventDefault();
-                CustomEditor.toggleItalic(editor);
-                return;
-              }
-            }}
-          />
+          <div ref={paperRef} className={styles.paper}>
+            <Editable
+              ref={editableRef}
+              className={styles.editable}
+              renderElement={renderElement}
+              renderLeaf={renderLeaf}
+              autoFocus
+              spellCheck={false}
+              onKeyDown={(e) => {
+                const ctrlKey = e.metaKey || e.ctrlKey;
+                if (ctrlKey && e.key == "=") {
+                  e.preventDefault();
+                  CustomEditor.gapUp(editor);
+                  return;
+                }
+                if (ctrlKey && e.key == "-") {
+                  e.preventDefault();
+                  CustomEditor.gapDown(editor);
+                  return;
+                }
+                if (!editor.selection) return;
+                if (Range.isCollapsed(editor.selection)) return;
+                if (ctrlKey && e.key == "ArrowUp") {
+                  e.preventDefault();
+                  CustomEditor.octaveUp(editor);
+                  return;
+                }
+                if (ctrlKey && e.key == "ArrowDown") {
+                  e.preventDefault();
+                  CustomEditor.octaveDown(editor);
+                  return;
+                }
+                if (ctrlKey && e.key == "ArrowLeft") {
+                  e.preventDefault();
+                  CustomEditor.beamUp(editor);
+                  return;
+                }
+                if (ctrlKey && e.key == "ArrowRight") {
+                  e.preventDefault();
+                  CustomEditor.beamDown(editor);
+                  return;
+                }
+                if (ctrlKey && e.key == "a") {
+                  e.preventDefault();
+                  CustomEditor.toggleSlur(editor);
+                  return;
+                }
+                if (ctrlKey && e.key == "s") {
+                  e.preventDefault();
+                  CustomEditor.toggleSuperscript(editor);
+                  return;
+                }
+                if (ctrlKey && e.key == "d") {
+                  e.preventDefault();
+                  CustomEditor.clearFormat(editor);
+                  return;
+                }
+                if (ctrlKey && e.key == "i") {
+                  e.preventDefault();
+                  CustomEditor.toggleItalic(editor);
+                  return;
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
     </Slate>

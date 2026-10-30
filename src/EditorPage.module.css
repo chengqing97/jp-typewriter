@@ -8,6 +8,9 @@
 .body {
   flex: 1;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   box-sizing: border-box;
   background-color: whitesmoke;
   overflow: auto;
@@ -15,16 +18,18 @@
   padding-top: 65px;
 }
 
+.paper {
+  border-radius: 7px;
+  background-color: white;
+  box-shadow: rgba(0 0 0 / 4%) 0 1px 5px;
+}
+
 .editable {
-  justify-self: center;
-  align-self: flex-start;
   min-height: 800px;
   padding: 40px;
   outline: none;
-  background-color: white;
   box-sizing: border-box;
   user-select: none;
-  border-radius: 7px;
-  box-shadow: rgba(0 0 0 / 4%) 0 1px 5px;
   touch-action: manipulation;
+  width: fit-content;
 }
