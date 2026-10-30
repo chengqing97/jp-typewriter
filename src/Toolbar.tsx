@@ -18,30 +18,25 @@ import {
   LuMinus,
   LuSuperscript,
 } from "react-icons/lu";
-import { ID, Permission, Role, useAppwrite, useUser } from "@appwrite.io/react";
-import type { JianpuDoc, SaveState } from "./types";
+import type { SaveState } from "./types";
 import { useEditorContext } from "./useEditorContext";
-import { DATABASE_ID, DEFAULT_TITLE } from "./constants";
+import { DEFAULT_TITLE } from "./constants";
 import { SideMenuButton } from "./SideMenu";
 import DeleteDialog from "./DeleteDialog";
-import { sortDocs } from "./utils/sortDocs";
 
 export default function Toolbar() {
   const editor = useSlate();
-  const { user } = useUser();
-  const { tablesDB } = useAppwrite();
   const {
     editableRef,
     currentDoc,
     loadState,
     title,
     docs,
-    setDocs,
     setCurrentDoc,
     setTitle,
     saveState,
     setSaveState,
-    currentSortIndex,
+    save,
   } = useEditorContext();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -87,50 +82,6 @@ export default function Toolbar() {
     a.download = title + ".json";
     a.click();
     URL.revokeObjectURL(url);
-  }
-
-  async function save() {
-    if (!user) return;
-    setSaveState("saving");
-    try {
-      const response = await tablesDB.upsertRow<JianpuDoc>({
-        databaseId: DATABASE_ID,
-        tableId: "documents",
-        rowId: currentDoc?.$id ?? ID.unique(),
-        data: {
-          title: title,
-          content: JSON.stringify(editor.children),
-        },
-        permissions: [
-          Permission.read(Role.user(user.$id)),
-          Permission.update(Role.user(user.$id)),
-          Permission.delete(Role.user(user.$id)),
-        ],
-      });
-      setDocs((docs) => {
-        if (!docs) return null;
-        let updated = false;
-        const updatedDocs = docs.map((doc) => {
-          if (doc.$id == response.$id) {
-            updated = true;
-            return response;
-          } else {
-            return doc;
-          }
-        });
-        if (updated) {
-          return updatedDocs;
-        } else {
-          updatedDocs.push(response);
-          return sortDocs(updatedDocs, currentSortIndex);
-        }
-      });
-      setCurrentDoc(response);
-      setSaveState("saved");
-    } catch (e) {
-      window.alert(e);
-      setSaveState("unsaved");
-    }
   }
 
   async function exportPDF() {
@@ -182,14 +133,14 @@ export default function Toolbar() {
           }}
           onKeyDown={(e) => {
             if (e.code == "Enter" && !e.nativeEvent.isComposing) {
-              save();
+              save(editor);
               e.currentTarget.blur();
             }
           }}
         />
         <TextButton
           className={styles.textButton}
-          onClick={save}
+          onClick={() => save(editor)}
           disabled={
             saveState == "saved" ||
             saveState == "saving" ||

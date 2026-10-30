@@ -13,7 +13,8 @@ import type { DocListItem, JianpuDoc, LoadState, SaveState } from "./types";
 import { DATABASE_ID, DEFAULT_TITLE } from "./constants";
 import { Editor } from "slate";
 import { CustomEditor } from "./CustomEditor";
-import { useAppwrite } from "@appwrite.io/react";
+import { ID, Permission, Role, useAppwrite, useUser } from "@appwrite.io/react";
+import { sortDocs } from "./utils/sortDocs";
 
 type EditorContextValue = {
   editableRef: RefObject<HTMLDivElement | null>;
@@ -30,12 +31,14 @@ type EditorContextValue = {
   setCurrentSortIndex: Dispatch<number>;
   loadState: LoadState;
   setLoadState: Dispatch<LoadState>;
+  save: (editor: Editor) => Promise<void>;
 };
 
 const EditorContext = createContext<EditorContextValue | null>(null);
 
 export function EditorContextProvider(props: PropsWithChildren) {
   const editableRef = useRef<HTMLDivElement>(null);
+  const { user } = useUser();
   const { tablesDB } = useAppwrite();
   const [currentDoc, setCurrentDoc] = useState<JianpuDoc | null>(null);
   const [docs, setDocs] = useState<DocListItem[] | null>(null);
@@ -80,6 +83,51 @@ export function EditorContextProvider(props: PropsWithChildren) {
     setTitle(DEFAULT_TITLE);
     setSaveState("init");
   }
+
+  async function save(editor: Editor) {
+    if (!user) return;
+    setSaveState("saving");
+    try {
+      const response = await tablesDB.upsertRow<JianpuDoc>({
+        databaseId: DATABASE_ID,
+        tableId: "documents",
+        rowId: currentDoc?.$id ?? ID.unique(),
+        data: {
+          title: title,
+          content: JSON.stringify(editor.children),
+        },
+        permissions: [
+          Permission.read(Role.user(user.$id)),
+          Permission.update(Role.user(user.$id)),
+          Permission.delete(Role.user(user.$id)),
+        ],
+      });
+      setDocs((docs) => {
+        if (!docs) return null;
+        let updated = false;
+        const updatedDocs = docs.map((doc) => {
+          if (doc.$id == response.$id) {
+            updated = true;
+            return response;
+          } else {
+            return doc;
+          }
+        });
+        if (updated) {
+          return updatedDocs;
+        } else {
+          updatedDocs.push(response);
+          return sortDocs(updatedDocs, currentSortIndex);
+        }
+      });
+      setCurrentDoc(response);
+      setSaveState("saved");
+    } catch (e) {
+      window.alert(e);
+      setSaveState("unsaved");
+    }
+  }
+
   return (
     <EditorContext.Provider
       value={{
@@ -97,6 +145,7 @@ export function EditorContextProvider(props: PropsWithChildren) {
         setCurrentSortIndex,
         loadState,
         setLoadState,
+        save,
       }}
     >
       {props.children}

@@ -9,6 +9,7 @@ import { useEditorContext } from "./useEditorContext";
 import { DATABASE_ID, sortMethods } from "./constants";
 import { sortDocs } from "./utils/sortDocs";
 import { CustomEditor } from "./CustomEditor";
+import { useDialogContext } from "./useDialog";
 
 export function SideMenuButton() {
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -91,6 +92,7 @@ function SideMenu(props: SideMenuProps) {
     currentSortIndex,
     docs,
     newDoc,
+    save,
     saveState,
     setDocs,
     setCurrentDoc,
@@ -98,6 +100,7 @@ function SideMenu(props: SideMenuProps) {
     setLoadState,
     setSaveState,
   } = useEditorContext();
+  const { showDialog } = useDialogContext();
   const [searchResults, setSearchResults] = useState<DocListItem[] | null>(
     null,
   );
@@ -112,10 +115,6 @@ function SideMenu(props: SideMenuProps) {
   }
 
   async function openDoc(doc: DocListItem) {
-    if (saveState == "unsaved") {
-      // const proceed: boolean = await promptConfirmation();
-      return;
-    }
     props.closeMenu();
     setLoadState("loading");
     setCurrentDoc({ ...doc, content: "" });
@@ -136,6 +135,30 @@ function SideMenu(props: SideMenuProps) {
       setSaveState("saved");
     } catch (e) {
       CustomEditor.setText(editor, `${e}`);
+    }
+  }
+
+  async function handleDocClick(doc: DocListItem) {
+    if (saveState == "unsaved") {
+      showDialog({
+        title: "You have unsaved changes",
+        buttons: [
+          { text: "Cancel", onClick: () => {} },
+          {
+            text: "Discard",
+            onClick: () => openDoc(doc),
+          },
+          {
+            text: "Save",
+            onClick: async () => {
+              await save(editor);
+              openDoc(doc);
+            },
+          },
+        ],
+      });
+    } else {
+      openDoc(doc);
     }
   }
 
@@ -195,7 +218,7 @@ function SideMenu(props: SideMenuProps) {
             <div
               key={doc.$id}
               className={styles.menuItem}
-              onClick={() => openDoc(doc)}
+              onClick={() => handleDocClick(doc)}
             >
               {doc.$id == currentDoc?.$id && <div className={styles.dot} />}
               <span className={styles.itemText}>{doc.title}</span>

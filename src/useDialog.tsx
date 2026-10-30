@@ -5,8 +5,6 @@ import {
   useState,
   type PropsWithChildren,
   type Dispatch,
-  useEffect,
-  useRef,
 } from "react";
 
 type ButtonOption = {
@@ -26,30 +24,15 @@ type DialogContextValue = {
 const DialogContext = createContext<DialogContextValue | null>(null);
 
 export function DialogContextProvider(props: PropsWithChildren) {
-  const dialogRef = useRef<HTMLDivElement>(null);
   const [dialog, showDialog] = useState<DialogOption | null>(null);
-
-  useEffect(() => {
-    function onMouseDown(event: MouseEvent) {
-      const target = event.target as Node;
-      if (!dialogRef.current) return;
-      if (dialogRef.current.contains(target)) return;
-      // outside click
-      showDialog(null);
-    }
-    document.addEventListener("mousedown", onMouseDown);
-    return () => {
-      document.removeEventListener("mousedown", onMouseDown);
-    };
-  }, []);
 
   return (
     <DialogContext.Provider value={{ showDialog }}>
       {props.children}
       {dialog && (
-        <div className={styles.layout}>
+        <div className={styles.layout} onClick={() => showDialog(null)}>
           <div className={styles.dialogBody}>
-            <p>{dialog.title}</p>
+            <p className={styles.title}>{dialog.title}</p>
             <div className={styles.buttonRow}>
               {dialog.buttons.map((button, i) => (
                 <button
