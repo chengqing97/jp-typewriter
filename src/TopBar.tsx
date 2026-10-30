@@ -1,4 +1,4 @@
-import styles from "./Toolbar.module.css";
+import styles from "./TopBar.module.css";
 import { Editor, Element, Transforms } from "slate";
 import { useSlate } from "slate-react";
 import { useState, type ButtonHTMLAttributes } from "react";
@@ -21,10 +21,10 @@ import {
 import type { SaveState } from "./types";
 import { useEditorContext } from "./useEditorContext";
 import { DEFAULT_TITLE } from "./constants";
-import { SideMenuButton } from "./SideMenu";
+import { SideBarButton } from "./SideBar";
 import DeleteDialog from "./DeleteDialog";
 
-export default function Toolbar() {
+export default function TopBar() {
   const editor = useSlate();
   const {
     editableRef,
@@ -113,7 +113,7 @@ export default function Toolbar() {
   return (
     <div className={styles.layout}>
       <div className={styles.fixedContainer}>
-        <SideMenuButton />
+        <SideBarButton />
         <input
           className={styles.title}
           value={title}

@@ -1,4 +1,4 @@
-import styles from "./SideMenu.module.css";
+import styles from "./SideBar.module.css";
 import { useEffect, useRef, useState, type Ref } from "react";
 import { LuArrowDown, LuMenu, LuRotateCcw, LuSearch } from "react-icons/lu";
 import { Query, useAppwrite, useAuth } from "@appwrite.io/react";
@@ -11,7 +11,7 @@ import { sortDocs } from "./utils/sortDocs";
 import { CustomEditor } from "./CustomEditor";
 import { useDialogContext } from "./useDialog";
 
-export function SideMenuButton() {
+export function SideBarButton() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const { tablesDB } = useAppwrite();
@@ -67,7 +67,7 @@ export function SideMenuButton() {
       </button>
 
       {showMenu && (
-        <SideMenu
+        <SideBar
           ref={menuRef}
           closeMenu={() => setShowMenu(false)}
           onReload={getDocs}
@@ -83,7 +83,7 @@ type SideMenuProps = {
   onReload: () => void;
 };
 
-function SideMenu(props: SideMenuProps) {
+function SideBar(props: SideMenuProps) {
   const editor = useSlate();
   const { tablesDB } = useAppwrite();
   const { user, signOut } = useAuth();

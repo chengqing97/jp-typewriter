@@ -9,7 +9,7 @@ import {
   withReact,
 } from "slate-react";
 import type { Descendant } from "slate";
-import Toolbar from "./Toolbar";
+import TopBar from "./TopBar";
 import { withHistory } from "slate-history";
 import { CustomLeaf } from "./CustomLeaf";
 import { CustomEditor } from "./CustomEditor";
@@ -94,7 +94,7 @@ export default function EditorPage() {
         setSaveState(content === currentDoc?.content ? "saved" : "unsaved");
       }}
     >
-      <Toolbar />
+      <TopBar />
       <div className={styles.layout}>
         <Editable
           ref={editableRef}
