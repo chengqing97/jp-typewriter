@@ -7,15 +7,19 @@
 
 .body {
   flex: 1;
+  overflow: auto;
+}
+
+.backdrop {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  box-sizing: border-box;
   background-color: whitesmoke;
-  overflow: auto;
+  box-sizing: border-box;
   padding: 50px;
   padding-top: 65px;
+  min-width: fit-content;
 }
 
 .paper {

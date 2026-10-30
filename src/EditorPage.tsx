@@ -104,70 +104,72 @@ export default function EditorPage() {
         <TopBar />
         <Toolbar />
         <div className={styles.body}>
-          <div ref={paperRef} className={styles.paper}>
-            <Editable
-              ref={editableRef}
-              className={styles.editable}
-              renderElement={renderElement}
-              renderLeaf={renderLeaf}
-              autoFocus
-              spellCheck={false}
-              onKeyDown={(e) => {
-                const ctrlKey = e.metaKey || e.ctrlKey;
-                if (ctrlKey && e.key == "=") {
-                  e.preventDefault();
-                  CustomEditor.gapUp(editor);
-                  return;
-                }
-                if (ctrlKey && e.key == "-") {
-                  e.preventDefault();
-                  CustomEditor.gapDown(editor);
-                  return;
-                }
-                if (!editor.selection) return;
-                if (Range.isCollapsed(editor.selection)) return;
-                if (ctrlKey && e.key == "ArrowUp") {
-                  e.preventDefault();
-                  CustomEditor.octaveUp(editor);
-                  return;
-                }
-                if (ctrlKey && e.key == "ArrowDown") {
-                  e.preventDefault();
-                  CustomEditor.octaveDown(editor);
-                  return;
-                }
-                if (ctrlKey && e.key == "ArrowLeft") {
-                  e.preventDefault();
-                  CustomEditor.beamUp(editor);
-                  return;
-                }
-                if (ctrlKey && e.key == "ArrowRight") {
-                  e.preventDefault();
-                  CustomEditor.beamDown(editor);
-                  return;
-                }
-                if (ctrlKey && e.key == "a") {
-                  e.preventDefault();
-                  CustomEditor.toggleSlur(editor);
-                  return;
-                }
-                if (ctrlKey && e.key == "s") {
-                  e.preventDefault();
-                  CustomEditor.toggleSuperscript(editor);
-                  return;
-                }
-                if (ctrlKey && e.key == "d") {
-                  e.preventDefault();
-                  CustomEditor.clearFormat(editor);
-                  return;
-                }
-                if (ctrlKey && e.key == "i") {
-                  e.preventDefault();
-                  CustomEditor.toggleItalic(editor);
-                  return;
-                }
-              }}
-            />
+          <div className={styles.backdrop}>
+            <div ref={paperRef} className={styles.paper}>
+              <Editable
+                ref={editableRef}
+                className={styles.editable}
+                renderElement={renderElement}
+                renderLeaf={renderLeaf}
+                autoFocus
+                spellCheck={false}
+                onKeyDown={(e) => {
+                  const ctrlKey = e.metaKey || e.ctrlKey;
+                  if (ctrlKey && e.key == "=") {
+                    e.preventDefault();
+                    CustomEditor.gapUp(editor);
+                    return;
+                  }
+                  if (ctrlKey && e.key == "-") {
+                    e.preventDefault();
+                    CustomEditor.gapDown(editor);
+                    return;
+                  }
+                  if (!editor.selection) return;
+                  if (Range.isCollapsed(editor.selection)) return;
+                  if (ctrlKey && e.key == "ArrowUp") {
+                    e.preventDefault();
+                    CustomEditor.octaveUp(editor);
+                    return;
+                  }
+                  if (ctrlKey && e.key == "ArrowDown") {
+                    e.preventDefault();
+                    CustomEditor.octaveDown(editor);
+                    return;
+                  }
+                  if (ctrlKey && e.key == "ArrowLeft") {
+                    e.preventDefault();
+                    CustomEditor.beamUp(editor);
+                    return;
+                  }
+                  if (ctrlKey && e.key == "ArrowRight") {
+                    e.preventDefault();
+                    CustomEditor.beamDown(editor);
+                    return;
+                  }
+                  if (ctrlKey && e.key == "a") {
+                    e.preventDefault();
+                    CustomEditor.toggleSlur(editor);
+                    return;
+                  }
+                  if (ctrlKey && e.key == "s") {
+                    e.preventDefault();
+                    CustomEditor.toggleSuperscript(editor);
+                    return;
+                  }
+                  if (ctrlKey && e.key == "d") {
+                    e.preventDefault();
+                    CustomEditor.clearFormat(editor);
+                    return;
+                  }
+                  if (ctrlKey && e.key == "i") {
+                    e.preventDefault();
+                    CustomEditor.toggleItalic(editor);
+                    return;
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
