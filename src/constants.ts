@@ -20,3 +20,5 @@ export const sortMethods = [
     query: Query.orderDesc("$updatedAt"),
   },
 ];
+
+export const OFFLINE_MODE = import.meta.env.VITE_OFFLINE_MODE;

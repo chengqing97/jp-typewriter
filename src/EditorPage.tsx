@@ -86,6 +86,26 @@ export default function EditorPage() {
   }, []);
 
   useEffect(() => {
+    const viewport = window.visualViewport;
+
+    if (!viewport) return;
+
+    const updateHeight = () => {
+      document.documentElement.style.setProperty(
+        "--viewport-height",
+        `${viewport.height}px`,
+      );
+    };
+
+    viewport.addEventListener("resize", updateHeight);
+    updateHeight();
+
+    return () => {
+      viewport.removeEventListener("resize", updateHeight);
+    };
+  }, []);
+
+  useEffect(() => {
     resizePaper();
   }, [currentDoc]);
 

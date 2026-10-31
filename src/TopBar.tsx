@@ -6,7 +6,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import type { SaveState } from "./types";
 import { useEditorContext } from "./useEditorContext";
-import { DEFAULT_TITLE } from "./constants";
+import { DEFAULT_TITLE, OFFLINE_MODE } from "./constants";
 import { SideBarButton } from "./SideBar";
 import DeleteDialog from "./DeleteDialog";
 
@@ -83,7 +83,7 @@ export default function TopBar() {
 
   return (
     <div className={styles.container}>
-      <SideBarButton />
+      {!OFFLINE_MODE && <SideBarButton />}
       <input
         className={styles.title}
         value={title}
@@ -135,7 +135,9 @@ export default function TopBar() {
         </TextButton>
       )}
       <div style={{ flex: 1 }} />
-      {docs === null ? <p className={styles.statusText}>Loading</p> : null}
+      <p className={styles.statusText}>
+        {OFFLINE_MODE ? "Offline" : docs === null ? "Loading" : ""}
+      </p>
       {showDeleteDialog && (
         <DeleteDialog onDismiss={() => setShowDeleteDialog(false)} />
       )}

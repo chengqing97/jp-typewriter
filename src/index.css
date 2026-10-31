@@ -2,10 +2,14 @@
 
 :root {
   font-family: "Noto Sans", "Noto Music";
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
   margin: 0;
+  position: fixed;
+  inset: 0;
 }
 
 h1,
