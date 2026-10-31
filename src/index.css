@@ -4,6 +4,11 @@
   font-family: "Noto Sans", "Noto Music";
   overflow: hidden;
   overscroll-behavior: none;
+  background-color: whitesmoke;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {

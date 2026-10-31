@@ -18,10 +18,12 @@ import {
 import { useSlate } from "slate-react";
 import { Transforms } from "slate";
 import { CustomEditor } from "./CustomEditor";
+import { useEditorContext } from "./useEditorContext";
 
 const DRAG_THRESHOLD = 5;
 
 export default function Toolbar() {
+  const { keyboardVisible } = useEditorContext();
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const hasDragged = useRef(false);
@@ -99,20 +101,24 @@ export default function Toolbar() {
           <IconButton onClick={() => CustomEditor.gapUp(editor)}>
             <LuArrowDownToLine />
           </IconButton>
-          <IconButton onClick={() => CustomEditor.octaveDown(editor)}>
-            <LuArrowDownToDot />
-          </IconButton>
-          <IconButton onClick={() => CustomEditor.octaveUp(editor)}>
-            <LuArrowUpFromDot />
-          </IconButton>
-          <IconButton onClick={() => CustomEditor.beamDown(editor)}>
-            <LuUnderline />
-            <LuMinus size={12} />
-          </IconButton>
-          <IconButton onClick={() => CustomEditor.beamUp(editor)}>
-            <LuUnderline />
-            <LuPlus size={12} />
-          </IconButton>
+          {!keyboardVisible && (
+            <>
+              <IconButton onClick={() => CustomEditor.octaveDown(editor)}>
+                <LuArrowDownToDot />
+              </IconButton>
+              <IconButton onClick={() => CustomEditor.octaveUp(editor)}>
+                <LuArrowUpFromDot />
+              </IconButton>
+              <IconButton onClick={() => CustomEditor.beamDown(editor)}>
+                <LuUnderline />
+                <LuMinus size={12} />
+              </IconButton>
+              <IconButton onClick={() => CustomEditor.beamUp(editor)}>
+                <LuUnderline />
+                <LuPlus size={12} />
+              </IconButton>
+            </>
+          )}
           <IconButton onClick={() => CustomEditor.toggleSlur(editor)}>
             <LuRainbow />
           </IconButton>

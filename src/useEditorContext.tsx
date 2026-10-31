@@ -18,6 +18,7 @@ import { sortDocs } from "./utils/sortDocs";
 
 type EditorContextValue = {
   paperRef: RefObject<HTMLDivElement | null>;
+  editableRef: RefObject<HTMLDivElement | null>;
   currentDoc: JianpuDoc | null;
   setCurrentDoc: Dispatch<JianpuDoc | null>;
   docs: DocListItem[] | null;
@@ -32,12 +33,17 @@ type EditorContextValue = {
   loadState: LoadState;
   setLoadState: Dispatch<LoadState>;
   save: (editor: Editor) => Promise<void>;
+  isFocused: boolean;
+  setIsFocused: Dispatch<SetStateAction<boolean>>;
+  keyboardVisible: boolean;
+  setKeyboardVisible: Dispatch<SetStateAction<boolean>>;
 };
 
 const EditorContext = createContext<EditorContextValue | null>(null);
 
 export function EditorContextProvider(props: PropsWithChildren) {
   const paperRef = useRef<HTMLDivElement>(null);
+  const editableRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
   const { tablesDB } = useAppwrite();
   const [currentDoc, setCurrentDoc] = useState<JianpuDoc | null>(null);
@@ -46,6 +52,8 @@ export function EditorContextProvider(props: PropsWithChildren) {
   const [saveState, setSaveState] = useState<SaveState>("init");
   const [loadState, setLoadState] = useState<LoadState>("loaded");
   const [currentSortIndex, setCurrentSortIndex] = useState(0);
+  const [isFocused, setIsFocused] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -132,6 +140,7 @@ export function EditorContextProvider(props: PropsWithChildren) {
     <EditorContext.Provider
       value={{
         paperRef,
+        editableRef,
         currentDoc,
         setCurrentDoc,
         docs,
@@ -146,6 +155,10 @@ export function EditorContextProvider(props: PropsWithChildren) {
         loadState,
         setLoadState,
         save,
+        isFocused,
+        setIsFocused,
+        keyboardVisible,
+        setKeyboardVisible,
       }}
     >
       {props.children}

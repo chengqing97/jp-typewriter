@@ -1,5 +1,5 @@
 import styles from "./EditorPage.module.css";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createEditor, Range } from "slate";
 import {
   Editable,
@@ -21,6 +21,7 @@ import {
 } from "./CustomElements";
 import { useEditorContext } from "./useEditorContext";
 import Toolbar from "./Toolbar";
+import VirtualKeyboard from "./VirtualKeyboard";
 
 const defaultValue: Descendant[] = [
   {
@@ -32,8 +33,8 @@ const defaultValue: Descendant[] = [
 const A4_RATIO = 210 / 297;
 
 export default function EditorPage() {
-  const editableRef = useRef<HTMLDivElement>(null);
-  const { paperRef, currentDoc, setSaveState } = useEditorContext();
+  const { paperRef, editableRef, currentDoc, setSaveState, setIsFocused } =
+    useEditorContext();
 
   const [editor] = useState(() =>
     withSlur(withReact(withHistory(createEditor()))),
@@ -133,7 +134,12 @@ export default function EditorPage() {
                 renderLeaf={renderLeaf}
                 autoFocus
                 spellCheck={false}
+                autoComplete="off"
+                autoCorrect="off"
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
                 onKeyDown={(e) => {
+                  console.log("Slate received:", e.key, e.isTrusted);
                   const ctrlKey = e.metaKey || e.ctrlKey;
                   if (ctrlKey && e.key == "=") {
                     e.preventDefault();
@@ -192,6 +198,7 @@ export default function EditorPage() {
             </div>
           </div>
         </div>
+        {navigator.maxTouchPoints > 0 && <VirtualKeyboard />}
       </div>
     </Slate>
   );

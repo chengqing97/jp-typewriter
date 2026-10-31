@@ -21,4 +21,4 @@ export const sortMethods = [
   },
 ];
 
-export const OFFLINE_MODE = import.meta.env.VITE_OFFLINE_MODE;
+export const OFFLINE_MODE = import.meta.env.VITE_OFFLINE_MODE === "true";
