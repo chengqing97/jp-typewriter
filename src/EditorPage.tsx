@@ -125,6 +125,11 @@ export default function EditorPage() {
                     CustomEditor.gapDown(editor);
                     return;
                   }
+                  if (ctrlKey && e.key == "s") {
+                    e.preventDefault();
+                    CustomEditor.toggleSuperscript(editor);
+                    return;
+                  }
                   if (!editor.selection) return;
                   if (Range.isCollapsed(editor.selection)) return;
                   if (ctrlKey && e.key == "ArrowUp") {
@@ -150,11 +155,6 @@ export default function EditorPage() {
                   if (ctrlKey && e.key == "a") {
                     e.preventDefault();
                     CustomEditor.toggleSlur(editor);
-                    return;
-                  }
-                  if (ctrlKey && e.key == "s") {
-                    e.preventDefault();
-                    CustomEditor.toggleSuperscript(editor);
                     return;
                   }
                   if (ctrlKey && e.key == "d") {

@@ -46,7 +46,7 @@ export function CustomLeaf({ attributes, children, leaf }: RenderLeafProps) {
       newRects.push({
         x: rect.x - parentRect.x,
         y: rect.y - parentRect.y,
-        height: rect.height,
+        height: 19,
         width: rect.width,
         char: text[i],
       });

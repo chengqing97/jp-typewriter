@@ -30,6 +30,7 @@
 
 .editable {
   min-height: 800px;
+  aspect-ratio: 210 / 297;
   padding: 40px;
   outline: none;
   box-sizing: border-box;
