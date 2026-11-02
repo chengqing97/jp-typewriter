@@ -14,6 +14,7 @@
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
+  pointer-events: none;
 }
 
 .toggleButton {
@@ -25,14 +26,13 @@
 
   border: 1px solid #d1d5db;
   border-radius: 16px;
-
   background: #fff;
   color: #374151;
-
   font-size: 22px;
-  cursor: pointer;
-
   box-shadow: 0 3px 10px rgb(0 0 0 / 12%);
+
+  cursor: pointer;
+  pointer-events: auto;
 }
 .toggleButton:hover {
   background: #f3f4f6;
@@ -62,15 +62,14 @@
 
   border: 1px solid #d1d5db;
   border-radius: 10px;
-
   background: #fff;
   color: #374151;
-
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-
   box-shadow: 0 2px 3px rgb(0 0 0 / 5%);
+
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 .modifierButton:hover {
@@ -99,15 +98,14 @@
 
   border: 1px solid #d1d5db;
   border-radius: 10px;
-
   background: #fff;
   color: #374151;
-
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-
   box-shadow: 0 2px 3px rgb(0 0 0 / 5%);
+
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 .actionButton:hover {
@@ -144,14 +142,13 @@
 
   border: 1px solid #d1d5db;
   border-radius: 10px;
-
   background: #fff;
   color: #374151;
-
   font-size: 20px;
-  cursor: pointer;
-
   box-shadow: 0 2px 3px rgb(0 0 0 / 5%);
+
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 .arrowButton:hover {

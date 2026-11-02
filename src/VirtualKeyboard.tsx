@@ -132,18 +132,20 @@ export default function VirtualKeyboard() {
         windowSelection.modify(shift ? "extend" : "move", "forward", "line");
         break;
       case "ArrowLeft":
-        windowSelection.modify(
-          shift ? "extend" : "move",
-          "backward",
-          "character",
-        );
+        Transforms.move(editor, {
+          distance: 1,
+          unit: "character",
+          reverse: true,
+          edge: shift ? "focus" : undefined,
+        });
         break;
       case "ArrowRight":
-        windowSelection.modify(
-          shift ? "extend" : "move",
-          "forward",
-          "character",
-        );
+        Transforms.move(editor, {
+          distance: 1,
+          unit: "character",
+          reverse: false,
+          edge: shift ? "focus" : undefined,
+        });
         break;
     }
   }

@@ -143,7 +143,7 @@ function MusicDecoration({ leaf, rects }: MusicDecorationProps) {
                   height: 1,
                   left: 0,
                   right: 0,
-                  top: (leaf.superscript ? 19.5 : 17) + 2 * i,
+                  top: (leaf.superscript ? 20.5 : 17) + 2 * i,
                   backgroundColor: "black",
                 }}
               />
