@@ -11,6 +11,8 @@
   flex: 1;
   overflow: auto;
   overscroll-behavior: contain;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .backdrop {
@@ -22,8 +24,7 @@
   justify-content: flex-start;
   background-color: whitesmoke;
   box-sizing: border-box;
-  padding: 50px;
-  padding-top: 65px;
+  padding: 65px 50px 75px 50px;
   min-width: fit-content;
 }
 

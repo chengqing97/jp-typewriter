@@ -7,8 +7,8 @@ import {
 } from "react-icons/lu";
 import styles from "./VirtualKeyboard.module.css";
 import { useEffect, useRef, useState } from "react";
-import { Transforms, Range } from "slate";
-import { useSlate } from "slate-react";
+import { Transforms, Range, Editor, Element } from "slate";
+import { useSlate, ReactEditor } from "slate-react";
 import { useEditorContext } from "./useEditorContext";
 
 type Direction = "ArrowLeft" | "ArrowRight" | "ArrowUp" | "ArrowDown";
@@ -53,12 +53,17 @@ export default function VirtualKeyboard() {
   }, []);
 
   function moveCursor(direction: Direction) {
-    const { selection } = editor;
-    if (!selection) return;
+    const { selection: editorSelection } = editor;
+    const windowSelection = window.getSelection();
+    const [block] = Editor.nodes(editor, {
+      match: (n) => Element.isElement(n) && Editor.isBlock(editor, n),
+    });
 
-    const reverse = direction === "ArrowLeft" || direction === "ArrowUp";
+    if (!editorSelection) return;
+    if (!windowSelection) return;
+    if (!block) return;
 
-    if (!shift && Range.isExpanded(selection)) {
+    if (!shift && Range.isExpanded(editorSelection)) {
       if (ctrl) {
         editableRef.current?.dispatchEvent(
           new KeyboardEvent("keydown", {
@@ -72,22 +77,89 @@ export default function VirtualKeyboard() {
         );
       } else {
         Transforms.collapse(editor, {
-          edge: reverse ? "start" : "end",
+          edge:
+            direction === "ArrowLeft" || direction === "ArrowUp"
+              ? "start"
+              : "end",
         });
       }
       return;
     }
 
-    Transforms.move(editor, {
-      distance: 1,
-      unit: ctrl
-        ? "word"
-        : direction === "ArrowLeft" || direction === "ArrowRight"
-          ? "character"
-          : "line",
-      reverse,
-      ...(shift ? { edge: "focus" as const } : {}),
-    });
+    if (ctrl) {
+      switch (direction) {
+        case "ArrowUp":
+          Transforms.move(editor, {
+            distance: 1,
+            unit: "line",
+            reverse: true,
+            edge: shift ? "focus" : undefined,
+          });
+          break;
+        case "ArrowDown":
+          Transforms.move(editor, {
+            distance: 1,
+            unit: "line",
+            reverse: false,
+            edge: shift ? "focus" : undefined,
+          });
+          break;
+        case "ArrowLeft":
+          Transforms.move(editor, {
+            distance: 1,
+            unit: "word",
+            reverse: true,
+            edge: shift ? "focus" : undefined,
+          });
+          break;
+        case "ArrowRight":
+          Transforms.move(editor, {
+            distance: 1,
+            unit: "word",
+            reverse: false,
+            edge: shift ? "focus" : undefined,
+          });
+          break;
+      }
+      return;
+    }
+
+    switch (direction) {
+      case "ArrowUp":
+        windowSelection.modify(shift ? "extend" : "move", "backward", "line");
+        break;
+      case "ArrowDown":
+        windowSelection.modify(shift ? "extend" : "move", "forward", "line");
+        break;
+      case "ArrowLeft":
+        windowSelection.modify(
+          shift ? "extend" : "move",
+          "backward",
+          "character",
+        );
+        break;
+      case "ArrowRight":
+        windowSelection.modify(
+          shift ? "extend" : "move",
+          "forward",
+          "character",
+        );
+        break;
+    }
+  }
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function stopMoving() {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   }
 
   function arrowButton(direction: Direction, icon: React.ReactNode) {
@@ -97,8 +169,18 @@ export default function VirtualKeyboard() {
         className={styles.arrowButton}
         onPointerDown={(e) => {
           e.preventDefault();
-          moveCursor(direction);
+
+          moveCursor(direction); // Immediate movement
+
+          timeoutRef.current = setTimeout(() => {
+            intervalRef.current = setInterval(() => {
+              moveCursor(direction);
+            }, 35);
+          }, 200);
         }}
+        onPointerUp={stopMoving}
+        onPointerLeave={stopMoving}
+        onPointerCancel={stopMoving}
       >
         {icon}
       </button>
@@ -106,11 +188,22 @@ export default function VirtualKeyboard() {
   }
   if (!isFocused) return null;
   return (
-    <>
-      {/* Left: Modifier keys */}
+    <div className={styles.layout}>
+      <button
+        type="button"
+        className={styles.toggleButton}
+        onPointerDown={(e) => e.preventDefault()}
+        onClick={() => setKeyboardVisible((v) => !v)}
+        aria-label={
+          keyboardVisible ? "Hide virtual keyboard" : "Show virtual keyboard"
+        }
+        aria-expanded={keyboardVisible}
+      >
+        <LuKeyboard />
+      </button>
       {keyboardVisible && (
-        <div className={styles.leftWrapper}>
-          <div className={styles.modifierContainer}>
+        <div className={styles.keyboardContainer}>
+          <div className={styles.leftPart}>
             <button
               type="button"
               className={`${styles.modifierButton} ${
@@ -120,7 +213,6 @@ export default function VirtualKeyboard() {
             >
               Shift
             </button>
-
             <button
               type="button"
               className={`${styles.modifierButton} ${
@@ -131,26 +223,49 @@ export default function VirtualKeyboard() {
               Ctrl
             </button>
           </div>
-        </div>
-      )}
 
-      {/* Right: Toggle + Arrow keys */}
-      <div className={styles.rightWrapper}>
-        <button
-          type="button"
-          className={styles.toggleButton}
-          onPointerDown={(e) => e.preventDefault()}
-          onClick={() => setKeyboardVisible((v) => !v)}
-          aria-label={
-            keyboardVisible ? "Hide virtual keyboard" : "Show virtual keyboard"
-          }
-          aria-expanded={keyboardVisible}
-        >
-          <LuKeyboard />
-        </button>
+          <div className={styles.middlePart}>
+            <button
+              type="button"
+              className={styles.actionButton}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                ReactEditor.focus(editor);
+                const { selection } = editor;
+                if (!selection || Range.isCollapsed(selection)) return;
+                document.execCommand("cut");
+              }}
+            >
+              Cut
+            </button>
+            <button
+              type="button"
+              className={styles.actionButton}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                ReactEditor.focus(editor);
+                const { selection } = editor;
+                if (!selection || Range.isCollapsed(selection)) return;
+                document.execCommand("copy");
+              }}
+            >
+              Copy
+            </button>
+            <button
+              type="button"
+              className={styles.actionButton}
+              onPointerDown={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              Paste
+            </button>
+          </div>
 
-        {keyboardVisible && (
-          <div className={styles.arrowContainer}>
+          <div className={styles.rightPart}>
             {arrowButton("ArrowLeft", <LuArrowLeft />)}
 
             <div className={styles.arrowColumn}>
@@ -160,8 +275,8 @@ export default function VirtualKeyboard() {
 
             {arrowButton("ArrowRight", <LuArrowRight />)}
           </div>
-        )}
-      </div>
-    </>
+        </div>
+      )}
+    </div>
   );
 }
