@@ -201,14 +201,13 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
             _tool(Icons.format_italic, 'Italic (test)', () {}),
             _tool(Icons.arrow_upward, 'Octave up (next phase)', () {}),
             _tool(Icons.arrow_downward, 'Octave down (next phase)', () {}),
-            _tool(Icons.undo, 'Undo', () {
-              _controller.undo();
-              _focusNode.requestFocus();
-            }),
-            _tool(Icons.redo, 'Redo', () {
-              _controller.redo();
-              _focusNode.requestFocus();
-            }),
+            for (final digit in ['1', '2', '3', '4', '5', '6', '7'])
+              TextButton(
+                onPressed: () => _insert(digit),
+                child: Text(digit, style: const TextStyle(fontSize: 18)),
+              ),
+            _tool(Icons.space_bar, 'Insert space', () => _insert(' ')),
+            _tool(Icons.keyboard_return, 'New line', () => _insert('\n')),
             _tool(Icons.select_all, 'Select all', _selectAll),
           ],
         ),
