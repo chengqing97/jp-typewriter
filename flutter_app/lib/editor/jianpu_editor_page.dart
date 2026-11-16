@@ -7,7 +7,7 @@ import 'octave_dot_painter.dart';
 /// First editing-engine spike: use Flutter's single EditableText surface,
 /// rather than one widget per note or a webview contenteditable element.
 /// Keeps a single editable text surface while rendering per-range Jianpu styles.
-class JianpuEditingController extends TextEditingController {
+class JianpuEditingController extends TextEditingController implements JianpuNotationSource {
   JianpuEditingController({required String text}) : super(text: text) {
     _lastText = text;
     _runs = text.isEmpty ? <JianpuRun>[] : <JianpuRun>[JianpuRun(text: text)];
@@ -16,6 +16,9 @@ class JianpuEditingController extends TextEditingController {
 
   late String _lastText;
   late List<JianpuRun> _runs;
+
+  @override
+  List<JianpuRun> get runs => List.unmodifiable(_runs);
 
   void formatRange(int start, int end, JianpuRun Function(JianpuRun) transform) {
     if (start < 0 || end > text.length || start >= end) return;
