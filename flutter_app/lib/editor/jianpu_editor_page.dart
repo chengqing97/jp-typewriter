@@ -226,7 +226,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
 
   void _changeOctave(int amount) {
     _formatSelection((run) => run.copyWith(
-          octave: (run.octave + amount).clamp(-2, 2),
+          octave: (run.octave + amount).clamp(-2, 2).toInt(),
         ));
   }
 
@@ -461,7 +461,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         child: Row(
           children: [
             _tool(Icons.format_italic, 'Toggle italic on selection', _toggleItalic),
-            _tool(Icons.superscript, 'Toggle superscript on selection', _toggleSuperscript),
+            _tool(Icons.text_fields, 'Toggle superscript on selection', _toggleSuperscript),
             _tool(Icons.horizontal_rule, 'Cycle beam level on selection', _cycleBeam),
             _tool(Icons.arrow_upward, 'Raise octave on selection', () => _changeOctave(1)),
             _tool(Icons.arrow_downward, 'Lower octave on selection', () => _changeOctave(-1)),
