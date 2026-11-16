@@ -62,6 +62,50 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
             SelectAllTextIntent(SelectionChangedCause.keyboard),
         SingleActivator(LogicalKeyboardKey.keyA, meta: true):
             SelectAllTextIntent(SelectionChangedCause.keyboard),
+
+        // Word-wise navigation on Android/Windows/Linux keyboards.
+        SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
+            ExtendSelectionToNextWordBoundaryIntent(
+          forward: false,
+          collapseSelection: true,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
+            ExtendSelectionToNextWordBoundaryIntent(
+          forward: true,
+          collapseSelection: true,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowLeft, control: true, shift: true):
+            ExtendSelectionToNextWordBoundaryIntent(
+          forward: false,
+          collapseSelection: false,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowRight, control: true, shift: true):
+            ExtendSelectionToNextWordBoundaryIntent(
+          forward: true,
+          collapseSelection: false,
+        ),
+
+        // Option + Left/Right is the usual word-navigation shortcut on iPad.
+        SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true):
+            ExtendSelectionToNextWordBoundaryIntent(
+          forward: false,
+          collapseSelection: true,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowRight, alt: true):
+            ExtendSelectionToNextWordBoundaryIntent(
+          forward: true,
+          collapseSelection: true,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true, shift: true):
+            ExtendSelectionToNextWordBoundaryIntent(
+          forward: false,
+          collapseSelection: false,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowRight, alt: true, shift: true):
+            ExtendSelectionToNextWordBoundaryIntent(
+          forward: true,
+          collapseSelection: false,
+        ),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
