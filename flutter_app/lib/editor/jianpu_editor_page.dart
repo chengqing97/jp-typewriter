@@ -30,8 +30,8 @@ class JianpuEditingController extends TextEditingController {
         continue;
       }
 
-      final localStart = (start - runStart).clamp(0, run.text.length);
-      final localEnd = (end - runStart).clamp(0, run.text.length);
+      final localStart = (start - runStart).clamp(0, run.text.length).toInt();
+      final localEnd = (end - runStart).clamp(0, run.text.length).toInt();
       if (localStart > 0) {
         _appendRun(updated, run.copyWith(text: run.text.substring(0, localStart)));
       }
