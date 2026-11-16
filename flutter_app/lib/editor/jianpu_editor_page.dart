@@ -69,6 +69,7 @@ class JianpuEditingController extends TextEditingController {
     final current = text;
     if (current == _lastText) return;
 
+    // Find the smallest changed range shared by the old and new strings.
     var prefix = 0;
     while (prefix < _lastText.length &&
         prefix < current.length &&
@@ -86,55 +87,47 @@ class JianpuEditingController extends TextEditingController {
 
     final oldEnd = _lastText.length - suffix;
     final inserted = current.substring(prefix, current.length - suffix);
-    final updated = <JianpuRun>[];
-    var offset = 0;
-
-    for (final run in _runs) {
-      final runStart = offset;
-      final runEnd = offset + run.text.length;
-      offset = runEnd;
-
-      if (runStart < prefix) {
-        final keepEnd = (runEnd < prefix ? runEnd : prefix);
-        if (keepEnd > runStart) {
-          _appendRun(updated, run.copyWith(
-            text: run.text.substring(0, keepEnd - runStart),
-          ));
-        }
-      }
-      if (runEnd > oldEnd) {
-        final keepStart = runStart > oldEnd ? runStart : oldEnd;
-        if (runEnd > keepStart) {
-          _appendRun(updated, run.copyWith(
-            text: run.text.substring(keepStart - runStart),
-          ));
-        }
-      }
-    }
-
-    // Inserted text starts unformatted; existing formatting outside the edit survives.
     final before = <JianpuRun>[];
     final after = <JianpuRun>[];
-    var newOffset = 0;
-    for (final run in updated) {
-      final runEnd = newOffset + run.text.length;
-      if (runEnd <= prefix) {
-        _appendRun(before, run);
-      } else {
-        _appendRun(after, run);
+
+    // Split the old runs into two independent sides of the edit. Do not merge
+    // them together before inserting new text: that would move the left side
+    // to the right whenever both sides share the same formatting.
+    var offset = 0;
+    for (final run in _runs) {
+      final runStart = offset;
+      final runEnd = runStart + run.text.length;
+      offset = runEnd;
+
+      final beforeEnd = (runEnd < prefix ? runEnd : prefix);
+      if (beforeEnd > runStart) {
+        _appendRun(
+          before,
+          run.copyWith(text: run.text.substring(0, beforeEnd - runStart)),
+        );
       }
-      newOffset = runEnd;
+
+      final afterStart = (runStart > oldEnd ? runStart : oldEnd);
+      if (runEnd > afterStart) {
+        _appendRun(
+          after,
+          run.copyWith(text: run.text.substring(afterStart - runStart)),
+        );
+      }
     }
-    _runs = <JianpuRun>[];
+
+    final rebuilt = <JianpuRun>[];
     for (final run in before) {
-      _appendRun(_runs, run);
+      _appendRun(rebuilt, run);
     }
     if (inserted.isNotEmpty) {
-      _appendRun(_runs, JianpuRun(text: inserted));
+      _appendRun(rebuilt, JianpuRun(text: inserted));
     }
     for (final run in after) {
-      _appendRun(_runs, run);
+      _appendRun(rebuilt, run);
     }
+
+    _runs = rebuilt;
     _lastText = current;
   }
 
