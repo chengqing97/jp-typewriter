@@ -88,20 +88,40 @@ class JianpuEditingController extends TextEditingController {
     // Repeated characters (especially spaces) make a text diff ambiguous.
     // For a pure insertion, the post-edit caret tells us the actual insertion
     // point. Prefer it when the old text is exactly preserved around it.
-    final insertedLength = current.length - _lastText.length;
+    final lengthDelta = current.length - _lastText.length;
     final selection = value.selection;
-    if (insertedLength > 0 &&
-        selection.isValid &&
-        selection.isCollapsed) {
-      final caretPrefix = selection.extentOffset - insertedLength;
-      if (caretPrefix >= 0 &&
-          caretPrefix <= _lastText.length &&
-          _lastText.substring(0, caretPrefix) ==
-              current.substring(0, caretPrefix) &&
-          _lastText.substring(caretPrefix) ==
-              current.substring(caretPrefix + insertedLength)) {
-        prefix = caretPrefix;
-        suffix = _lastText.length - prefix;
+    if (selection.isValid && selection.isCollapsed) {
+      final caret = selection.extentOffset;
+
+      if (lengthDelta > 0) {
+        // For insertion, the caret is immediately after the inserted text.
+        final insertedLength = lengthDelta;
+        final editStart = caret - insertedLength;
+        if (editStart >= 0 &&
+            editStart <= _lastText.length &&
+            _lastText.substring(0, editStart) ==
+                current.substring(0, editStart) &&
+            _lastText.substring(editStart) ==
+                current.substring(editStart + insertedLength)) {
+          prefix = editStart;
+          suffix = _lastText.length - prefix;
+        }
+      } else if (lengthDelta < 0) {
+        // For deletion, the caret marks the start of the removed range.
+        // This disambiguates identical adjacent characters with different
+        // formatting, where a common-prefix diff may otherwise delete the
+        // wrong run's character.
+        final deletedLength = -lengthDelta;
+        final editStart = caret;
+        if (editStart >= 0 &&
+            editStart + deletedLength <= _lastText.length &&
+            _lastText.substring(0, editStart) ==
+                current.substring(0, editStart) &&
+            _lastText.substring(editStart + deletedLength) ==
+                current.substring(editStart)) {
+          prefix = editStart;
+          suffix = _lastText.length - editStart - deletedLength;
+        }
       }
     }
 
