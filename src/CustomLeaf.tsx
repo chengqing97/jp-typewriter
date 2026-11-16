@@ -95,11 +95,13 @@ function MusicDecoration({ leaf, rects }: MusicDecorationProps) {
   return (
     <span
       contentEditable={false}
+      aria-hidden="true"
       style={{
         position: "absolute",
         inset: 0,
         pointerEvents: "none",
         userSelect: "none",
+        WebkitUserSelect: "none",
       }}
     >
       {rects.map((rect, i) => (

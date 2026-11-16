@@ -64,24 +64,25 @@ export function SlurElement(props: RenderElementProps) {
   }
 
   return (
-    <pre
+    <span
       {...props.attributes}
       style={{
         position: "relative",
-        display: "inline-block",
         marginTop: props.element.gap,
       }}
     >
       {...props.children}
       <span
+        contentEditable={false}
         style={{
           position: "absolute",
           borderTop: "1px solid black",
           borderRadius: 5,
+          pointerEvents: "none",
           ...getSlurStyle(),
         }}
       />
-    </pre>
+    </span>
   );
 }
 

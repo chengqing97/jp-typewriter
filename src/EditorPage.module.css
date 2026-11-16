@@ -40,7 +40,8 @@
   padding: 40px;
   outline: none;
   box-sizing: border-box;
-  user-select: none;
   touch-action: manipulation;
   width: fit-content;
+  user-select: text;
+  -webkit-user-select: text;
 }
