@@ -85,6 +85,26 @@ class JianpuEditingController extends TextEditingController {
       suffix++;
     }
 
+    // Repeated characters (especially spaces) make a text diff ambiguous.
+    // For a pure insertion, the post-edit caret tells us the actual insertion
+    // point. Prefer it when the old text is exactly preserved around it.
+    final insertedLength = current.length - _lastText.length;
+    final selection = value.selection;
+    if (insertedLength > 0 &&
+        selection.isValid &&
+        selection.isCollapsed) {
+      final caretPrefix = selection.extentOffset - insertedLength;
+      if (caretPrefix >= 0 &&
+          caretPrefix <= _lastText.length &&
+          _lastText.substring(0, caretPrefix) ==
+              current.substring(0, caretPrefix) &&
+          _lastText.substring(caretPrefix) ==
+              current.substring(caretPrefix + insertedLength)) {
+        prefix = caretPrefix;
+        suffix = _lastText.length - prefix;
+      }
+    }
+
     final oldEnd = _lastText.length - suffix;
     final inserted = current.substring(prefix, current.length - suffix);
     final before = <JianpuRun>[];
