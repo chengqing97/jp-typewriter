@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../models/jianpu_document.dart';
-import 'jianpu_editor_page.dart';
+
+
+abstract interface class JianpuNotationSource {
+  String get text;
+  List<JianpuRun> get runs;
+}
 
 /// Paints octave dots above/below note digits without adding characters to the
 /// editable text. Keeping the dots out of the TextSpan tree preserves the
@@ -14,7 +19,7 @@ class OctaveDotPainter extends CustomPainter {
     required this.textScaler,
   }) : super(repaint: controller);
 
-  final JianpuEditingController controller;
+  final JianpuNotationSource controller;
   final TextStyle baseStyle;
   final TextDirection textDirection;
   final TextScaler textScaler;
