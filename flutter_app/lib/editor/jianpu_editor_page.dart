@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/jianpu_document.dart';
+import 'octave_dot_painter.dart';
 
 /// First editing-engine spike: use Flutter's single EditableText surface,
 /// rather than one widget per note or a webview contenteditable element.
@@ -180,10 +181,9 @@ class JianpuEditingController extends TextEditingController {
     final spans = <InlineSpan>[];
     for (final run in _runs) {
       final decorations = <TextDecoration>[];
-      if (run.beam > 0 || run.octave < 0) {
+      if (run.beam > 0) {
         decorations.add(TextDecoration.underline);
       }
-      if (run.octave > 0) decorations.add(TextDecoration.overline);
 
       spans.add(TextSpan(
         text: run.text,
@@ -422,7 +422,19 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                   ),
                                 ),
                                 const SizedBox(height: 28),
-                                EditableText(
+                                CustomPaint(
+                                  foregroundPainter: OctaveDotPainter(
+                                    controller: _controller,
+                                    baseStyle: const TextStyle(
+                                      fontFamily: 'monospace',
+                                      fontSize: 23,
+                                      height: 2.0,
+                                      color: Color(0xFF202124),
+                                    ),
+                                    textDirection: Directionality.of(context),
+                                    textScaler: MediaQuery.textScalerOf(context),
+                                  ),
+                                  child: EditableText(
                                   controller: _controller,
                                   focusNode: _focusNode,
                                   style: const TextStyle(
@@ -446,6 +458,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                   textCapitalization:
                                       TextCapitalization.none,
                                   onChanged: (_) => setState(() {}),
+                                  ),
                                 ),
                                 if (_showHelp) ...[
                                   const SizedBox(height: 32),
