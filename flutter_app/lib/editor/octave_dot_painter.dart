@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/jianpu_document.dart';
 
 
-abstract interface class JianpuNotationSource {
+abstract interface class JianpuNotationSource implements Listenable {
   String get text;
   List<JianpuRun> get runs;
 }
