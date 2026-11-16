@@ -85,6 +85,28 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
           collapseSelection: false,
         ),
 
+        // Ctrl + Up/Down moves to the beginning/end of the current line.
+        SingleActivator(LogicalKeyboardKey.arrowUp, control: true):
+            ExtendSelectionToLineBreakIntent(
+          forward: false,
+          collapseSelection: true,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowDown, control: true):
+            ExtendSelectionToLineBreakIntent(
+          forward: true,
+          collapseSelection: true,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowUp, control: true, shift: true):
+            ExtendSelectionToLineBreakIntent(
+          forward: false,
+          collapseSelection: false,
+        ),
+        SingleActivator(LogicalKeyboardKey.arrowDown, control: true, shift: true):
+            ExtendSelectionToLineBreakIntent(
+          forward: true,
+          collapseSelection: false,
+        ),
+
         // Option + Left/Right is the usual word-navigation shortcut on iPad.
         SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true):
             ExtendSelectionToNextWordBoundaryIntent(
