@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../models/jianpu_document.dart';
 import 'octave_dot_painter.dart';
@@ -210,6 +211,15 @@ class JianpuEditingController extends TextEditingController implements JianpuNot
   }
 }
 
+enum EditorFormatCommand {
+  octaveUp, octaveDown, beamUp, beamDown, superscript, italic, clear,
+}
+
+class EditorFormatIntent extends Intent {
+  const EditorFormatIntent(this.command);
+  final EditorFormatCommand command;
+}
+
 class JianpuEditorPage extends StatefulWidget {
   const JianpuEditorPage({super.key});
 
@@ -221,6 +231,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   late final JianpuEditingController _controller;
   late final FocusNode _focusNode;
   bool _showHelp = true;
+  int _slurSequence = 0;
 
   static const _sample = '4 4 5 5 | 6 6 5 -\n'
       '4 4 3 3 | 2 2 1 -\n'
@@ -232,25 +243,15 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     super.initState();
     _controller = JianpuEditingController(text: _sample);
     _focusNode = FocusNode(debugLabel: 'Jianpu editor');
+    _controller.addListener(_handleControllerChanged);
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_handleControllerChanged);
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
-  }
-
-  void _insert(String value) {
-    final selection = _controller.selection;
-    final start = selection.isValid ? selection.start : _controller.text.length;
-    final end = selection.isValid ? selection.end : start;
-    final text = _controller.text.replaceRange(start, end, value);
-    _controller.value = TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: start + value.length),
-    );
-    _focusNode.requestFocus();
   }
 
   void _formatSelection(JianpuRun Function(JianpuRun) transform) {
@@ -260,9 +261,20 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     _focusNode.requestFocus();
   }
 
+  bool get _hasSelection =>
+      _controller.selection.isValid && !_controller.selection.isCollapsed;
+
+  void _handleControllerChanged() {
+    if (mounted) setState(() {});
+  }
+
   void _changeOctave(int amount) {
+    _formatSelection((run) => run.copyWith(octave: run.octave + amount));
+  }
+
+  void _changeBeam(int amount) {
     _formatSelection((run) => run.copyWith(
-          octave: (run.octave + amount).clamp(-2, 2).toInt(),
+          beam: (run.beam + amount).clamp(0, 16).toInt(),
         ));
   }
 
@@ -271,12 +283,37 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   }
 
   void _toggleSuperscript() {
-    _formatSelection(
-        (run) => run.copyWith(superscript: !run.superscript));
+    _formatSelection((run) => run.copyWith(superscript: !run.superscript));
   }
 
-  void _cycleBeam() {
-    _formatSelection((run) => run.copyWith(beam: (run.beam + 1) % 4));
+  void _toggleSlur() {
+    if (!_hasSelection) return;
+    final shouldClear = _selectedRuns().any((run) => run.slurId != null);
+    final id = 'slur-${++_slurSequence}';
+    _formatSelection((run) => shouldClear
+        ? run.copyWith(clearSlur: true)
+        : run.copyWith(slurId: id));
+  }
+
+  List<JianpuRun> _selectedRuns() {
+    final selection = _controller.selection;
+    var offset = 0;
+    return _controller.runs.where((run) {
+      final start = offset;
+      final end = start + run.text.length;
+      offset = end;
+      return end > selection.start && start < selection.end;
+    }).toList();
+  }
+
+  void _clearStyles() {
+    _formatSelection((run) => run.copyWith(
+          octave: 0,
+          beam: 0,
+          superscript: false,
+          italic: false,
+          clearSlur: true,
+        ));
   }
 
   void _selectAll() {
@@ -289,84 +326,109 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   @override
   Widget build(BuildContext context) {
     return Shortcuts(
-      shortcuts: const <ShortcutActivator, Intent>{
-        SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
-        SingleActivator(LogicalKeyboardKey.keyA, control: true):
-            SelectAllTextIntent(SelectionChangedCause.keyboard),
-        SingleActivator(LogicalKeyboardKey.keyA, meta: true):
-            SelectAllTextIntent(SelectionChangedCause.keyboard),
+      shortcuts: <ShortcutActivator, Intent>{
+        const SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
+        const SingleActivator(LogicalKeyboardKey.keyA, control: true):
+            const SelectAllTextIntent(SelectionChangedCause.keyboard),
+        const SingleActivator(LogicalKeyboardKey.keyA, meta: true):
+            const SelectAllTextIntent(SelectionChangedCause.keyboard),
 
-        // Word-wise navigation on Android/Windows/Linux keyboards.
-        SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
-            ExtendSelectionToNextWordBoundaryIntent(
-          forward: false,
-          collapseSelection: true,
-        ),
-        SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
-            ExtendSelectionToNextWordBoundaryIntent(
-          forward: true,
-          collapseSelection: true,
-        ),
-        SingleActivator(LogicalKeyboardKey.arrowLeft, control: true, shift: true):
-            ExtendSelectionToNextWordBoundaryIntent(
-          forward: false,
-          collapseSelection: false,
-        ),
-        SingleActivator(LogicalKeyboardKey.arrowRight, control: true, shift: true):
-            ExtendSelectionToNextWordBoundaryIntent(
-          forward: true,
-          collapseSelection: false,
-        ),
-
-        // Ctrl + Up/Down moves to the beginning/end of the current line.
         SingleActivator(LogicalKeyboardKey.arrowUp, control: true):
-            ExtendSelectionToLineBreakIntent(
-          forward: false,
-          collapseSelection: true,
-        ),
+            _hasSelection
+                ? const EditorFormatIntent(EditorFormatCommand.octaveUp)
+                : const ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true),
         SingleActivator(LogicalKeyboardKey.arrowDown, control: true):
-            ExtendSelectionToLineBreakIntent(
-          forward: true,
-          collapseSelection: true,
-        ),
-        SingleActivator(LogicalKeyboardKey.arrowUp, control: true, shift: true):
-            ExtendSelectionToLineBreakIntent(
-          forward: false,
-          collapseSelection: false,
-        ),
-        SingleActivator(LogicalKeyboardKey.arrowDown, control: true, shift: true):
-            ExtendSelectionToLineBreakIntent(
-          forward: true,
-          collapseSelection: false,
-        ),
+            _hasSelection
+                ? const EditorFormatIntent(EditorFormatCommand.octaveDown)
+                : const ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true),
+        SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
+            _hasSelection
+                ? const EditorFormatIntent(EditorFormatCommand.beamUp)
+                : const ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: true),
+        SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
+            _hasSelection
+                ? const EditorFormatIntent(EditorFormatCommand.beamDown)
+                : const ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: true),
 
-        // Option + Left/Right is the usual word-navigation shortcut on iPad.
-        SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true):
-            ExtendSelectionToNextWordBoundaryIntent(
-          forward: false,
-          collapseSelection: true,
-        ),
-        SingleActivator(LogicalKeyboardKey.arrowRight, alt: true):
-            ExtendSelectionToNextWordBoundaryIntent(
-          forward: true,
-          collapseSelection: true,
-        ),
-        SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true, shift: true):
-            ExtendSelectionToNextWordBoundaryIntent(
-          forward: false,
-          collapseSelection: false,
-        ),
-        SingleActivator(LogicalKeyboardKey.arrowRight, alt: true, shift: true):
-            ExtendSelectionToNextWordBoundaryIntent(
-          forward: true,
-          collapseSelection: false,
-        ),
+        SingleActivator(LogicalKeyboardKey.arrowUp, meta: true):
+            _hasSelection
+                ? const EditorFormatIntent(EditorFormatCommand.octaveUp)
+                : const ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true),
+        SingleActivator(LogicalKeyboardKey.arrowDown, meta: true):
+            _hasSelection
+                ? const EditorFormatIntent(EditorFormatCommand.octaveDown)
+                : const ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true),
+        SingleActivator(LogicalKeyboardKey.arrowLeft, meta: true):
+            _hasSelection
+                ? const EditorFormatIntent(EditorFormatCommand.beamUp)
+                : const ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: true),
+        SingleActivator(LogicalKeyboardKey.arrowRight, meta: true):
+            _hasSelection
+                ? const EditorFormatIntent(EditorFormatCommand.beamDown)
+                : const ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: true),
+
+        if (_hasSelection) ...{
+          const SingleActivator(LogicalKeyboardKey.keyS, control: true):
+              const EditorFormatIntent(EditorFormatCommand.superscript),
+          const SingleActivator(LogicalKeyboardKey.keyI, control: true):
+              const EditorFormatIntent(EditorFormatCommand.italic),
+          const SingleActivator(LogicalKeyboardKey.keyD, control: true):
+              const EditorFormatIntent(EditorFormatCommand.clear),
+          const SingleActivator(LogicalKeyboardKey.keyS, meta: true):
+              const EditorFormatIntent(EditorFormatCommand.superscript),
+          const SingleActivator(LogicalKeyboardKey.keyI, meta: true):
+              const EditorFormatIntent(EditorFormatCommand.italic),
+          const SingleActivator(LogicalKeyboardKey.keyD, meta: true):
+              const EditorFormatIntent(EditorFormatCommand.clear),
+        },
+
+        const SingleActivator(LogicalKeyboardKey.arrowLeft, control: true, shift: true):
+            ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: false),
+        const SingleActivator(LogicalKeyboardKey.arrowRight, control: true, shift: true):
+            ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: false),
+        const SingleActivator(LogicalKeyboardKey.arrowUp, control: true, shift: true):
+            ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: false),
+        const SingleActivator(LogicalKeyboardKey.arrowDown, control: true, shift: true):
+            ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: false),
+        const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true):
+            ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: true),
+        const SingleActivator(LogicalKeyboardKey.arrowRight, alt: true):
+            ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: true),
+        const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true, shift: true):
+            ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: false),
+        const SingleActivator(LogicalKeyboardKey.arrowRight, alt: true, shift: true):
+            ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: false),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
           SelectAllTextIntent: CallbackAction<SelectAllTextIntent>(
             onInvoke: (_) {
-              _selectAll();
+              if (_hasSelection) {
+                _toggleSlur();
+              } else {
+                _selectAll();
+              }
+              return null;
+            },
+          ),
+          EditorFormatIntent: CallbackAction<EditorFormatIntent>(
+            onInvoke: (intent) {
+              switch (intent.command) {
+                case EditorFormatCommand.octaveUp:
+                  _changeOctave(1);
+                case EditorFormatCommand.octaveDown:
+                  _changeOctave(-1);
+                case EditorFormatCommand.beamUp:
+                  _changeBeam(1);
+                case EditorFormatCommand.beamDown:
+                  _changeBeam(-1);
+                case EditorFormatCommand.superscript:
+                  _toggleSuperscript();
+                case EditorFormatCommand.italic:
+                  _toggleItalic();
+                case EditorFormatCommand.clear:
+                  _clearStyles();
+              }
               return null;
             },
           ),
@@ -425,14 +487,19 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                   ),
                                 ),
                                 const SizedBox(height: 28),
-                                CustomPaint(
+                                Theme(
+                                  data: Theme.of(context).copyWith(
+                                    textSelectionTheme: const TextSelectionThemeData(
+                                      selectionHandleColor: Color(0xFF315E9E),
+                                    ),
+                                  ),
+                                  child: CustomPaint(
                                   foregroundPainter: OctaveDotPainter(
                                     controller: _controller,
-                                    baseStyle: const TextStyle(
-                                      fontFamily: 'monospace',
+                                    baseStyle: GoogleFonts.lxgwWenKaiMonoTc(
                                       fontSize: 23,
                                       height: 2.0,
-                                      color: Color(0xFF202124),
+                                      color: const Color(0xFF202124),
                                     ),
                                     textDirection: Directionality.of(context),
                                     textScaler: MediaQuery.textScalerOf(context),
@@ -440,11 +507,10 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                   child: EditableText(
                                   controller: _controller,
                                   focusNode: _focusNode,
-                                  style: const TextStyle(
-                                    fontFamily: 'monospace',
+                                  style: GoogleFonts.lxgwWenKaiMonoTc(
                                     fontSize: 23,
                                     height: 2.0,
-                                    color: Color(0xFF202124),
+                                    color: const Color(0xFF202124),
                                   ),
                                   cursorColor: const Color(0xFF315E9E),
                                   backgroundCursorColor: Colors.grey,
@@ -458,9 +524,11 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                   enableSuggestions: false,
                                   selectionControls:
                                       materialTextSelectionControls,
+                                  enableInteractiveSelection: true,
                                   textCapitalization:
                                       TextCapitalization.none,
                                   onChanged: (_) => setState(() {}),
+                                  ),
                                   ),
                                 ),
                                 if (_showHelp) ...[
@@ -509,20 +577,16 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
           children: [
-            _tool(Icons.format_italic, 'Toggle italic on selection', _toggleItalic),
-            _tool(Icons.text_fields, 'Toggle superscript on selection', _toggleSuperscript),
-            _tool(Icons.horizontal_rule, 'Cycle beam level on selection', _cycleBeam),
-            _tool(Icons.arrow_upward, 'Raise octave on selection', () => _changeOctave(1)),
-            _tool(Icons.arrow_downward, 'Lower octave on selection', () => _changeOctave(-1)),
-            for (final digit in ['1', '2', '3', '4', '5', '6', '7'])
-              TextButton(
-                onPressed: () => _insert(digit),
-                child: Text(digit, style: const TextStyle(fontSize: 18)),
-              ),
-            _tool(Icons.space_bar, 'Insert space', () => _insert(' ')),
-            _tool(Icons.keyboard_return, 'New line', () => _insert('\n')),
-            _tool(Icons.select_all, 'Select all', _selectAll),
+            _tool(Icons.format_italic, 'Toggle italic (Ctrl/Cmd+I)', _toggleItalic),
+            _tool(Icons.text_fields, 'Toggle superscript (Ctrl/Cmd+S)', _toggleSuperscript),
+            _tool(Icons.horizontal_rule, 'Increase beam (Ctrl/Cmd+Left)', () => _changeBeam(1)),
+            _tool(Icons.remove, 'Decrease beam (Ctrl/Cmd+Right)', () => _changeBeam(-1)),
+            _tool(Icons.arrow_upward, 'Raise octave (Ctrl/Cmd+Up)', () => _changeOctave(1)),
+            _tool(Icons.arrow_downward, 'Lower octave (Ctrl/Cmd+Down)', () => _changeOctave(-1)),
+            _tool(Icons.format_clear, 'Clear formatting (Ctrl/Cmd+D)', _clearStyles),
+            _tool(Icons.architecture, 'Toggle slur (Ctrl/Cmd+A)', _toggleSlur),
           ],
+
         ),
       ),
     );
