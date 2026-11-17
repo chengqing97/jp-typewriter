@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -235,6 +237,12 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   late final FocusNode _focusNode;
   bool _showHelp = true;
   int _slurSequence = 0;
+  Timer? _arrowRepeatTimer;
+  Timer? _arrowRepeatInitialTimer;
+  LogicalKeyboardKey? _heldArrowKey;
+
+  static const _arrowRepeatDelay = Duration(milliseconds: 400);
+  static const _arrowRepeatInterval = Duration(milliseconds: 45);
 
   static const _sample = '4 4 5 5 | 6 6 5 -\n'
       '4 4 3 3 | 2 2 1 -\n'
@@ -250,10 +258,13 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       onKeyEvent: _handleRepeatKey,
     );
     _controller.addListener(_handleControllerChanged);
+    _focusNode.addListener(_handleFocusChanged);
   }
 
   @override
   void dispose() {
+    _focusNode.removeListener(_handleFocusChanged);
+    _stopArrowRepeat();
     _controller.removeListener(_handleControllerChanged);
     _controller.dispose();
     _focusNode.dispose();
@@ -321,52 +332,102 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         ));
   }
 
+  void _handleFocusChanged() {
+    if (!_focusNode.hasFocus) _stopArrowRepeat();
+  }
+
+  bool _isArrowKey(LogicalKeyboardKey key) =>
+      key == LogicalKeyboardKey.arrowLeft ||
+      key == LogicalKeyboardKey.arrowRight ||
+      key == LogicalKeyboardKey.arrowUp ||
+      key == LogicalKeyboardKey.arrowDown;
+
   KeyEventResult _handleRepeatKey(FocusNode node, KeyEvent event) {
-    if (event is! KeyRepeatEvent) return KeyEventResult.ignored;
+    if (event is KeyUpEvent && event.logicalKey == _heldArrowKey) {
+      _stopArrowRepeat();
+      return KeyEventResult.handled;
+    }
+
+    if (event is! KeyDownEvent || !_isArrowKey(event.logicalKey)) {
+      return KeyEventResult.ignored;
+    }
+
+    // Leave modified arrows to Shortcuts (word/line navigation and formatting).
     if (HardwareKeyboard.instance.isControlPressed ||
         HardwareKeyboard.instance.isMetaPressed ||
         HardwareKeyboard.instance.isAltPressed) {
       return KeyEventResult.ignored;
     }
 
-    final key = event.logicalKey;
+    // Handle the initial press ourselves, then synthesize repeats because
+    // iPadOS currently sends only KeyDownEvent and KeyUpEvent to Flutter.
+    _stopArrowRepeat();
+    _heldArrowKey = event.logicalKey;
+    _moveCursorForArrow(event.logicalKey);
+
+    _arrowRepeatInitialTimer = Timer(_arrowRepeatDelay, () {
+      if (!_focusNode.hasFocus || _heldArrowKey == null) return;
+      _moveCursorForArrow(_heldArrowKey!);
+      _arrowRepeatTimer = Timer.periodic(_arrowRepeatInterval, (_) {
+        final key = _heldArrowKey;
+        if (!_focusNode.hasFocus || key == null) {
+          _stopArrowRepeat();
+          return;
+        }
+        _moveCursorForArrow(key);
+      });
+    });
+
+    return KeyEventResult.handled;
+  }
+
+  void _stopArrowRepeat() {
+    _arrowRepeatInitialTimer?.cancel();
+    _arrowRepeatInitialTimer = null;
+    _arrowRepeatTimer?.cancel();
+    _arrowRepeatTimer = null;
+    _heldArrowKey = null;
+  }
+
+  void _moveCursorForArrow(LogicalKeyboardKey key) {
     final selection = _controller.selection;
-    if (!selection.isValid) return KeyEventResult.ignored;
+    if (!selection.isValid) return;
     final text = _controller.text;
-    var caret = selection.extentOffset;
+    final caret = selection.extentOffset;
     var next = caret;
 
     if (key == LogicalKeyboardKey.arrowLeft ||
         key == LogicalKeyboardKey.arrowRight) {
       final left = key == LogicalKeyboardKey.arrowLeft;
-      if (!HardwareKeyboard.instance.isShiftPressed && !selection.isCollapsed) {
+      if (!HardwareKeyboard.instance.isShiftPressed &&
+          !selection.isCollapsed) {
         next = left ? selection.start : selection.end;
       } else {
         next = (caret + (left ? -1 : 1)).clamp(0, text.length).toInt();
       }
     } else if (key == LogicalKeyboardKey.arrowUp ||
         key == LogicalKeyboardKey.arrowDown) {
-      final previousBreak = caret > 0 ? text.lastIndexOf('\n', caret - 1) : -1;
+      final previousBreak = caret > 0 ? text.lastIndexOf('\\n', caret - 1) : -1;
       final lineStart = previousBreak + 1;
-      final lineEndFound = text.indexOf('\n', caret);
+      final lineEndFound = text.indexOf('\\n', caret);
       final lineEnd = lineEndFound < 0 ? text.length : lineEndFound;
       final column = caret - lineStart;
       if (key == LogicalKeyboardKey.arrowUp) {
-        if (lineStart == 0) return KeyEventResult.ignored;
+        if (lineStart == 0) return;
         final previousEnd = lineStart - 1;
         final previousStart =
-            (previousEnd > 0 ? text.lastIndexOf('\n', previousEnd - 1) + 1 : 0);
+            (previousEnd > 0 ? text.lastIndexOf('\\n', previousEnd - 1) + 1 : 0);
         next =
             (previousStart + column).clamp(previousStart, previousEnd).toInt();
       } else {
-        if (lineEnd == text.length) return KeyEventResult.ignored;
+        if (lineEnd == text.length) return;
         final nextStart = lineEnd + 1;
-        final nextEndFound = text.indexOf('\n', nextStart);
+        final nextEndFound = text.indexOf('\\n', nextStart);
         final nextEnd = nextEndFound < 0 ? text.length : nextEndFound;
         next = (nextStart + column).clamp(nextStart, nextEnd).toInt();
       }
     } else {
-      return KeyEventResult.ignored;
+      return;
     }
 
     if (HardwareKeyboard.instance.isShiftPressed) {
@@ -376,7 +437,6 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     } else {
       _controller.selection = TextSelection.collapsed(offset: next);
     }
-    return KeyEventResult.handled;
   }
 
   void _selectAll() {
