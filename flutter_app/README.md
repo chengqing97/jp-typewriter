@@ -8,8 +8,13 @@ It does not replace or modify the current application.
 ```sh
 cd flutter_app
 flutter pub get
+dart run build_runner build --delete-conflicting-outputs
 flutter run
 ```
+
+Drift generates the typed database implementation in
+`lib/storage/app_database.g.dart`. Run the code-generation command after
+changing the Drift tables or database annotations.
 
 ## Current scope
 
@@ -18,8 +23,10 @@ flutter run
 - A4-proportioned paper preview.
 - Jianpu digit input toolbar and select-all.
 - A framework-independent Jianpu run/document model.
-- Local SQLite document storage with automatic debounced saving.
+- Local SQLite persistence through Drift, with reactive document-list updates.
 - Document drawer with create, open, rename, and delete actions.
+- Existing `jianpu_documents.db` documents are retained when moving from
+  sqflite repository access to Drift.
 
 ## Next engineering steps
 
