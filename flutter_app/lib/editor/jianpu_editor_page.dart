@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/cupertino.dart' show cupertinoTextSelectionControls;
+import 'package:cupertino_ui/cupertino_ui.dart' show cupertinoTextSelectionControls;
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
