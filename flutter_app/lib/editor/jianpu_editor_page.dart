@@ -424,6 +424,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   final GlobalKey _editorFieldKey = GlobalKey();
   final JianpuDocumentRepository _repository = JianpuDocumentRepository();
   final List<LocalJianpuDocument> _documents = [];
+  StreamSubscription<List<LocalJianpuDocument>>? _documentsSubscription;
   Timer? _saveTimer;
   String? _currentDocumentId;
   String _currentDocumentTitle = 'Loading documents…';
@@ -465,6 +466,12 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     _controller.removeListener(_handleControllerChanged);
     _controller.dispose();
     _focusNode.dispose();
+    final subscription = _documentsSubscription;
+    if (subscription != null) {
+      unawaited(subscription.cancel().then((_) => _repository.close()));
+    } else {
+      unawaited(_repository.close());
+    }
     super.dispose();
   }
 
@@ -502,6 +509,13 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         _documents.addAll(docs);
         _openDocument(docs.first);
       }
+      _documentsSubscription ??= _repository.watchDocuments().listen((updatedDocs) {
+        if (!mounted) return;
+        _documents
+          ..clear()
+          ..addAll(updatedDocs);
+        setState(() {});
+      });
     } catch (error) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not load local documents: $error')),
