@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/cupertino.dart' show cupertinoTextSelectionControls;
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -609,8 +610,9 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                         autofocus: false,
                                         autocorrect: false,
                                         enableSuggestions: false,
-                                        selectionControls:
-                                            materialTextSelectionControls,
+                                        selectionControls: Theme.of(context).platform == TargetPlatform.iOS
+                                            ? cupertinoTextSelectionControls
+                                            : materialTextSelectionControls,
                                         enableInteractiveSelection: true,
                                         textCapitalization:
                                             TextCapitalization.none,
