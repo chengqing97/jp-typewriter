@@ -14,6 +14,18 @@ const _jianpuClipboardFormat = CustomValueFormat<String>(
   applicationId: 'com.chengqing97.jptypewriter.jianpu-runs',
 );
 
+class _JianpuEditorSnapshot {
+  const _JianpuEditorSnapshot({
+    required this.text,
+    required this.runs,
+    required this.selection,
+  });
+
+  final String text;
+  final List<JianpuRun> runs;
+  final TextSelection selection;
+}
+
 /// First editing-engine spike: use Flutter's single EditableText surface,
 /// rather than one widget per note or a webview contenteditable element.
 /// Keeps a single editable text surface while rendering per-range Jianpu styles.
@@ -22,11 +34,51 @@ class JianpuEditingController extends TextEditingController
   JianpuEditingController({required String text}) : super(text: text) {
     _lastText = text;
     _runs = text.isEmpty ? <JianpuRun>[] : <JianpuRun>[JianpuRun(text: text)];
+    _undoStack.add(_snapshot());
     addListener(_reconcileTextChanges);
   }
 
   late String _lastText;
   late List<JianpuRun> _runs;
+  final List<_JianpuEditorSnapshot> _undoStack = [];
+  final List<_JianpuEditorSnapshot> _redoStack = [];
+
+  bool get canUndo => _undoStack.isNotEmpty;
+  bool get canRedo => _redoStack.isNotEmpty;
+
+  _JianpuEditorSnapshot _snapshot() => _JianpuEditorSnapshot(
+        text: text,
+        runs: List<JianpuRun>.of(_runs),
+        selection: selection,
+      );
+
+  void _recordUndo() {
+    _undoStack.add(_snapshot());
+    if (_undoStack.length > 200) _undoStack.removeAt(0);
+    _redoStack.clear();
+  }
+
+  void undo() {
+    if (!canUndo) return;
+    _redoStack.add(_snapshot());
+    _restore(_undoStack.removeLast());
+  }
+
+  void redo() {
+    if (!canRedo) return;
+    _undoStack.add(_snapshot());
+    _restore(_redoStack.removeLast());
+  }
+
+  void _restore(_JianpuEditorSnapshot snapshot) {
+    _runs = List<JianpuRun>.of(snapshot.runs);
+    _lastText = snapshot.text;
+    value = TextEditingValue(
+      text: snapshot.text,
+      selection: snapshot.selection,
+    );
+    notifyListeners();
+  }
 
   @override
   List<JianpuRun> get runs => List.unmodifiable(_runs);
@@ -34,6 +86,7 @@ class JianpuEditingController extends TextEditingController
   void formatRange(
       int start, int end, JianpuRun Function(JianpuRun) transform) {
     if (start < 0 || end > text.length || start >= end) return;
+    _recordUndo();
     final updated = <JianpuRun>[];
     var offset = 0;
     for (final run in _runs) {
@@ -69,6 +122,7 @@ class JianpuEditingController extends TextEditingController
 
   void replaceRangeWithRuns(int start, int end, List<JianpuRun> insertedRuns) {
     if (start < 0 || end < start || end > text.length) return;
+    _recordUndo();
     final updated = <JianpuRun>[];
     var offset = 0;
     for (final run in _runs) {
@@ -112,6 +166,11 @@ class JianpuEditingController extends TextEditingController
   void _reconcileTextChanges() {
     final current = text;
     if (current == _lastText) return;
+
+    // TextField has already changed the text value, but _runs and _lastText
+    // still describe the previous document state. Capture that state so undo
+    // restores the matching formatting as well as the characters.
+    _recordUndo();
 
     // Find the smallest changed range shared by the old and new strings.
     var prefix = 0;
@@ -319,6 +378,16 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     if (mounted) setState(() {});
   }
 
+  void _undo() {
+    _controller.undo();
+    _focusNode.requestFocus();
+  }
+
+  void _redo() {
+    _controller.redo();
+    _focusNode.requestFocus();
+  }
+
   void _changeOctave(int amount) {
     _formatSelection((run) => run.copyWith(octave: run.octave + amount));
   }
@@ -380,6 +449,18 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     if (event is KeyDownEvent &&
         (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed) &&
         !HardwareKeyboard.instance.isAltPressed) {
+      if (event.logicalKey == LogicalKeyboardKey.keyZ) {
+        if (HardwareKeyboard.instance.isShiftPressed) {
+          _redo();
+        } else {
+          _undo();
+        }
+        return KeyEventResult.handled;
+      }
+      if (event.logicalKey == LogicalKeyboardKey.keyY) {
+        _redo();
+        return KeyEventResult.handled;
+      }
       if (event.logicalKey == LogicalKeyboardKey.keyC) { _copySelection(); return KeyEventResult.handled; }
       if (event.logicalKey == LogicalKeyboardKey.keyX) { _cutSelection(); return KeyEventResult.handled; }
       if (event.logicalKey == LogicalKeyboardKey.keyV) { _pasteFromClipboard(); return KeyEventResult.handled; }
@@ -931,6 +1012,16 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
           children: [
+            IconButton(
+              tooltip: 'Undo (Ctrl/Cmd+Z)',
+              onPressed: _controller.canUndo ? _undo : null,
+              icon: const Icon(Icons.undo),
+            ),
+            IconButton(
+              tooltip: 'Redo (Ctrl/Cmd+Shift+Z)',
+              onPressed: _controller.canRedo ? _redo : null,
+              icon: const Icon(Icons.redo),
+            ),
             _tool(Icons.format_italic, 'Toggle italic (Ctrl/Cmd+I)',
                 _toggleItalic),
             _tool(Icons.text_fields, 'Toggle superscript (Ctrl/Cmd+S)',
