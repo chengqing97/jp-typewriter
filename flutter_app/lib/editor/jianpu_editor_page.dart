@@ -407,22 +407,22 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       }
     } else if (key == LogicalKeyboardKey.arrowUp ||
         key == LogicalKeyboardKey.arrowDown) {
-      final previousBreak = caret > 0 ? text.lastIndexOf('\\n', caret - 1) : -1;
+      final previousBreak = caret > 0 ? text.lastIndexOf('\n', caret - 1) : -1;
       final lineStart = previousBreak + 1;
-      final lineEndFound = text.indexOf('\\n', caret);
+      final lineEndFound = text.indexOf('\n', caret);
       final lineEnd = lineEndFound < 0 ? text.length : lineEndFound;
       final column = caret - lineStart;
       if (key == LogicalKeyboardKey.arrowUp) {
         if (lineStart == 0) return;
         final previousEnd = lineStart - 1;
         final previousStart =
-            (previousEnd > 0 ? text.lastIndexOf('\\n', previousEnd - 1) + 1 : 0);
+            (previousEnd > 0 ? text.lastIndexOf('\n', previousEnd - 1) + 1 : 0);
         next =
             (previousStart + column).clamp(previousStart, previousEnd).toInt();
       } else {
         if (lineEnd == text.length) return;
         final nextStart = lineEnd + 1;
-        final nextEndFound = text.indexOf('\\n', nextStart);
+        final nextEndFound = text.indexOf('\n', nextStart);
         final nextEnd = nextEndFound < 0 ? text.length : nextEndFound;
         next = (nextStart + column).clamp(nextStart, nextEnd).toInt();
       }
