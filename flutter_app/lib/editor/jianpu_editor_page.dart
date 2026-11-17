@@ -517,6 +517,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     _currentDocumentTitle = doc.title;
     _controller.loadRuns(doc.runs);
     _lastPersistedContent = _contentFingerprint();
+    _saveTimer?.cancel();
     if (mounted) setState(() {});
   }
 
@@ -531,6 +532,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     final id = _currentDocumentId;
     if (id == null) return;
     final fingerprint = _contentFingerprint();
+    if (fingerprint == _lastPersistedContent) return;
     try {
       await _repository.saveDocument(id: id, title: _currentDocumentTitle, runs: _controller.runs);
       if (id != _currentDocumentId) return;
@@ -1237,7 +1239,6 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                 onPressed: _isLoadingDocuments ? null : _renameCurrentDocument,
                 icon: const Icon(Icons.edit_outlined),
               ),
-            actions: [
               IconButton(
                 tooltip: 'Editing test instructions',
                 onPressed: () => setState(() => _showHelp = !_showHelp),
