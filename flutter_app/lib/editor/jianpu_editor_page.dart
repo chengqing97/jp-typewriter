@@ -496,8 +496,15 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   void _insertPlainText(String text) => _insertRichRuns(text.isEmpty ? const [] : [JianpuRun(text: text)]);
 
   void _insertRichRuns(List<JianpuRun> sourceRuns) {
-    final sel = _controller.selection; if (!sel.isValid) return;
-    final runs = sourceRuns.map((run) => run.copyWith(slurId: run.slurId == null ? null : 'slur-${++_slurSequence}')).toList();
+    final sel = _controller.selection;
+    if (!sel.isValid) return;
+    final slurIds = <String, String>{};
+    final runs = sourceRuns.map((run) {
+      final oldId = run.slurId;
+      if (oldId == null) return run;
+      final newId = slurIds.putIfAbsent(oldId, () => 'slur-${++_slurSequence}');
+      return run.copyWith(slurId: newId);
+    }).toList();
     _controller.replaceRangeWithRuns(sel.start, sel.end, runs);
     _focusNode.requestFocus();
   }
