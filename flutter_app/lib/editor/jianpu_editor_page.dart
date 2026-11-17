@@ -441,6 +441,15 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     'runs': runs.map((run) => {'text': run.text, 'octave': run.octave, 'beam': run.beam, 'superscript': run.superscript, 'italic': run.italic, 'slurId': run.slurId}).toList(),
   });
 
+  String _encodeHtmlClipboard(List<JianpuRun> runs, String plain) {
+    final payload = base64Url.encode(utf8.encode(_encodeRuns(runs)));
+    final escaped = plain
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+    return '<!--jianpu-runs:$payload--><pre>$escaped</pre>';
+  }
+
   List<JianpuRun>? _decodeRuns(String payload) {
     try {
       final decoded = jsonDecode(payload);
@@ -461,6 +470,9 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     if (clipboard == null) { await Clipboard.setData(ClipboardData(text: plain)); return; }
     final item = DataWriterItem();
     item.add(_jianpuClipboardFormat(_encodeRuns(runs)));
+    // Keep a standard HTML representation as a second rich-data path. Some
+    // platform clipboards normalize custom UTIs, while preserving public.html.
+    item.add(Formats.htmlText(_encodeHtmlClipboard(runs, plain)));
     item.add(Formats.plainText(plain));
     await clipboard.write([item]);
   }
@@ -485,6 +497,24 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         final payload = await reader.readValue(_jianpuClipboardFormat);
         final runs = payload == null ? null : _decodeRuns(payload);
         if (runs != null) { _insertRichRuns(runs); return; }
+      }
+      // The HTML representation carries the same private Jianpu payload.
+      // This is a fallback for platforms that do not round-trip custom UTIs.
+      if (reader.canProvide(Formats.htmlText)) {
+        final html = await reader.readValue(Formats.htmlText);
+        if (html != null) {
+          final match = RegExp(r'<!--jianpu-runs:([A-Za-z0-9_=-]+)-->')
+              .firstMatch(html);
+          if (match != null) {
+            final encoded = base64Url.normalize(match.group(1)!);
+            final payload = utf8.decode(base64Url.decode(encoded));
+            final runs = _decodeRuns(payload);
+            if (runs != null) {
+              _insertRichRuns(runs);
+              return;
+            }
+          }
+        }
       }
       if (reader.canProvide(Formats.plainText)) {
         final plain = await reader.readValue(Formats.plainText);
@@ -814,6 +844,38 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                       autocorrect: false,
                                       enableSuggestions: false,
                                       enableInteractiveSelection: true,
+                                      contextMenuBuilder: (context, editableTextState) {
+                                        final items = editableTextState.contextMenuButtonItems;
+                                        for (var i = 0; i < items.length; i++) {
+                                          final item = items[i];
+                                          switch (item.type) {
+                                            case ContextMenuButtonType.copy:
+                                              items[i] = item.copyWith(onPressed: () {
+                                                ContextMenuController.removeAny();
+                                                unawaited(_copySelection());
+                                              });
+                                              break;
+                                            case ContextMenuButtonType.cut:
+                                              items[i] = item.copyWith(onPressed: () {
+                                                ContextMenuController.removeAny();
+                                                unawaited(_cutSelection());
+                                              });
+                                              break;
+                                            case ContextMenuButtonType.paste:
+                                              items[i] = item.copyWith(onPressed: () {
+                                                ContextMenuController.removeAny();
+                                                unawaited(_pasteFromClipboard());
+                                              });
+                                              break;
+                                            default:
+                                              break;
+                                          }
+                                        }
+                                        return AdaptiveTextSelectionToolbar.buttonItems(
+                                          anchors: editableTextState.contextMenuAnchors,
+                                          buttonItems: items,
+                                        );
+                                      },
                                       textCapitalization:
                                           TextCapitalization.none,
                                       decoration:
