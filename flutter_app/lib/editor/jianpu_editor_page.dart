@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -8,7 +8,8 @@ import 'octave_dot_painter.dart';
 /// First editing-engine spike: use Flutter's single EditableText surface,
 /// rather than one widget per note or a webview contenteditable element.
 /// Keeps a single editable text surface while rendering per-range Jianpu styles.
-class JianpuEditingController extends TextEditingController implements JianpuNotationSource {
+class JianpuEditingController extends TextEditingController
+    implements JianpuNotationSource {
   JianpuEditingController({required String text}) : super(text: text) {
     _lastText = text;
     _runs = text.isEmpty ? <JianpuRun>[] : <JianpuRun>[JianpuRun(text: text)];
@@ -21,7 +22,8 @@ class JianpuEditingController extends TextEditingController implements JianpuNot
   @override
   List<JianpuRun> get runs => List.unmodifiable(_runs);
 
-  void formatRange(int start, int end, JianpuRun Function(JianpuRun) transform) {
+  void formatRange(
+      int start, int end, JianpuRun Function(JianpuRun) transform) {
     if (start < 0 || end > text.length || start >= end) return;
     final updated = <JianpuRun>[];
     var offset = 0;
@@ -38,12 +40,14 @@ class JianpuEditingController extends TextEditingController implements JianpuNot
       final localStart = (start - runStart).clamp(0, run.text.length).toInt();
       final localEnd = (end - runStart).clamp(0, run.text.length).toInt();
       if (localStart > 0) {
-        _appendRun(updated, run.copyWith(text: run.text.substring(0, localStart)));
+        _appendRun(
+            updated, run.copyWith(text: run.text.substring(0, localStart)));
       }
       if (localEnd > localStart) {
         _appendRun(
           updated,
-          transform(run.copyWith(text: run.text.substring(localStart, localEnd))),
+          transform(
+              run.copyWith(text: run.text.substring(localStart, localEnd))),
         );
       }
       if (localEnd < run.text.length) {
@@ -63,7 +67,8 @@ class JianpuEditingController extends TextEditingController implements JianpuNot
           previous.superscript == run.superscript &&
           previous.italic == run.italic &&
           previous.slurId == run.slurId) {
-        target[target.length - 1] = previous.copyWith(text: previous.text + run.text);
+        target[target.length - 1] =
+            previous.copyWith(text: previous.text + run.text);
         return;
       }
     }
@@ -204,7 +209,13 @@ class JianpuEditingController extends TextEditingController implements JianpuNot
 }
 
 enum EditorFormatCommand {
-  octaveUp, octaveDown, beamUp, beamDown, superscript, italic, clear,
+  octaveUp,
+  octaveDown,
+  beamUp,
+  beamDown,
+  superscript,
+  italic,
+  clear,
 }
 
 class EditorFormatIntent extends Intent {
@@ -282,9 +293,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     if (!_hasSelection) return;
     final shouldClear = _selectedRuns().any((run) => run.slurId != null);
     final id = 'slur-${++_slurSequence}';
-    _formatSelection((run) => shouldClear
-        ? run.copyWith(clearSlur: true)
-        : run.copyWith(slurId: id));
+    _formatSelection((run) =>
+        shouldClear ? run.copyWith(clearSlur: true) : run.copyWith(slurId: id));
   }
 
   List<JianpuRun> _selectedRuns() {
@@ -326,8 +336,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     if (key == LogicalKeyboardKey.arrowLeft ||
         key == LogicalKeyboardKey.arrowRight) {
       final left = key == LogicalKeyboardKey.arrowLeft;
-      if (!HardwareKeyboard.instance.isShiftPressed &&
-          !selection.isCollapsed) {
+      if (!HardwareKeyboard.instance.isShiftPressed && !selection.isCollapsed) {
         next = left ? selection.start : selection.end;
       } else {
         next = (caret + (left ? -1 : 1)).clamp(0, text.length).toInt();
@@ -344,7 +353,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         final previousEnd = lineStart - 1;
         final previousStart =
             (previousEnd > 0 ? text.lastIndexOf('\n', previousEnd - 1) + 1 : 0);
-        next = (previousStart + column).clamp(previousStart, previousEnd).toInt();
+        next =
+            (previousStart + column).clamp(previousStart, previousEnd).toInt();
       } else {
         if (lineEnd == text.length) return KeyEventResult.ignored;
         final nextStart = lineEnd + 1;
@@ -358,7 +368,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
 
     if (HardwareKeyboard.instance.isShiftPressed) {
       final anchor = selection.isCollapsed ? caret : selection.baseOffset;
-      _controller.selection = TextSelection(baseOffset: anchor, extentOffset: next);
+      _controller.selection =
+          TextSelection(baseOffset: anchor, extentOffset: next);
     } else {
       _controller.selection = TextSelection.collapsed(offset: next);
     }
@@ -376,46 +387,51 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   Widget build(BuildContext context) {
     return Shortcuts(
       shortcuts: <ShortcutActivator, Intent>{
-        const SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
+        const SingleActivator(LogicalKeyboardKey.escape): const DismissIntent(),
         const SingleActivator(LogicalKeyboardKey.keyA, control: true):
-            SelectAllTextIntent(SelectionChangedCause.keyboard),
+            const SelectAllTextIntent(SelectionChangedCause.keyboard),
         const SingleActivator(LogicalKeyboardKey.keyA, meta: true):
-            SelectAllTextIntent(SelectionChangedCause.keyboard),
-
-        SingleActivator(LogicalKeyboardKey.arrowUp, control: true):
+            const SelectAllTextIntent(SelectionChangedCause.keyboard),
+        const SingleActivator(LogicalKeyboardKey.arrowUp, control: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.octaveUp)
-                : ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true),
-        SingleActivator(LogicalKeyboardKey.arrowDown, control: true):
+                : const ExtendSelectionToLineBreakIntent(
+                    forward: false, collapseSelection: true),
+        const SingleActivator(LogicalKeyboardKey.arrowDown, control: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.octaveDown)
-                : ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true),
-        SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
+                : const ExtendSelectionToLineBreakIntent(
+                    forward: true, collapseSelection: true),
+        const SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.beamUp)
-                : ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: true),
-        SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
+                : const ExtendSelectionToNextWordBoundaryIntent(
+                    forward: false, collapseSelection: true),
+        const SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.beamDown)
-                : ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: true),
-
-        SingleActivator(LogicalKeyboardKey.arrowUp, meta: true):
+                : const ExtendSelectionToNextWordBoundaryIntent(
+                    forward: true, collapseSelection: true),
+        const SingleActivator(LogicalKeyboardKey.arrowUp, meta: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.octaveUp)
-                : ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true),
-        SingleActivator(LogicalKeyboardKey.arrowDown, meta: true):
+                : const ExtendSelectionToLineBreakIntent(
+                    forward: false, collapseSelection: true),
+        const SingleActivator(LogicalKeyboardKey.arrowDown, meta: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.octaveDown)
-                : ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true),
-        SingleActivator(LogicalKeyboardKey.arrowLeft, meta: true):
+                : const ExtendSelectionToLineBreakIntent(
+                    forward: true, collapseSelection: true),
+        const SingleActivator(LogicalKeyboardKey.arrowLeft, meta: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.beamUp)
-                : ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true),
-        SingleActivator(LogicalKeyboardKey.arrowRight, meta: true):
+                : const ExtendSelectionToLineBreakIntent(
+                    forward: false, collapseSelection: true),
+        const SingleActivator(LogicalKeyboardKey.arrowRight, meta: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.beamDown)
-                : ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true),
-
+                : const ExtendSelectionToLineBreakIntent(
+                    forward: true, collapseSelection: true),
         if (_hasSelection) ...{
           const SingleActivator(LogicalKeyboardKey.keyS, control: true):
               const EditorFormatIntent(EditorFormatCommand.superscript),
@@ -430,23 +446,36 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
           const SingleActivator(LogicalKeyboardKey.keyD, meta: true):
               const EditorFormatIntent(EditorFormatCommand.clear),
         },
-
-        const SingleActivator(LogicalKeyboardKey.arrowLeft, control: true, shift: true):
-            ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: false),
-        const SingleActivator(LogicalKeyboardKey.arrowRight, control: true, shift: true):
-            ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: false),
-        const SingleActivator(LogicalKeyboardKey.arrowUp, control: true, shift: true):
-            ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: false),
-        const SingleActivator(LogicalKeyboardKey.arrowDown, control: true, shift: true):
-            ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: false),
+        const SingleActivator(LogicalKeyboardKey.arrowLeft,
+                control: true, shift: true):
+            const ExtendSelectionToNextWordBoundaryIntent(
+                forward: false, collapseSelection: false),
+        const SingleActivator(LogicalKeyboardKey.arrowRight,
+                control: true, shift: true):
+            const ExtendSelectionToNextWordBoundaryIntent(
+                forward: true, collapseSelection: false),
+        const SingleActivator(LogicalKeyboardKey.arrowUp,
+                control: true, shift: true):
+            const ExtendSelectionToLineBreakIntent(
+                forward: false, collapseSelection: false),
+        const SingleActivator(LogicalKeyboardKey.arrowDown,
+                control: true, shift: true):
+            const ExtendSelectionToLineBreakIntent(
+                forward: true, collapseSelection: false),
         const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true):
-            ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: true),
+            const ExtendSelectionToNextWordBoundaryIntent(
+                forward: false, collapseSelection: true),
         const SingleActivator(LogicalKeyboardKey.arrowRight, alt: true):
-            ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: true),
-        const SingleActivator(LogicalKeyboardKey.arrowLeft, alt: true, shift: true):
-            ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: false),
-        const SingleActivator(LogicalKeyboardKey.arrowRight, alt: true, shift: true):
-            ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: false),
+            const ExtendSelectionToNextWordBoundaryIntent(
+                forward: true, collapseSelection: true),
+        const SingleActivator(LogicalKeyboardKey.arrowLeft,
+                alt: true, shift: true):
+            const ExtendSelectionToNextWordBoundaryIntent(
+                forward: false, collapseSelection: false),
+        const SingleActivator(LogicalKeyboardKey.arrowRight,
+                alt: true, shift: true):
+            const ExtendSelectionToNextWordBoundaryIntent(
+                forward: true, collapseSelection: false),
       },
       child: Actions(
         actions: <Type, Action<Intent>>{
@@ -507,9 +536,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      final pageWidth = constraints.maxWidth
-                          .clamp(280.0, 760.0)
-                          .toDouble();
+                      final pageWidth =
+                          constraints.maxWidth.clamp(280.0, 760.0).toDouble();
                       final pageHeight = pageWidth * 297 / 210;
                       return SingleChildScrollView(
                         padding: const EdgeInsets.all(20),
@@ -545,49 +573,50 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                 const SizedBox(height: 28),
                                 Theme(
                                   data: Theme.of(context).copyWith(
-                                    textSelectionTheme: const TextSelectionThemeData(
+                                    textSelectionTheme:
+                                        const TextSelectionThemeData(
                                       selectionHandleColor: Color(0xFF315E9E),
                                     ),
                                   ),
                                   child: CustomPaint(
-                                  foregroundPainter: OctaveDotPainter(
-                                    controller: _controller,
-                                    baseStyle: GoogleFonts.lxgwWenKaiMonoTc(
-                                      fontSize: 23,
-                                      height: 2.0,
-                                      color: const Color(0xFF202124),
+                                    foregroundPainter: OctaveDotPainter(
+                                      controller: _controller,
+                                      baseStyle: GoogleFonts.lxgwWenKaiMonoTc(
+                                        fontSize: 23,
+                                        height: 2.0,
+                                        color: const Color(0xFF202124),
+                                      ),
+                                      textDirection: Directionality.of(context),
+                                      textScaler:
+                                          MediaQuery.textScalerOf(context),
                                     ),
-                                    textDirection: Directionality.of(context),
-                                    textScaler: MediaQuery.textScalerOf(context),
-                                  ),
-                                  child: Focus(
-                                    onKeyEvent: _handleRepeatKey,
-                                    child: EditableText(
-                                  controller: _controller,
-                                  focusNode: _focusNode,
-                                  style: GoogleFonts.lxgwWenKaiMonoTc(
-                                    fontSize: 23,
-                                    height: 2.0,
-                                    color: const Color(0xFF202124),
-                                  ),
-                                  cursorColor: const Color(0xFF315E9E),
-                                  backgroundCursorColor: Colors.grey,
-                                  selectionColor:
-                                      const Color(0x55315E9E),
-                                  keyboardType: TextInputType.multiline,
-                                  maxLines: null,
-                                  expands: false,
-                                  autofocus: false,
-                                  autocorrect: false,
-                                  enableSuggestions: false,
-                                  selectionControls:
-                                      materialTextSelectionControls,
-                                  enableInteractiveSelection: true,
-                                  textCapitalization:
-                                      TextCapitalization.none,
-                                  onChanged: (_) => setState(() {}),
+                                    child: Focus(
+                                      onKeyEvent: _handleRepeatKey,
+                                      child: EditableText(
+                                        controller: _controller,
+                                        focusNode: _focusNode,
+                                        style: GoogleFonts.lxgwWenKaiMonoTc(
+                                          fontSize: 23,
+                                          height: 2.0,
+                                          color: const Color(0xFF202124),
+                                        ),
+                                        cursorColor: const Color(0xFF315E9E),
+                                        backgroundCursorColor: Colors.grey,
+                                        selectionColor: const Color(0x55315E9E),
+                                        keyboardType: TextInputType.multiline,
+                                        maxLines: null,
+                                        expands: false,
+                                        autofocus: false,
+                                        autocorrect: false,
+                                        enableSuggestions: false,
+                                        selectionControls:
+                                            materialTextSelectionControls,
+                                        enableInteractiveSelection: true,
+                                        textCapitalization:
+                                            TextCapitalization.none,
+                                        onChanged: (_) => setState(() {}),
+                                      ),
                                     ),
-                                  ),
                                   ),
                                 ),
                                 if (_showHelp) ...[
@@ -595,9 +624,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                   const Divider(),
                                   Text(
                                     'Editing engine prototype',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelLarge,
+                                    style:
+                                        Theme.of(context).textTheme.labelLarge,
                                   ),
                                   const SizedBox(height: 6),
                                   const Text(
@@ -636,16 +664,22 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
           children: [
-            _tool(Icons.format_italic, 'Toggle italic (Ctrl/Cmd+I)', _toggleItalic),
-            _tool(Icons.text_fields, 'Toggle superscript (Ctrl/Cmd+S)', _toggleSuperscript),
-            _tool(Icons.horizontal_rule, 'Increase beam (Ctrl/Cmd+Left)', () => _changeBeam(1)),
-            _tool(Icons.remove, 'Decrease beam (Ctrl/Cmd+Right)', () => _changeBeam(-1)),
-            _tool(Icons.arrow_upward, 'Raise octave (Ctrl/Cmd+Up)', () => _changeOctave(1)),
-            _tool(Icons.arrow_downward, 'Lower octave (Ctrl/Cmd+Down)', () => _changeOctave(-1)),
-            _tool(Icons.format_clear, 'Clear formatting (Ctrl/Cmd+D)', _clearStyles),
+            _tool(Icons.format_italic, 'Toggle italic (Ctrl/Cmd+I)',
+                _toggleItalic),
+            _tool(Icons.text_fields, 'Toggle superscript (Ctrl/Cmd+S)',
+                _toggleSuperscript),
+            _tool(Icons.horizontal_rule, 'Increase beam (Ctrl/Cmd+Left)',
+                () => _changeBeam(1)),
+            _tool(Icons.remove, 'Decrease beam (Ctrl/Cmd+Right)',
+                () => _changeBeam(-1)),
+            _tool(Icons.arrow_upward, 'Raise octave (Ctrl/Cmd+Up)',
+                () => _changeOctave(1)),
+            _tool(Icons.arrow_downward, 'Lower octave (Ctrl/Cmd+Down)',
+                () => _changeOctave(-1)),
+            _tool(Icons.format_clear, 'Clear formatting (Ctrl/Cmd+D)',
+                _clearStyles),
             _tool(Icons.architecture, 'Toggle slur (Ctrl/Cmd+A)', _toggleSlur),
           ],
-
         ),
       ),
     );
@@ -667,9 +701,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       child: ValueListenableBuilder<TextEditingValue>(
         valueListenable: _controller,
         builder: (context, value, _) {
-          final offset = value.selection.isValid
-              ? value.selection.extentOffset
-              : 0;
+          final offset =
+              value.selection.isValid ? value.selection.extentOffset : 0;
           return Text(
             'Characters: ${value.text.length}    Cursor: $offset',
             style: Theme.of(context).textTheme.labelSmall,

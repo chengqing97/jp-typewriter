@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../models/jianpu_document.dart';
 
@@ -36,7 +36,6 @@ class OctaveDotPainter extends CustomPainter {
             color: run.superscript ? Colors.transparent : null,
             fontStyle: run.italic ? FontStyle.italic : FontStyle.normal,
             fontSize: run.superscript ? (baseStyle.fontSize ?? 23) * .68 : null,
-
           ),
         ),
     ];
@@ -100,12 +99,11 @@ class OctaveDotPainter extends CustomPainter {
             }
           }
         }
-
       }
       if (run.slurId != null) {
         slurGroups.putIfAbsent(run.slurId!, () => <int>[]).addAll(
-          List<int>.generate(run.text.length, (i) => offset + i),
-        );
+              List<int>.generate(run.text.length, (i) => offset + i),
+            );
       }
       offset += run.text.length;
     }
@@ -118,7 +116,9 @@ class OctaveDotPainter extends CustomPainter {
       if (firstBoxes.isEmpty || lastBoxes.isEmpty) continue;
       final first = firstBoxes.first;
       final last = lastBoxes.first;
-      if ((first.top - last.top).abs() > first.height * 1.5) continue;
+      if ((first.top - last.top).abs() > (first.bottom - first.top) * 1.5) {
+        continue;
+      }
       final start = Offset(first.left, first.top - 5);
       final end = Offset(last.right, last.top - 5);
       final width = (end.dx - start.dx).abs();
@@ -152,7 +152,8 @@ class OctaveDotPainter extends CustomPainter {
       if (first != null && last != null) {
         for (var level = 0; level < run.beam; level++) {
           final y = bottom + 2.5 + level * 3.2;
-          canvas.drawLine(Offset(first!.left, y), Offset(last!.right, y), paint);
+          canvas.drawLine(
+              Offset(first!.left, y), Offset(last!.right, y), paint);
         }
       }
       first = null;
