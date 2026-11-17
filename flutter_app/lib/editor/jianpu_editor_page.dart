@@ -560,7 +560,9 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                     textDirection: Directionality.of(context),
                                     textScaler: MediaQuery.textScalerOf(context),
                                   ),
-                                  child: EditableText(
+                                  child: Focus(
+                                    onKeyEvent: _handleRepeatKey,
+                                    child: EditableText(
                                   controller: _controller,
                                   focusNode: _focusNode,
                                   style: GoogleFonts.lxgwWenKaiMonoTc(
@@ -584,6 +586,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                   textCapitalization:
                                       TextCapitalization.none,
                                   onChanged: (_) => setState(() {}),
+                                    ),
                                   ),
                                   ),
                                 ),
