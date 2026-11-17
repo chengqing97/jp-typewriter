@@ -17,7 +17,7 @@ class JianpuDocuments extends Table {
   TextColumn get title => text()();
   TextColumn get contentJson => text().named('content_json')();
   IntColumn get createdAt => integer().named('created_at')();
-  IntColumn get updatedAt => integer().named('updated_at');
+  IntColumn get updatedAt => integer().named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
