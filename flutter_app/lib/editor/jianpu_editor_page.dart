@@ -969,7 +969,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         },
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Jianpu Typewriter'),
+            title: const Text('[Doc title]'),
             actions: [
               IconButton(
                 tooltip: 'Editing test instructions',
@@ -1011,15 +1011,6 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const Text(
-                                  'Untitled Jianpu',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 28),
                                 Theme(
                                   data: Theme.of(context).copyWith(
                                     textSelectionTheme:
@@ -1165,11 +1156,11 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
             ),
             _tool(Icons.format_italic, 'Toggle italic (Ctrl/Cmd+I)',
                 _toggleItalic),
-            _tool(Icons.text_fields, 'Toggle superscript (Ctrl/Cmd+S)',
+            _tool(Icons.superscript, 'Toggle superscript (Ctrl/Cmd+S)',
                 _toggleSuperscript),
-            _tool(Icons.horizontal_rule, 'Increase beam (Ctrl/Cmd+Left)',
+            _tool(Icons.arrow_back, 'Increase beam (Ctrl/Cmd+Left)',
                 () => _changeBeam(1)),
-            _tool(Icons.remove, 'Decrease beam (Ctrl/Cmd+Right)',
+            _tool(Icons.arrow_forward, 'Decrease beam (Ctrl/Cmd+Right)',
                 () => _changeBeam(-1)),
             _tool(Icons.arrow_upward, 'Raise octave (Ctrl/Cmd+Up)',
                 () => _changeOctave(1)),
@@ -1177,7 +1168,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                 () => _changeOctave(-1)),
             _tool(Icons.format_clear, 'Clear formatting (Ctrl/Cmd+D)',
                 _clearStyles),
-            _tool(Icons.architecture, 'Toggle slur (Ctrl/Cmd+A)', _toggleSlur),
+            _tool(Icons.looks, 'Toggle slur (Ctrl/Cmd+A)', _toggleSlur),
           ],
         ),
       ),
