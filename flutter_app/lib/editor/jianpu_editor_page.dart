@@ -34,12 +34,14 @@ class JianpuEditingController extends TextEditingController
   JianpuEditingController({required String text}) : super(text: text) {
     _lastText = text;
     _runs = text.isEmpty ? <JianpuRun>[] : <JianpuRun>[JianpuRun(text: text)];
+    _lastKnownSelection = selection;
     _undoStack.add(_snapshot());
     addListener(_reconcileTextChanges);
   }
 
   late String _lastText;
   late List<JianpuRun> _runs;
+  late TextSelection _lastKnownSelection;
   final List<_JianpuEditorSnapshot> _undoStack = [];
   final List<_JianpuEditorSnapshot> _redoStack = [];
 
@@ -77,6 +79,7 @@ class JianpuEditingController extends TextEditingController
       text: snapshot.text,
       selection: snapshot.selection,
     );
+    _lastKnownSelection = snapshot.selection;
     notifyListeners();
   }
 
@@ -165,12 +168,21 @@ class JianpuEditingController extends TextEditingController
 
   void _reconcileTextChanges() {
     final current = text;
-    if (current == _lastText) return;
+    if (current == _lastText) {
+      _lastKnownSelection = selection;
+      return;
+    }
 
     // TextField has already changed the text value, but _runs and _lastText
-    // still describe the previous document state. Capture that state so undo
-    // restores the matching formatting as well as the characters.
-    _recordUndo();
+    // still describe the previous document state. Use the cached selection
+    // from before this edit so undo restores the original caret/selection.
+    _undoStack.add(_JianpuEditorSnapshot(
+      text: _lastText,
+      runs: List<JianpuRun>.of(_runs),
+      selection: _lastKnownSelection,
+    ));
+    if (_undoStack.length > 200) _undoStack.removeAt(0);
+    _redoStack.clear();
 
     // Find the smallest changed range shared by the old and new strings.
     var prefix = 0;
@@ -272,6 +284,7 @@ class JianpuEditingController extends TextEditingController
 
     _runs = rebuilt;
     _lastText = current;
+    _lastKnownSelection = selection;
   }
 
   @override
