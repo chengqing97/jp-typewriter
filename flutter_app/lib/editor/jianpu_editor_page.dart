@@ -605,23 +605,30 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       await _renameCurrentDocument();
       return;
     }
-    final field = TextEditingController(text: doc.title);
+    var editedTitle = doc.title;
     final title = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Rename document'),
-        content: TextField(controller: field, autofocus: true),
+        content: TextField(
+          autofocus: true,
+          controller: null,
+          onChanged: (value) => editedTitle = value,
+          onSubmitted: (value) => Navigator.pop(dialogContext, value),
+          decoration: InputDecoration(hintText: doc.title),
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
-              onPressed: () => Navigator.pop(context, field.text),
-              child: const Text('Rename')),
+            onPressed: () => Navigator.pop(dialogContext, editedTitle),
+            child: const Text('Rename'),
+          ),
         ],
       ),
     );
-    field.dispose();
     if (title == null || title.trim().isEmpty) return;
     await _repository.renameDocument(doc.id, title.trim());
     await _refreshDocuments();
@@ -630,27 +637,28 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   Future<void> _renameCurrentDocument() async {
     final id = _currentDocumentId;
     if (id == null) return;
-    final field = TextEditingController(text: _currentDocumentTitle);
+    var editedTitle = _currentDocumentTitle;
     final title = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Rename document'),
         content: TextField(
-          controller: field,
           autofocus: true,
-          onSubmitted: (value) => Navigator.pop(context, value),
+          onChanged: (value) => editedTitle = value,
+          onSubmitted: (value) => Navigator.pop(dialogContext, value),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
-              onPressed: () => Navigator.pop(context, field.text),
-              child: const Text('Rename')),
+            onPressed: () => Navigator.pop(dialogContext, editedTitle),
+            child: const Text('Rename'),
+          ),
         ],
       ),
     );
-    field.dispose();
     if (title == null || title.trim().isEmpty) return;
     _currentDocumentTitle = title.trim();
     await _repository.renameDocument(id, _currentDocumentTitle);
