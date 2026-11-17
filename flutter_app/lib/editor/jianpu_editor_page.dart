@@ -44,6 +44,11 @@ class JianpuEditingController extends TextEditingController
   late TextSelection _lastKnownSelection;
   final List<_JianpuEditorSnapshot> _undoStack = [];
   final List<_JianpuEditorSnapshot> _redoStack = [];
+  bool _isTypingGroup = false;
+  DateTime? _lastTypingTime;
+  int? _lastTypingCaret;
+
+  static const _typingGroupInterval = Duration(milliseconds: 750);
 
   bool get canUndo => _undoStack.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
@@ -55,6 +60,9 @@ class JianpuEditingController extends TextEditingController
       );
 
   void _recordUndo() {
+    _isTypingGroup = false;
+    _lastTypingTime = null;
+    _lastTypingCaret = null;
     _undoStack.add(_snapshot());
     if (_undoStack.length > 200) _undoStack.removeAt(0);
     _redoStack.clear();
@@ -62,17 +70,26 @@ class JianpuEditingController extends TextEditingController
 
   void undo() {
     if (!canUndo) return;
+    _isTypingGroup = false;
+    _lastTypingTime = null;
+    _lastTypingCaret = null;
     _redoStack.add(_snapshot());
     _restore(_undoStack.removeLast());
   }
 
   void redo() {
     if (!canRedo) return;
+    _isTypingGroup = false;
+    _lastTypingTime = null;
+    _lastTypingCaret = null;
     _undoStack.add(_snapshot());
     _restore(_redoStack.removeLast());
   }
 
   void _restore(_JianpuEditorSnapshot snapshot) {
+    _isTypingGroup = false;
+    _lastTypingTime = null;
+    _lastTypingCaret = null;
     _runs = List<JianpuRun>.of(snapshot.runs);
     _lastText = snapshot.text;
     value = TextEditingValue(
@@ -182,20 +199,58 @@ class JianpuEditingController extends TextEditingController
     final current = text;
     final selection = value.selection;
     if (current == _lastText) {
+      if (selection != _lastKnownSelection) {
+        // Moving the caret or changing the selection ends the current
+        // typing group, even if the next keystroke happens immediately.
+        _isTypingGroup = false;
+        _lastTypingTime = null;
+        _lastTypingCaret = null;
+      }
       _lastKnownSelection = selection;
       return;
     }
 
+    final lengthDelta = current.length - _lastText.length;
+    var insertionStart = -1;
+    var isPureInsertion = false;
+    if (lengthDelta > 0 &&
+        selection.isValid &&
+        selection.isCollapsed &&
+        _lastKnownSelection.isValid &&
+        _lastKnownSelection.isCollapsed) {
+      insertionStart = selection.extentOffset - lengthDelta;
+      isPureInsertion = insertionStart >= 0 &&
+          insertionStart <= _lastText.length &&
+          _lastKnownSelection.extentOffset == insertionStart &&
+          _lastText.substring(0, insertionStart) ==
+              current.substring(0, insertionStart) &&
+          _lastText.substring(insertionStart) ==
+              current.substring(insertionStart + lengthDelta);
+    }
+
+    final now = DateTime.now();
+    final joinsPreviousTyping = isPureInsertion &&
+        _isTypingGroup &&
+        _lastTypingTime != null &&
+        now.difference(_lastTypingTime!) <= _typingGroupInterval &&
+        _lastTypingCaret == insertionStart;
+
     // TextField has already changed the text value, but _runs and _lastText
-    // still describe the previous document state. Use the cached selection
-    // from before this edit so undo restores the original caret/selection.
-    _undoStack.add(_JianpuEditorSnapshot(
-      text: _lastText,
-      runs: List<JianpuRun>.of(_runs),
-      selection: _lastKnownSelection,
-    ));
-    if (_undoStack.length > 200) _undoStack.removeAt(0);
-    _redoStack.clear();
+    // still describe the previous document state. Keep only the first
+    // pre-typing snapshot for a continuous group of inserted characters.
+    if (!joinsPreviousTyping) {
+      _undoStack.add(_JianpuEditorSnapshot(
+        text: _lastText,
+        runs: List<JianpuRun>.of(_runs),
+        selection: _lastKnownSelection,
+      ));
+      if (_undoStack.length > 200) _undoStack.removeAt(0);
+      _redoStack.clear();
+    }
+
+    _isTypingGroup = isPureInsertion;
+    _lastTypingTime = isPureInsertion ? now : null;
+    _lastTypingCaret = isPureInsertion ? selection.extentOffset : null;
 
     // Find the smallest changed range shared by the old and new strings.
     var prefix = 0;
@@ -216,7 +271,6 @@ class JianpuEditingController extends TextEditingController
     // Repeated characters (especially spaces) make a text diff ambiguous.
     // For a pure insertion, the post-edit caret tells us the actual insertion
     // point. Prefer it when the old text is exactly preserved around it.
-    final lengthDelta = current.length - _lastText.length;
     if (selection.isValid && selection.isCollapsed) {
       final caret = selection.extentOffset;
 
