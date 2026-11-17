@@ -245,7 +245,10 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   void initState() {
     super.initState();
     _controller = JianpuEditingController(text: _sample);
-    _focusNode = FocusNode(debugLabel: 'Jianpu editor');
+    _focusNode = FocusNode(
+      debugLabel: 'Jianpu editor',
+      onKeyEvent: _handleRepeatKey,
+    );
     _controller.addListener(_handleControllerChanged);
   }
 
@@ -590,9 +593,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                       textScaler:
                                           MediaQuery.textScalerOf(context),
                                     ),
-                                    child: Focus(
-                                      onKeyEvent: _handleRepeatKey,
-                                      child: TextField(
+                                    child: TextField(
                                         controller: _controller,
                                         focusNode: _focusNode,
                                         style: GoogleFonts.lxgwWenKaiMonoTc(
