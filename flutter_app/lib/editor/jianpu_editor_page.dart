@@ -132,23 +132,35 @@ class JianpuEditingController extends TextEditingController
       final runStart = offset, runEnd = runStart + run.text.length;
       offset = runEnd;
       final beforeEnd = runEnd.clamp(0, start).toInt();
-      if (beforeEnd > runStart) _appendRun(updated, run.copyWith(text: run.text.substring(0, beforeEnd - runStart)));
+      if (beforeEnd > runStart) {
+        _appendRun(updated,
+            run.copyWith(text: run.text.substring(0, beforeEnd - runStart)));
+      }
     }
-    for (final run in insertedRuns) { _appendRun(updated, run); }
+    for (final run in insertedRuns) {
+      _appendRun(updated, run);
+    }
     offset = 0;
     for (final run in _runs) {
       final runStart = offset, runEnd = runStart + run.text.length;
       offset = runEnd;
       final afterStart = runStart > end ? runStart : end;
-      if (runEnd > afterStart) _appendRun(updated, run.copyWith(text: run.text.substring(afterStart - runStart)));
+      if (runEnd > afterStart) {
+        _appendRun(updated,
+            run.copyWith(text: run.text.substring(afterStart - runStart)));
+      }
     }
     final insertedText = insertedRuns.map((run) => run.text).join();
     final updatedText = text.replaceRange(start, end, insertedText);
     _runs = updated;
     _lastText = updatedText;
-    value = TextEditingValue(text: updatedText, selection: TextSelection.collapsed(offset: start + insertedText.length));
+    value = TextEditingValue(
+        text: updatedText,
+        selection:
+            TextSelection.collapsed(offset: start + insertedText.length));
     notifyListeners();
   }
+
   void _appendRun(List<JianpuRun> target, JianpuRun run) {
     if (run.text.isEmpty) return;
     if (target.isNotEmpty) {
@@ -168,6 +180,7 @@ class JianpuEditingController extends TextEditingController
 
   void _reconcileTextChanges() {
     final current = text;
+    final selection = value.selection;
     if (current == _lastText) {
       _lastKnownSelection = selection;
       return;
@@ -204,7 +217,6 @@ class JianpuEditingController extends TextEditingController
     // For a pure insertion, the post-edit caret tells us the actual insertion
     // point. Prefer it when the old text is exactly preserved around it.
     final lengthDelta = current.length - _lastText.length;
-    final selection = value.selection;
     if (selection.isValid && selection.isCollapsed) {
       final caret = selection.extentOffset;
 
@@ -460,7 +472,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
 
   KeyEventResult _handleRepeatKey(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent &&
-        (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed) &&
+        (HardwareKeyboard.instance.isControlPressed ||
+            HardwareKeyboard.instance.isMetaPressed) &&
         !HardwareKeyboard.instance.isAltPressed) {
       if (event.logicalKey == LogicalKeyboardKey.keyZ) {
         if (HardwareKeyboard.instance.isShiftPressed) {
@@ -474,9 +487,18 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         _redo();
         return KeyEventResult.handled;
       }
-      if (event.logicalKey == LogicalKeyboardKey.keyC) { _copySelection(); return KeyEventResult.handled; }
-      if (event.logicalKey == LogicalKeyboardKey.keyX) { _cutSelection(); return KeyEventResult.handled; }
-      if (event.logicalKey == LogicalKeyboardKey.keyV) { _pasteFromClipboard(); return KeyEventResult.handled; }
+      if (event.logicalKey == LogicalKeyboardKey.keyC) {
+        _copySelection();
+        return KeyEventResult.handled;
+      }
+      if (event.logicalKey == LogicalKeyboardKey.keyX) {
+        _cutSelection();
+        return KeyEventResult.handled;
+      }
+      if (event.logicalKey == LogicalKeyboardKey.keyV) {
+        _pasteFromClipboard();
+        return KeyEventResult.handled;
+      }
     }
     if (event is KeyUpEvent && event.logicalKey == _heldArrowKey) {
       _stopArrowRepeat();
@@ -521,19 +543,34 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   }
 
   List<JianpuRun> _runsForRange(int start, int end) {
-    final result = <JianpuRun>[]; var offset = 0;
+    final result = <JianpuRun>[];
+    var offset = 0;
     for (final run in _controller.runs) {
-      final runStart = offset, runEnd = runStart + run.text.length; offset = runEnd;
-      final from = runStart > start ? runStart : start, to = runEnd < end ? runEnd : end;
-      if (from < to) result.add(run.copyWith(text: run.text.substring(from - runStart, to - runStart)));
+      final runStart = offset, runEnd = runStart + run.text.length;
+      offset = runEnd;
+      final from = runStart > start ? runStart : start,
+          to = runEnd < end ? runEnd : end;
+      if (from < to) {
+        result.add(run.copyWith(
+            text: run.text.substring(from - runStart, to - runStart)));
+      }
     }
     return result;
   }
 
   String _encodeRuns(List<JianpuRun> runs) => jsonEncode({
-    'version': 1,
-    'runs': runs.map((run) => {'text': run.text, 'octave': run.octave, 'beam': run.beam, 'superscript': run.superscript, 'italic': run.italic, 'slurId': run.slurId}).toList(),
-  });
+        'version': 1,
+        'runs': runs
+            .map((run) => {
+                  'text': run.text,
+                  'octave': run.octave,
+                  'beam': run.beam,
+                  'superscript': run.superscript,
+                  'italic': run.italic,
+                  'slurId': run.slurId
+                })
+            .toList(),
+      });
 
   String _encodeHtmlClipboard(List<JianpuRun> runs, String plain) {
     final payload = base64Url.encode(utf8.encode(_encodeRuns(runs)));
@@ -547,21 +584,39 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   List<JianpuRun>? _decodeRuns(String payload) {
     try {
       final decoded = jsonDecode(payload);
-      if (decoded is! Map || decoded['version'] != 1 || decoded['runs'] is! List) return null;
+      if (decoded is! Map ||
+          decoded['version'] != 1 ||
+          decoded['runs'] is! List) {
+        return null;
+      }
       final result = <JianpuRun>[];
       for (final item in decoded['runs'] as List) {
         if (item is! Map || item['text'] is! String) return null;
-        result.add(JianpuRun(text: item['text'] as String, octave: item['octave'] is int ? item['octave'] as int : 0, beam: item['beam'] is int ? item['beam'] as int : 0, superscript: item['superscript'] == true, italic: item['italic'] == true, slurId: item['slurId'] is String ? item['slurId'] as String : null));
+        result.add(JianpuRun(
+            text: item['text'] as String,
+            octave: item['octave'] is int ? item['octave'] as int : 0,
+            beam: item['beam'] is int ? item['beam'] as int : 0,
+            superscript: item['superscript'] == true,
+            italic: item['italic'] == true,
+            slurId:
+                item['slurId'] is String ? item['slurId'] as String : null));
       }
       return result;
-    } catch (_) { return null; }
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _copySelection() async {
-    final sel = _controller.selection; if (!sel.isValid || sel.isCollapsed) return;
-    final runs = _runsForRange(sel.start, sel.end), plain = runs.map((r) => r.text).join();
+    final sel = _controller.selection;
+    if (!sel.isValid || sel.isCollapsed) return;
+    final runs = _runsForRange(sel.start, sel.end),
+        plain = runs.map((r) => r.text).join();
     final clipboard = SystemClipboard.instance;
-    if (clipboard == null) { await Clipboard.setData(ClipboardData(text: plain)); return; }
+    if (clipboard == null) {
+      await Clipboard.setData(ClipboardData(text: plain));
+      return;
+    }
     final item = DataWriterItem();
     item.add(_jianpuClipboardFormat(_encodeRuns(runs)));
     // Keep a standard HTML representation as a second rich-data path. Some
@@ -572,7 +627,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   }
 
   Future<void> _cutSelection() async {
-    final sel = _controller.selection; if (!sel.isValid || sel.isCollapsed) return;
+    final sel = _controller.selection;
+    if (!sel.isValid || sel.isCollapsed) return;
     await _copySelection();
     _controller.replaceRangeWithRuns(sel.start, sel.end, const []);
     _focusNode.requestFocus();
@@ -590,15 +646,18 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       if (reader.canProvide(_jianpuClipboardFormat)) {
         final payload = await reader.readValue(_jianpuClipboardFormat);
         final runs = payload == null ? null : _decodeRuns(payload);
-        if (runs != null) { _insertRichRuns(runs); return; }
+        if (runs != null) {
+          _insertRichRuns(runs);
+          return;
+        }
       }
       // The HTML representation carries the same private Jianpu payload.
       // This is a fallback for platforms that do not round-trip custom UTIs.
       if (reader.canProvide(Formats.htmlText)) {
         final html = await reader.readValue(Formats.htmlText);
         if (html != null) {
-          final match = RegExp(r'<!--jianpu-runs:([A-Za-z0-9_=-]+)-->')
-              .firstMatch(html);
+          final match =
+              RegExp(r'<!--jianpu-runs:([A-Za-z0-9_=-]+)-->').firstMatch(html);
           if (match != null) {
             final encoded = base64Url.normalize(match.group(1)!);
             final payload = utf8.decode(base64Url.decode(encoded));
@@ -614,10 +673,11 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         final plain = await reader.readValue(Formats.plainText);
         if (plain != null) _insertPlainText(plain);
       }
-    } catch (_) { /* Preserve the document if clipboard access is denied. */ }
+    } catch (_) {/* Preserve the document if clipboard access is denied. */}
   }
 
-  void _insertPlainText(String text) => _insertRichRuns(text.isEmpty ? const [] : [JianpuRun(text: text)]);
+  void _insertPlainText(String text) =>
+      _insertRichRuns(text.isEmpty ? const [] : [JianpuRun(text: text)]);
 
   void _insertRichRuns(List<JianpuRun> sourceRuns) {
     final sel = _controller.selection;
@@ -632,6 +692,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     _controller.replaceRangeWithRuns(sel.start, sel.end, runs);
     _focusNode.requestFocus();
   }
+
   void _stopArrowRepeat() {
     _arrowRepeatInitialTimer?.cancel();
     _arrowRepeatInitialTimer = null;
@@ -675,7 +736,9 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       // getLocalRectForCaret returns local coordinates. Convert explicitly;
       // passing targetPoint directly makes globalToLocal offset it again,
       // which incorrectly sends vertical navigation toward the first line.
-      next = editable.getPositionForPoint(editable.localToGlobal(targetPoint)).offset;
+      next = editable
+          .getPositionForPoint(editable.localToGlobal(targetPoint))
+          .offset;
       next = next.clamp(0, text.length).toInt();
       if (next == caret) return;
     } else {
@@ -938,35 +1001,46 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                       autocorrect: false,
                                       enableSuggestions: false,
                                       enableInteractiveSelection: true,
-                                      contextMenuBuilder: (context, editableTextState) {
-                                        final items = editableTextState.contextMenuButtonItems;
+                                      contextMenuBuilder:
+                                          (context, editableTextState) {
+                                        final items = editableTextState
+                                            .contextMenuButtonItems;
                                         for (var i = 0; i < items.length; i++) {
                                           final item = items[i];
                                           switch (item.type) {
                                             case ContextMenuButtonType.copy:
-                                              items[i] = item.copyWith(onPressed: () {
-                                                ContextMenuController.removeAny();
+                                              items[i] =
+                                                  item.copyWith(onPressed: () {
+                                                ContextMenuController
+                                                    .removeAny();
                                                 unawaited(_copySelection());
                                               });
                                               break;
                                             case ContextMenuButtonType.cut:
-                                              items[i] = item.copyWith(onPressed: () {
-                                                ContextMenuController.removeAny();
+                                              items[i] =
+                                                  item.copyWith(onPressed: () {
+                                                ContextMenuController
+                                                    .removeAny();
                                                 unawaited(_cutSelection());
                                               });
                                               break;
                                             case ContextMenuButtonType.paste:
-                                              items[i] = item.copyWith(onPressed: () {
-                                                ContextMenuController.removeAny();
-                                                unawaited(_pasteFromClipboard());
+                                              items[i] =
+                                                  item.copyWith(onPressed: () {
+                                                ContextMenuController
+                                                    .removeAny();
+                                                unawaited(
+                                                    _pasteFromClipboard());
                                               });
                                               break;
                                             default:
                                               break;
                                           }
                                         }
-                                        return AdaptiveTextSelectionToolbar.buttonItems(
-                                          anchors: editableTextState.contextMenuAnchors,
+                                        return AdaptiveTextSelectionToolbar
+                                            .buttonItems(
+                                          anchors: editableTextState
+                                              .contextMenuAnchors,
                                           buttonItems: items,
                                         );
                                       },
