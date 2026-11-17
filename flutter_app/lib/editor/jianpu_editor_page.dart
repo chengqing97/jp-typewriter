@@ -399,8 +399,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     if (key == LogicalKeyboardKey.arrowLeft ||
         key == LogicalKeyboardKey.arrowRight) {
       final left = key == LogicalKeyboardKey.arrowLeft;
-      if (!HardwareKeyboard.instance.isShiftPressed &&
-          !selection.isCollapsed) {
+      if (!HardwareKeyboard.instance.isShiftPressed && !selection.isCollapsed) {
         next = left ? selection.start : selection.end;
       } else {
         next = (caret + (left ? -1 : 1)).clamp(0, text.length).toInt();
@@ -654,28 +653,27 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                           MediaQuery.textScalerOf(context),
                                     ),
                                     child: TextField(
-                                        controller: _controller,
-                                        focusNode: _focusNode,
-                                        style: GoogleFonts.lxgwWenKaiMonoTc(
-                                          fontSize: 23,
-                                          height: 2.0,
-                                          color: const Color(0xFF202124),
-                                        ),
-                                        cursorColor: const Color(0xFF315E9E),
-                                        selectionColor: const Color(0x55315E9E),
-                                        keyboardType: TextInputType.multiline,
-                                        maxLines: null,
-                                        autofocus: false,
-                                        autocorrect: false,
-                                        enableSuggestions: false,
-                                        enableInteractiveSelection: true,
-                                        textCapitalization:
-                                            TextCapitalization.none,
-                                        decoration: const InputDecoration.collapsed(
-                                          hintText: '',
-                                        ),
-                                        onChanged: (_) => setState(() {}),
+                                      controller: _controller,
+                                      focusNode: _focusNode,
+                                      style: GoogleFonts.lxgwWenKaiMonoTc(
+                                        fontSize: 23,
+                                        height: 2.0,
+                                        color: const Color(0xFF202124),
                                       ),
+                                      cursorColor: const Color(0xFF315E9E),
+                                      keyboardType: TextInputType.multiline,
+                                      maxLines: null,
+                                      autofocus: false,
+                                      autocorrect: false,
+                                      enableSuggestions: false,
+                                      enableInteractiveSelection: true,
+                                      textCapitalization:
+                                          TextCapitalization.none,
+                                      decoration:
+                                          const InputDecoration.collapsed(
+                                        hintText: '',
+                                      ),
+                                      onChanged: (_) => setState(() {}),
                                     ),
                                   ),
                                 ),
