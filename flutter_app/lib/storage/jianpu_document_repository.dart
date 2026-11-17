@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-import '../models/jianpu_document.dart';
+import '../models/jianpu_document.dart' hide JianpuDocument;
 import 'app_database.dart';
 import 'local_jianpu_document.dart';
 
@@ -106,7 +106,7 @@ class JianpuDocumentRepository {
 
   Future<void> close() => _database.close();
 
-  LocalJianpuDocument _toLocalDocument(JianpuDocumentsData row) {
+  LocalJianpuDocument _toLocalDocument(JianpuDocument row) {
     return LocalJianpuDocument.fromRow({
       'id': row.id,
       'title': row.title,

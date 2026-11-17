@@ -111,7 +111,9 @@ class JianpuEditingController extends TextEditingController
     final caret = TextSelection.collapsed(offset: _lastText.length);
     value = TextEditingValue(text: _lastText, selection: caret);
     _lastKnownSelection = caret;
-    _undoStack..clear()..add(_snapshot());
+    _undoStack
+      ..clear()
+      ..add(_snapshot());
     _redoStack.clear();
     _isTypingGroup = false;
     _lastTypingTime = null;
@@ -491,17 +493,24 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     _scheduleSave();
   }
 
-  String _contentFingerprint() => jsonEncode(_controller.runs.map((run) => {
-        'text': run.text, 'octave': run.octave, 'beam': run.beam,
-        'superscript': run.superscript, 'italic': run.italic, 'slurId': run.slurId,
-      }).toList());
+  String _contentFingerprint() => jsonEncode(_controller.runs
+      .map((run) => {
+            'text': run.text,
+            'octave': run.octave,
+            'beam': run.beam,
+            'superscript': run.superscript,
+            'italic': run.italic,
+            'slurId': run.slurId,
+          })
+      .toList());
 
   Future<void> _initializeDocuments() async {
     try {
       final docs = await _repository.listDocuments();
       if (docs.isEmpty) {
         final first = await _repository.createDocument(
-          title: 'Untitled Jianpu', runs: [JianpuRun(text: _sample)],
+          title: 'Untitled Jianpu',
+          runs: [const JianpuRun(text: _sample)],
         );
         _documents.add(first);
         _openDocument(first);
@@ -509,7 +518,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         _documents.addAll(docs);
         _openDocument(docs.first);
       }
-      _documentsSubscription ??= _repository.watchDocuments().listen((updatedDocs) {
+      _documentsSubscription ??=
+          _repository.watchDocuments().listen((updatedDocs) {
         if (!mounted) return;
         _documents
           ..clear()
@@ -517,9 +527,11 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         setState(() {});
       });
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not load local documents: $error')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not load local documents: $error')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoadingDocuments = false);
     }
@@ -536,8 +548,11 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   }
 
   void _scheduleSave() {
-    if (_currentDocumentId == null || _isLoadingDocuments ||
-        _contentFingerprint() == _lastPersistedContent) return;
+    if (_currentDocumentId == null ||
+        _isLoadingDocuments ||
+        _contentFingerprint() == _lastPersistedContent) {
+      return;
+    }
     _saveTimer?.cancel();
     _saveTimer = Timer(const Duration(milliseconds: 650), _saveCurrentDocument);
   }
@@ -548,17 +563,22 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     final fingerprint = _contentFingerprint();
     if (fingerprint == _lastPersistedContent) return;
     try {
-      await _repository.saveDocument(id: id, title: _currentDocumentTitle, runs: _controller.runs);
+      await _repository.saveDocument(
+          id: id, title: _currentDocumentTitle, runs: _controller.runs);
       if (id != _currentDocumentId) return;
       _lastPersistedContent = fingerprint;
       final docs = await _repository.listDocuments();
       if (!mounted || id != _currentDocumentId) return;
-      _documents..clear()..addAll(docs);
+      _documents
+        ..clear()
+        ..addAll(docs);
       setState(() {});
     } catch (error) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save document: $error')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not save document: $error')),
+        );
+      }
     }
   }
 
@@ -569,10 +589,13 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
 
   Future<void> _createDocument() async {
     await _flushPendingSave();
-    final doc = await _repository.createDocument(title: 'Untitled Jianpu', runs: const []);
+    final doc = await _repository
+        .createDocument(title: 'Untitled Jianpu', runs: const []);
     final docs = await _repository.listDocuments();
     if (!mounted) return;
-    _documents..clear()..addAll(docs);
+    _documents
+      ..clear()
+      ..addAll(docs);
     _openDocument(doc);
     Navigator.of(context).maybePop();
   }
@@ -589,8 +612,12 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         title: const Text('Rename document'),
         content: TextField(controller: field, autofocus: true),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, field.text), child: const Text('Rename')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, field.text),
+              child: const Text('Rename')),
         ],
       ),
     );
@@ -609,12 +636,17 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       builder: (context) => AlertDialog(
         title: const Text('Rename document'),
         content: TextField(
-          controller: field, autofocus: true,
+          controller: field,
+          autofocus: true,
           onSubmitted: (value) => Navigator.pop(context, value),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, field.text), child: const Text('Rename')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, field.text),
+              child: const Text('Rename')),
         ],
       ),
     );
@@ -628,7 +660,9 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   Future<void> _refreshDocuments() async {
     final docs = await _repository.listDocuments();
     if (!mounted) return;
-    _documents..clear()..addAll(docs);
+    _documents
+      ..clear()
+      ..addAll(docs);
     setState(() {});
   }
 
@@ -639,8 +673,12 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         title: const Text('Delete document?'),
         content: Text('“${doc.title}” will be permanently deleted.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Delete')),
         ],
       ),
     );
@@ -650,7 +688,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     await _refreshDocuments();
     if (doc.id == _currentDocumentId) {
       if (_documents.isEmpty) {
-        final fresh = await _repository.createDocument(title: 'Untitled Jianpu', runs: const []);
+        final fresh = await _repository
+            .createDocument(title: 'Untitled Jianpu', runs: const []);
         _documents.add(fresh);
         _openDocument(fresh);
       } else {
@@ -670,7 +709,9 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 20, 8, 12),
               child: Row(children: [
-                Expanded(child: Text('My Documents', style: Theme.of(context).textTheme.titleLarge)),
+                Expanded(
+                    child: Text('My Documents',
+                        style: Theme.of(context).textTheme.titleLarge)),
                 IconButton(
                   tooltip: 'New document',
                   onPressed: _isLoadingDocuments ? null : _createDocument,
@@ -690,15 +731,18 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                         return ListTile(
                           selected: selected,
                           leading: const Icon(Icons.description_outlined),
-                          title: Text(doc.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          title: Text(doc.title,
+                              maxLines: 1, overflow: TextOverflow.ellipsis),
                           subtitle: Text(_formatDocumentDate(doc.updatedAt)),
                           onTap: () async {
                             if (!selected) {
                               await _flushPendingSave();
                               if (!mounted) return;
-                              final latest = await _repository.getDocument(doc.id);
+                              final latest =
+                                  await _repository.getDocument(doc.id);
                               if (latest != null) _openDocument(latest);
                             }
+                            // ignore: use_build_context_synchronously
                             if (mounted) Navigator.of(context).maybePop();
                           },
                           trailing: PopupMenuButton<String>(
@@ -708,8 +752,10 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                               if (action == 'delete') _deleteDocument(doc);
                             },
                             itemBuilder: (context) => const [
-                              PopupMenuItem(value: 'rename', child: Text('Rename')),
-                              PopupMenuItem(value: 'delete', child: Text('Delete')),
+                              PopupMenuItem(
+                                  value: 'rename', child: Text('Rename')),
+                              PopupMenuItem(
+                                  value: 'delete', child: Text('Delete')),
                             ],
                           ),
                         );
@@ -1267,155 +1313,172 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
               Expanded(
                 child: SafeArea(
                   child: Column(
-              children: [
-                _buildToolbar(context),
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final pageWidth =
-                          constraints.maxWidth.clamp(280.0, 760.0).toDouble();
-                      final pageHeight = pageWidth * 297 / 210;
-                      return SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
-                        child: Center(
-                          child: Container(
-                            width: pageWidth,
-                            constraints: BoxConstraints(
-                              minHeight: pageHeight,
-                            ),
-                            padding: const EdgeInsets.fromLTRB(42, 48, 42, 48),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(3),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x18000000),
-                                  blurRadius: 18,
-                                  offset: Offset(0, 5),
+                    children: [
+                      _buildToolbar(context),
+                      Expanded(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final pageWidth = constraints.maxWidth
+                                .clamp(280.0, 760.0)
+                                .toDouble();
+                            final pageHeight = pageWidth * 297 / 210;
+                            return SingleChildScrollView(
+                              padding: const EdgeInsets.all(20),
+                              child: Center(
+                                child: Container(
+                                  width: pageWidth,
+                                  constraints: BoxConstraints(
+                                    minHeight: pageHeight,
+                                  ),
+                                  padding:
+                                      const EdgeInsets.fromLTRB(42, 48, 42, 48),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(3),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x18000000),
+                                        blurRadius: 18,
+                                        offset: Offset(0, 5),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Theme(
+                                        data: Theme.of(context).copyWith(
+                                          textSelectionTheme:
+                                              const TextSelectionThemeData(
+                                            selectionHandleColor:
+                                                Color(0xFF315E9E),
+                                          ),
+                                        ),
+                                        child: CustomPaint(
+                                          foregroundPainter: OctaveDotPainter(
+                                            controller: _controller,
+                                            baseStyle:
+                                                GoogleFonts.lxgwWenKaiMonoTc(
+                                              fontSize: 23,
+                                              height: 2.0,
+                                              color: const Color(0xFF202124),
+                                            ),
+                                            textDirection:
+                                                Directionality.of(context),
+                                            textScaler: MediaQuery.textScalerOf(
+                                                context),
+                                          ),
+                                          child: TextField(
+                                            key: _editorFieldKey,
+                                            controller: _controller,
+                                            focusNode: _focusNode,
+                                            style: GoogleFonts.lxgwWenKaiMonoTc(
+                                              fontSize: 23,
+                                              height: 2.0,
+                                              color: const Color(0xFF202124),
+                                            ),
+                                            cursorColor:
+                                                const Color(0xFF315E9E),
+                                            keyboardType:
+                                                TextInputType.multiline,
+                                            maxLines: null,
+                                            autofocus: false,
+                                            autocorrect: false,
+                                            enableSuggestions: false,
+                                            enableInteractiveSelection: true,
+                                            contextMenuBuilder:
+                                                (context, editableTextState) {
+                                              final items = editableTextState
+                                                  .contextMenuButtonItems;
+                                              for (var i = 0;
+                                                  i < items.length;
+                                                  i++) {
+                                                final item = items[i];
+                                                switch (item.type) {
+                                                  case ContextMenuButtonType
+                                                        .copy:
+                                                    items[i] = item.copyWith(
+                                                        onPressed: () {
+                                                      ContextMenuController
+                                                          .removeAny();
+                                                      unawaited(
+                                                          _copySelection());
+                                                    });
+                                                    break;
+                                                  case ContextMenuButtonType
+                                                        .cut:
+                                                    items[i] = item.copyWith(
+                                                        onPressed: () {
+                                                      ContextMenuController
+                                                          .removeAny();
+                                                      unawaited(
+                                                          _cutSelection());
+                                                    });
+                                                    break;
+                                                  case ContextMenuButtonType
+                                                        .paste:
+                                                    items[i] = item.copyWith(
+                                                        onPressed: () {
+                                                      ContextMenuController
+                                                          .removeAny();
+                                                      unawaited(
+                                                          _pasteFromClipboard());
+                                                    });
+                                                    break;
+                                                  default:
+                                                    break;
+                                                }
+                                              }
+                                              return AdaptiveTextSelectionToolbar
+                                                  .buttonItems(
+                                                anchors: editableTextState
+                                                    .contextMenuAnchors,
+                                                buttonItems: items,
+                                              );
+                                            },
+                                            textCapitalization:
+                                                TextCapitalization.none,
+                                            decoration:
+                                                const InputDecoration.collapsed(
+                                              hintText: '',
+                                            ),
+                                            onChanged: (_) => setState(() {}),
+                                          ),
+                                        ),
+                                      ),
+                                      if (_showHelp) ...[
+                                        const SizedBox(height: 32),
+                                        const Divider(),
+                                        Text(
+                                          'Editing engine prototype',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelLarge,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        const Text(
+                                          'Connect a physical keyboard and test '
+                                          'ArrowUp / ArrowDown across wrapped lines, '
+                                          'Home / End, Shift + arrows, selection, '
+                                          'and text insertion.',
+                                          style: TextStyle(
+                                            color: Colors.black54,
+                                            height: 1.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
                                 ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Theme(
-                                  data: Theme.of(context).copyWith(
-                                    textSelectionTheme:
-                                        const TextSelectionThemeData(
-                                      selectionHandleColor: Color(0xFF315E9E),
-                                    ),
-                                  ),
-                                  child: CustomPaint(
-                                    foregroundPainter: OctaveDotPainter(
-                                      controller: _controller,
-                                      baseStyle: GoogleFonts.lxgwWenKaiMonoTc(
-                                        fontSize: 23,
-                                        height: 2.0,
-                                        color: const Color(0xFF202124),
-                                      ),
-                                      textDirection: Directionality.of(context),
-                                      textScaler:
-                                          MediaQuery.textScalerOf(context),
-                                    ),
-                                    child: TextField(
-                                      key: _editorFieldKey,
-                                      controller: _controller,
-                                      focusNode: _focusNode,
-                                      style: GoogleFonts.lxgwWenKaiMonoTc(
-                                        fontSize: 23,
-                                        height: 2.0,
-                                        color: const Color(0xFF202124),
-                                      ),
-                                      cursorColor: const Color(0xFF315E9E),
-                                      keyboardType: TextInputType.multiline,
-                                      maxLines: null,
-                                      autofocus: false,
-                                      autocorrect: false,
-                                      enableSuggestions: false,
-                                      enableInteractiveSelection: true,
-                                      contextMenuBuilder:
-                                          (context, editableTextState) {
-                                        final items = editableTextState
-                                            .contextMenuButtonItems;
-                                        for (var i = 0; i < items.length; i++) {
-                                          final item = items[i];
-                                          switch (item.type) {
-                                            case ContextMenuButtonType.copy:
-                                              items[i] =
-                                                  item.copyWith(onPressed: () {
-                                                ContextMenuController
-                                                    .removeAny();
-                                                unawaited(_copySelection());
-                                              });
-                                              break;
-                                            case ContextMenuButtonType.cut:
-                                              items[i] =
-                                                  item.copyWith(onPressed: () {
-                                                ContextMenuController
-                                                    .removeAny();
-                                                unawaited(_cutSelection());
-                                              });
-                                              break;
-                                            case ContextMenuButtonType.paste:
-                                              items[i] =
-                                                  item.copyWith(onPressed: () {
-                                                ContextMenuController
-                                                    .removeAny();
-                                                unawaited(
-                                                    _pasteFromClipboard());
-                                              });
-                                              break;
-                                            default:
-                                              break;
-                                          }
-                                        }
-                                        return AdaptiveTextSelectionToolbar
-                                            .buttonItems(
-                                          anchors: editableTextState
-                                              .contextMenuAnchors,
-                                          buttonItems: items,
-                                        );
-                                      },
-                                      textCapitalization:
-                                          TextCapitalization.none,
-                                      decoration:
-                                          const InputDecoration.collapsed(
-                                        hintText: '',
-                                      ),
-                                      onChanged: (_) => setState(() {}),
-                                    ),
-                                  ),
-                                ),
-                                if (_showHelp) ...[
-                                  const SizedBox(height: 32),
-                                  const Divider(),
-                                  Text(
-                                    'Editing engine prototype',
-                                    style:
-                                        Theme.of(context).textTheme.labelLarge,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  const Text(
-                                    'Connect a physical keyboard and test '
-                                    'ArrowUp / ArrowDown across wrapped lines, '
-                                    'Home / End, Shift + arrows, selection, '
-                                    'and text insertion.',
-                                    style: TextStyle(
-                                      color: Colors.black54,
-                                      height: 1.5,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
+                      ),
+                      _buildStatusBar(context),
+                    ],
                   ),
-                ),
-                _buildStatusBar(context),
-                  ],
                 ),
               ),
             ],
