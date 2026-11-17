@@ -1,5 +1,4 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:cupertino_ui/cupertino_ui.dart' show cupertinoTextSelectionControls;
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -593,7 +592,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                     ),
                                     child: Focus(
                                       onKeyEvent: _handleRepeatKey,
-                                      child: EditableText(
+                                      child: TextField(
                                         controller: _controller,
                                         focusNode: _focusNode,
                                         style: GoogleFonts.lxgwWenKaiMonoTc(
@@ -602,20 +601,18 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                           color: const Color(0xFF202124),
                                         ),
                                         cursorColor: const Color(0xFF315E9E),
-                                        backgroundCursorColor: Colors.grey,
                                         selectionColor: const Color(0x55315E9E),
                                         keyboardType: TextInputType.multiline,
                                         maxLines: null,
-                                        expands: false,
                                         autofocus: false,
                                         autocorrect: false,
                                         enableSuggestions: false,
-                                        selectionControls: Theme.of(context).platform == TargetPlatform.iOS
-                                            ? cupertinoTextSelectionControls
-                                            : materialTextSelectionControls,
                                         enableInteractiveSelection: true,
                                         textCapitalization:
                                             TextCapitalization.none,
+                                        decoration: const InputDecoration.collapsed(
+                                          hintText: '',
+                                        ),
                                         onChanged: (_) => setState(() {}),
                                       ),
                                     ),
