@@ -8,6 +8,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:super_clipboard/super_clipboard.dart';
 
 import '../models/jianpu_document.dart';
+import '../storage/jianpu_document_repository.dart';
+import '../storage/local_jianpu_document.dart';
 import 'octave_dot_painter.dart';
 
 const _jianpuClipboardFormat = CustomValueFormat<String>(
@@ -102,6 +104,20 @@ class JianpuEditingController extends TextEditingController
 
   @override
   List<JianpuRun> get runs => List.unmodifiable(_runs);
+
+  void loadRuns(List<JianpuRun> runs) {
+    _runs = List<JianpuRun>.of(runs);
+    _lastText = _runs.map((run) => run.text).join();
+    final caret = TextSelection.collapsed(offset: _lastText.length);
+    value = TextEditingValue(text: _lastText, selection: caret);
+    _lastKnownSelection = caret;
+    _undoStack..clear()..add(_snapshot());
+    _redoStack.clear();
+    _isTypingGroup = false;
+    _lastTypingTime = null;
+    _lastTypingCaret = null;
+    notifyListeners();
+  }
 
   void formatRange(
       int start, int end, JianpuRun Function(JianpuRun) transform) {
@@ -406,6 +422,13 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   late final JianpuEditingController _controller;
   late final FocusNode _focusNode;
   final GlobalKey _editorFieldKey = GlobalKey();
+  final JianpuDocumentRepository _repository = JianpuDocumentRepository();
+  final List<LocalJianpuDocument> _documents = [];
+  Timer? _saveTimer;
+  String? _currentDocumentId;
+  String _currentDocumentTitle = 'Loading documents…';
+  String? _lastPersistedContent;
+  bool _isLoadingDocuments = true;
   bool _showHelp = true;
   int _slurSequence = 0;
   Timer? _arrowRepeatTimer;
@@ -424,19 +447,21 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   @override
   void initState() {
     super.initState();
-    _controller = JianpuEditingController(text: _sample);
+    _controller = JianpuEditingController(text: '');
     _focusNode = FocusNode(
       debugLabel: 'Jianpu editor',
       onKeyEvent: _handleRepeatKey,
     );
     _controller.addListener(_handleControllerChanged);
     _focusNode.addListener(_handleFocusChanged);
+    _initializeDocuments();
   }
 
   @override
   void dispose() {
     _focusNode.removeListener(_handleFocusChanged);
     _stopArrowRepeat();
+    _saveTimer?.cancel();
     _controller.removeListener(_handleControllerChanged);
     _controller.dispose();
     _focusNode.dispose();
@@ -454,7 +479,240 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       _controller.selection.isValid && !_controller.selection.isCollapsed;
 
   void _handleControllerChanged() {
+    if (!mounted) return;
+    setState(() {});
+    _scheduleSave();
+  }
+
+  String _contentFingerprint() => jsonEncode(_controller.runs.map((run) => {
+        'text': run.text, 'octave': run.octave, 'beam': run.beam,
+        'superscript': run.superscript, 'italic': run.italic, 'slurId': run.slurId,
+      }).toList());
+
+  Future<void> _initializeDocuments() async {
+    try {
+      final docs = await _repository.listDocuments();
+      if (docs.isEmpty) {
+        final first = await _repository.createDocument(
+          title: 'Untitled Jianpu', runs: [JianpuRun(text: _sample)],
+        );
+        _documents.add(first);
+        _openDocument(first);
+      } else {
+        _documents.addAll(docs);
+        _openDocument(docs.first);
+      }
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not load local documents: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoadingDocuments = false);
+    }
+  }
+
+  void _openDocument(LocalJianpuDocument doc) {
+    _saveTimer?.cancel();
+    _currentDocumentId = doc.id;
+    _currentDocumentTitle = doc.title;
+    _controller.loadRuns(doc.runs);
+    _lastPersistedContent = _contentFingerprint();
     if (mounted) setState(() {});
+  }
+
+  void _scheduleSave() {
+    if (_currentDocumentId == null || _isLoadingDocuments ||
+        _contentFingerprint() == _lastPersistedContent) return;
+    _saveTimer?.cancel();
+    _saveTimer = Timer(const Duration(milliseconds: 650), _saveCurrentDocument);
+  }
+
+  Future<void> _saveCurrentDocument() async {
+    final id = _currentDocumentId;
+    if (id == null) return;
+    final fingerprint = _contentFingerprint();
+    try {
+      await _repository.saveDocument(id: id, title: _currentDocumentTitle, runs: _controller.runs);
+      if (id != _currentDocumentId) return;
+      _lastPersistedContent = fingerprint;
+      final docs = await _repository.listDocuments();
+      if (!mounted || id != _currentDocumentId) return;
+      _documents..clear()..addAll(docs);
+      setState(() {});
+    } catch (error) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not save document: $error')),
+      );
+    }
+  }
+
+  Future<void> _flushPendingSave() async {
+    _saveTimer?.cancel();
+    await _saveCurrentDocument();
+  }
+
+  Future<void> _createDocument() async {
+    await _flushPendingSave();
+    final doc = await _repository.createDocument(title: 'Untitled Jianpu', runs: const []);
+    final docs = await _repository.listDocuments();
+    if (!mounted) return;
+    _documents..clear()..addAll(docs);
+    _openDocument(doc);
+    Navigator.of(context).maybePop();
+  }
+
+  Future<void> _renameDocument(LocalJianpuDocument doc) async {
+    if (doc.id == _currentDocumentId) {
+      await _renameCurrentDocument();
+      return;
+    }
+    final field = TextEditingController(text: doc.title);
+    final title = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename document'),
+        content: TextField(controller: field, autofocus: true),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, field.text), child: const Text('Rename')),
+        ],
+      ),
+    );
+    field.dispose();
+    if (title == null || title.trim().isEmpty) return;
+    await _repository.renameDocument(doc.id, title.trim());
+    await _refreshDocuments();
+  }
+
+  Future<void> _renameCurrentDocument() async {
+    final id = _currentDocumentId;
+    if (id == null) return;
+    final field = TextEditingController(text: _currentDocumentTitle);
+    final title = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Rename document'),
+        content: TextField(
+          controller: field, autofocus: true,
+          onSubmitted: (value) => Navigator.pop(context, value),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, field.text), child: const Text('Rename')),
+        ],
+      ),
+    );
+    field.dispose();
+    if (title == null || title.trim().isEmpty) return;
+    _currentDocumentTitle = title.trim();
+    await _repository.renameDocument(id, _currentDocumentTitle);
+    await _refreshDocuments();
+  }
+
+  Future<void> _refreshDocuments() async {
+    final docs = await _repository.listDocuments();
+    if (!mounted) return;
+    _documents..clear()..addAll(docs);
+    setState(() {});
+  }
+
+  Future<void> _deleteDocument(LocalJianpuDocument doc) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete document?'),
+        content: Text('“${doc.title}” will be permanently deleted.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    if (doc.id == _currentDocumentId) await _flushPendingSave();
+    await _repository.deleteDocument(doc.id);
+    await _refreshDocuments();
+    if (doc.id == _currentDocumentId) {
+      if (_documents.isEmpty) {
+        final fresh = await _repository.createDocument(title: 'Untitled Jianpu', runs: const []);
+        _documents.add(fresh);
+        _openDocument(fresh);
+      } else {
+        final next = await _repository.getDocument(_documents.first.id);
+        if (next != null) _openDocument(next);
+      }
+    }
+  }
+
+  Widget _buildDocumentDrawer() {
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 20, 8, 12),
+              child: Row(children: [
+                Expanded(child: Text('My Documents', style: Theme.of(context).textTheme.titleLarge)),
+                IconButton(
+                  tooltip: 'New document',
+                  onPressed: _isLoadingDocuments ? null : _createDocument,
+                  icon: const Icon(Icons.add),
+                ),
+              ]),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: _isLoadingDocuments
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: _documents.length,
+                      itemBuilder: (context, index) {
+                        final doc = _documents[index];
+                        final selected = doc.id == _currentDocumentId;
+                        return ListTile(
+                          selected: selected,
+                          leading: const Icon(Icons.description_outlined),
+                          title: Text(doc.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          subtitle: Text(_formatDocumentDate(doc.updatedAt)),
+                          onTap: () async {
+                            if (!selected) {
+                              await _flushPendingSave();
+                              if (!mounted) return;
+                              final latest = await _repository.getDocument(doc.id);
+                              if (latest != null) _openDocument(latest);
+                            }
+                            if (mounted) Navigator.of(context).maybePop();
+                          },
+                          trailing: PopupMenuButton<String>(
+                            tooltip: 'Document actions',
+                            onSelected: (action) {
+                              if (action == 'rename') _renameDocument(doc);
+                              if (action == 'delete') _deleteDocument(doc);
+                            },
+                            itemBuilder: (context) => const [
+                              PopupMenuItem(value: 'rename', child: Text('Rename')),
+                              PopupMenuItem(value: 'delete', child: Text('Delete')),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDocumentDate(DateTime date) {
+    final d = date.toLocal();
+    final now = DateTime.now();
+    if (d.year == now.year && d.month == now.month && d.day == now.day) {
+      return 'Today · ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    }
+    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
   }
 
   void _undo() {
@@ -968,8 +1226,17 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
           ),
         },
         child: Scaffold(
+          drawer: MediaQuery.sizeOf(context).width < 760
+              ? Drawer(child: _buildDocumentDrawer())
+              : null,
           appBar: AppBar(
-            title: const Text('[Doc title]'),
+            title: Text(_currentDocumentTitle),
+            actions: [
+              IconButton(
+                tooltip: 'Rename document',
+                onPressed: _isLoadingDocuments ? null : _renameCurrentDocument,
+                icon: const Icon(Icons.edit_outlined),
+              ),
             actions: [
               IconButton(
                 tooltip: 'Editing test instructions',
@@ -978,8 +1245,13 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
               ),
             ],
           ),
-          body: SafeArea(
-            child: Column(
+          body: Row(
+            children: [
+              if (MediaQuery.sizeOf(context).width >= 760)
+                SizedBox(width: 280, child: _buildDocumentDrawer()),
+              Expanded(
+                child: SafeArea(
+                  child: Column(
               children: [
                 _buildToolbar(context),
                 Expanded(
@@ -1128,8 +1400,10 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                   ),
                 ),
                 _buildStatusBar(context),
-              ],
-            ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
