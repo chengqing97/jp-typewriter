@@ -427,7 +427,11 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         _preferredVerticalX!,
         caretRect.center.dy + direction * caretRect.height,
       );
-      next = editable.getPositionForPoint(targetPoint).offset;
+      // RenderEditable.getPositionForPoint expects a GLOBAL point, while
+      // getLocalRectForCaret returns local coordinates. Convert explicitly;
+      // passing targetPoint directly makes globalToLocal offset it again,
+      // which incorrectly sends vertical navigation toward the first line.
+      next = editable.getPositionForPoint(editable.localToGlobal(targetPoint)).offset;
       next = next.clamp(0, text.length).toInt();
       if (next == caret) return;
     } else {
