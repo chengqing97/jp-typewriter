@@ -387,43 +387,43 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       shortcuts: <ShortcutActivator, Intent>{
         const SingleActivator(LogicalKeyboardKey.escape): DismissIntent(),
         const SingleActivator(LogicalKeyboardKey.keyA, control: true):
-            const SelectAllTextIntent(SelectionChangedCause.keyboard),
+            SelectAllTextIntent(SelectionChangedCause.keyboard),
         const SingleActivator(LogicalKeyboardKey.keyA, meta: true):
-            const SelectAllTextIntent(SelectionChangedCause.keyboard),
+            SelectAllTextIntent(SelectionChangedCause.keyboard),
 
         SingleActivator(LogicalKeyboardKey.arrowUp, control: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.octaveUp)
-                : const ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true),
+                : ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true),
         SingleActivator(LogicalKeyboardKey.arrowDown, control: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.octaveDown)
-                : const ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true),
+                : ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true),
         SingleActivator(LogicalKeyboardKey.arrowLeft, control: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.beamUp)
-                : const ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: true),
+                : ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: true),
         SingleActivator(LogicalKeyboardKey.arrowRight, control: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.beamDown)
-                : const ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: true),
+                : ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: true),
 
         SingleActivator(LogicalKeyboardKey.arrowUp, meta: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.octaveUp)
-                : const ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true),
+                : ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true),
         SingleActivator(LogicalKeyboardKey.arrowDown, meta: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.octaveDown)
-                : const ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true),
+                : ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true),
         SingleActivator(LogicalKeyboardKey.arrowLeft, meta: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.beamUp)
-                : const ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true),
+                : ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true),
         SingleActivator(LogicalKeyboardKey.arrowRight, meta: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.beamDown)
-                : const ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true),
+                : ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true),
 
         if (_hasSelection) ...{
           const SingleActivator(LogicalKeyboardKey.keyS, control: true):
@@ -474,18 +474,25 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
               switch (intent.command) {
                 case EditorFormatCommand.octaveUp:
                   _changeOctave(1);
+                  break;
                 case EditorFormatCommand.octaveDown:
                   _changeOctave(-1);
+                  break;
                 case EditorFormatCommand.beamUp:
                   _changeBeam(1);
+                  break;
                 case EditorFormatCommand.beamDown:
                   _changeBeam(-1);
+                  break;
                 case EditorFormatCommand.superscript:
                   _toggleSuperscript();
+                  break;
                 case EditorFormatCommand.italic:
                   _toggleItalic();
+                  break;
                 case EditorFormatCommand.clear:
                   _clearStyles();
+                  break;
               }
               return null;
             },
