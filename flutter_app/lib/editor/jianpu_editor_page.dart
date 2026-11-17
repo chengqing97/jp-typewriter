@@ -194,6 +194,7 @@ class JianpuEditingController extends TextEditingController implements JianpuNot
         style: TextStyle(
           fontStyle: run.italic ? FontStyle.italic : FontStyle.normal,
           fontSize: run.superscript ? 15 : null,
+          color: run.superscript ? Colors.transparent : null,
           decoration: decorations.isEmpty
               ? TextDecoration.none
               : TextDecoration.combine(decorations),
@@ -342,7 +343,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       }
     } else if (key == LogicalKeyboardKey.arrowUp ||
         key == LogicalKeyboardKey.arrowDown) {
-      final lineStart = text.lastIndexOf('\n', caret > 0 ? caret - 1 : 0) + 1;
+      final previousBreak = caret > 0 ? text.lastIndexOf('\n', caret - 1) : -1;
+      final lineStart = previousBreak + 1;
       final lineEndFound = text.indexOf('\n', caret);
       final lineEnd = lineEndFound < 0 ? text.length : lineEndFound;
       final column = caret - lineStart;
@@ -350,7 +352,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         if (lineStart == 0) return KeyEventResult.ignored;
         final previousEnd = lineStart - 1;
         final previousStart =
-            text.lastIndexOf('\n', previousEnd > 0 ? previousEnd - 1 : 0) + 1;
+            (previousEnd > 0 ? text.lastIndexOf('\n', previousEnd - 1) + 1 : 0);
         next = (previousStart + column).clamp(previousStart, previousEnd).toInt();
       } else {
         if (lineEnd == text.length) return KeyEventResult.ignored;
@@ -417,11 +419,11 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         SingleActivator(LogicalKeyboardKey.arrowLeft, meta: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.beamUp)
-                : const ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: true),
+                : const ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true),
         SingleActivator(LogicalKeyboardKey.arrowRight, meta: true):
             _hasSelection
                 ? const EditorFormatIntent(EditorFormatCommand.beamDown)
-                : const ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: true),
+                : const ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true),
 
         if (_hasSelection) ...{
           const SingleActivator(LogicalKeyboardKey.keyS, control: true):
