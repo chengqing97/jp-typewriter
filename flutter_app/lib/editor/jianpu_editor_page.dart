@@ -598,7 +598,11 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       ..clear()
       ..addAll(docs);
     _openDocument(doc);
-    Navigator.of(context).maybePop();
+    if (MediaQuery.sizeOf(context).width >= 760) {
+      setState(() => _isDocumentDrawerExpanded = false);
+    } else {
+      Navigator.of(context).maybePop();
+    }
   }
 
   Future<void> _renameDocument(LocalJianpuDocument doc) async {
@@ -758,8 +762,13 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                   await _repository.getDocument(doc.id);
                               if (latest != null) _openDocument(latest);
                             }
-                            // ignore: use_build_context_synchronously
-                            if (mounted) Navigator.of(context).maybePop();
+                            if (!mounted) return;
+                            if (MediaQuery.sizeOf(context).width >= 760) {
+                              setState(
+                                  () => _isDocumentDrawerExpanded = false);
+                            } else {
+                              Navigator.of(context).maybePop();
+                            }
                           },
                           trailing: PopupMenuButton<String>(
                             tooltip: 'Document actions',
@@ -779,41 +788,6 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                     ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCollapsedDocumentRail() {
-    return Material(
-      color: Theme.of(context).colorScheme.surface,
-      child: SafeArea(
-        child: SizedBox(
-          width: 56,
-          child: Column(
-            children: [
-              IconButton(
-                tooltip: 'Show documents',
-                onPressed: () =>
-                    setState(() => _isDocumentDrawerExpanded = true),
-                icon: const Icon(Icons.menu),
-              ),
-              IconButton(
-                tooltip: 'New document',
-                onPressed: _isLoadingDocuments ? null : _createDocument,
-                icon: const Icon(Icons.add),
-              ),
-              const Divider(height: 1),
-              const Spacer(),
-              Tooltip(
-                message: _currentDocumentTitle,
-                child: const Padding(
-                  padding: EdgeInsets.only(bottom: 12),
-                  child: Icon(Icons.description_outlined),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -1343,7 +1317,23 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
               ? Drawer(child: _buildDocumentDrawer())
               : null,
           appBar: AppBar(
-            title: Text(_currentDocumentTitle),
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (MediaQuery.sizeOf(context).width >= 760)
+                  IconButton(
+                    tooltip: _isDocumentDrawerExpanded
+                        ? 'Hide documents'
+                        : 'Show documents',
+                    onPressed: () => setState(() =>
+                        _isDocumentDrawerExpanded = !_isDocumentDrawerExpanded),
+                    icon: Icon(_isDocumentDrawerExpanded
+                        ? Icons.menu_open
+                        : Icons.menu),
+                  ),
+                Flexible(child: Text(_currentDocumentTitle)),
+              ],
+            ),
             actions: [
               IconButton(
                 tooltip: 'Rename document',
@@ -1357,13 +1347,9 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
               ),
             ],
           ),
-          body: Row(
+          body: Stack(
             children: [
-              if (MediaQuery.sizeOf(context).width >= 760)
-                _isDocumentDrawerExpanded
-                    ? SizedBox(width: 280, child: _buildDocumentDrawer())
-                    : _buildCollapsedDocumentRail(),
-              Expanded(
+              Positioned.fill(
                 child: SafeArea(
                   child: Column(
                     children: [
@@ -1534,6 +1520,20 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                   ),
                 ),
               ),
+              if (MediaQuery.sizeOf(context).width >= 760 &&
+                  _isDocumentDrawerExpanded)
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: Material(
+                    elevation: 12,
+                    child: SizedBox(
+                      width: 280,
+                      child: _buildDocumentDrawer(),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
