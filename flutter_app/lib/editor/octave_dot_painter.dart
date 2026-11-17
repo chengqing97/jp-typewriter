@@ -33,9 +33,10 @@ class OctaveDotPainter extends CustomPainter {
           text: run.text,
           style: TextStyle(
             fontFamily: baseStyle.fontFamily,
+            color: run.superscript ? Colors.transparent : null,
             fontStyle: run.italic ? FontStyle.italic : FontStyle.normal,
             fontSize: run.superscript ? (baseStyle.fontSize ?? 23) * .68 : null,
-            height: run.superscript ? .72 : null,
+
           ),
         ),
     ];
@@ -64,6 +65,27 @@ class OctaveDotPainter extends CustomPainter {
     for (final run in runs) {
       for (var i = 0; i < run.text.length; i++) {
         final code = run.text.codeUnitAt(i);
+        final boxesForGlyph = _boxes(layout, offset + i);
+        if (run.superscript && boxesForGlyph.isNotEmpty) {
+          final glyph = TextPainter(
+            text: TextSpan(
+              text: String.fromCharCode(code),
+              style: TextStyle(
+                fontFamily: baseStyle.fontFamily,
+                fontSize: (baseStyle.fontSize ?? 23) * .68,
+                color: baseStyle.color ?? Colors.black,
+                fontStyle: run.italic ? FontStyle.italic : FontStyle.normal,
+              ),
+            ),
+            textDirection: textDirection,
+            textScaler: textScaler,
+          )..layout();
+          glyph.paint(
+            canvas,
+            Offset(boxesForGlyph.first.left, boxesForGlyph.first.top - 5.5),
+          );
+          glyph.dispose();
+        }
         if (run.octave != 0 && code >= 0x31 && code <= 0x37) {
           final boxes = _boxes(layout, offset + i);
           if (boxes.isNotEmpty) {
