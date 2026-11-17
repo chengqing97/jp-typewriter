@@ -316,6 +316,62 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         ));
   }
 
+  KeyEventResult _handleRepeatKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyRepeatEvent) return KeyEventResult.ignored;
+    if (HardwareKeyboard.instance.isControlPressed ||
+        HardwareKeyboard.instance.isMetaPressed ||
+        HardwareKeyboard.instance.isAltPressed) {
+      return KeyEventResult.ignored;
+    }
+
+    final key = event.logicalKey;
+    final selection = _controller.selection;
+    if (!selection.isValid) return KeyEventResult.ignored;
+    final text = _controller.text;
+    var caret = selection.extentOffset;
+    var next = caret;
+
+    if (key == LogicalKeyboardKey.arrowLeft ||
+        key == LogicalKeyboardKey.arrowRight) {
+      final left = key == LogicalKeyboardKey.arrowLeft;
+      if (!HardwareKeyboard.instance.isShiftPressed &&
+          !selection.isCollapsed) {
+        next = left ? selection.start : selection.end;
+      } else {
+        next = (caret + (left ? -1 : 1)).clamp(0, text.length).toInt();
+      }
+    } else if (key == LogicalKeyboardKey.arrowUp ||
+        key == LogicalKeyboardKey.arrowDown) {
+      final lineStart = text.lastIndexOf('\n', caret > 0 ? caret - 1 : 0) + 1;
+      final lineEndFound = text.indexOf('\n', caret);
+      final lineEnd = lineEndFound < 0 ? text.length : lineEndFound;
+      final column = caret - lineStart;
+      if (key == LogicalKeyboardKey.arrowUp) {
+        if (lineStart == 0) return KeyEventResult.ignored;
+        final previousEnd = lineStart - 1;
+        final previousStart =
+            text.lastIndexOf('\n', previousEnd > 0 ? previousEnd - 1 : 0) + 1;
+        next = (previousStart + column).clamp(previousStart, previousEnd).toInt();
+      } else {
+        if (lineEnd == text.length) return KeyEventResult.ignored;
+        final nextStart = lineEnd + 1;
+        final nextEndFound = text.indexOf('\n', nextStart);
+        final nextEnd = nextEndFound < 0 ? text.length : nextEndFound;
+        next = (nextStart + column).clamp(nextStart, nextEnd).toInt();
+      }
+    } else {
+      return KeyEventResult.ignored;
+    }
+
+    if (HardwareKeyboard.instance.isShiftPressed) {
+      final anchor = selection.isCollapsed ? caret : selection.baseOffset;
+      _controller.selection = TextSelection(baseOffset: anchor, extentOffset: next);
+    } else {
+      _controller.selection = TextSelection.collapsed(offset: next);
+    }
+    return KeyEventResult.handled;
+  }
+
   void _selectAll() {
     _controller.selection = TextSelection(
       baseOffset: 0,
