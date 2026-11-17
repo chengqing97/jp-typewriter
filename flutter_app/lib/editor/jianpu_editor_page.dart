@@ -184,21 +184,12 @@ class JianpuEditingController extends TextEditingController implements JianpuNot
   }) {
     final spans = <InlineSpan>[];
     for (final run in _runs) {
-      final decorations = <TextDecoration>[];
-      if (run.beam > 0) {
-        decorations.add(TextDecoration.underline);
-      }
-
       spans.add(TextSpan(
         text: run.text,
         style: TextStyle(
           fontStyle: run.italic ? FontStyle.italic : FontStyle.normal,
           fontSize: run.superscript ? 15 : null,
           color: run.superscript ? Colors.transparent : null,
-          decoration: decorations.isEmpty
-              ? TextDecoration.none
-              : TextDecoration.combine(decorations),
-          decorationThickness: run.beam > 1 ? 2.0 : 1.0,
         ),
       ));
     }
