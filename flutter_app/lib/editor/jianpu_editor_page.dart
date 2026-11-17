@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/jianpu_document.dart';
@@ -235,11 +236,13 @@ class JianpuEditorPage extends StatefulWidget {
 class _JianpuEditorPageState extends State<JianpuEditorPage> {
   late final JianpuEditingController _controller;
   late final FocusNode _focusNode;
+  final GlobalKey _editorFieldKey = GlobalKey();
   bool _showHelp = true;
   int _slurSequence = 0;
   Timer? _arrowRepeatTimer;
   Timer? _arrowRepeatInitialTimer;
   LogicalKeyboardKey? _heldArrowKey;
+  double? _preferredVerticalX;
 
   static const _arrowRepeatDelay = Duration(milliseconds: 400);
   static const _arrowRepeatInterval = Duration(milliseconds: 45);
@@ -363,6 +366,10 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     // iPadOS currently sends only KeyDownEvent and KeyUpEvent to Flutter.
     _stopArrowRepeat();
     _heldArrowKey = event.logicalKey;
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft ||
+        event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      _preferredVerticalX = null;
+    }
     _moveCursorForArrow(event.logicalKey);
 
     _arrowRepeatInitialTimer = Timer(_arrowRepeatDelay, () {
@@ -406,25 +413,23 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       }
     } else if (key == LogicalKeyboardKey.arrowUp ||
         key == LogicalKeyboardKey.arrowDown) {
-      final previousBreak = caret > 0 ? text.lastIndexOf('\n', caret - 1) : -1;
-      final lineStart = previousBreak + 1;
-      final lineEndFound = text.indexOf('\n', caret);
-      final lineEnd = lineEndFound < 0 ? text.length : lineEndFound;
-      final column = caret - lineStart;
-      if (key == LogicalKeyboardKey.arrowUp) {
-        if (lineStart == 0) return;
-        final previousEnd = lineStart - 1;
-        final previousStart =
-            (previousEnd > 0 ? text.lastIndexOf('\n', previousEnd - 1) + 1 : 0);
-        next =
-            (previousStart + column).clamp(previousStart, previousEnd).toInt();
-      } else {
-        if (lineEnd == text.length) return;
-        final nextStart = lineEnd + 1;
-        final nextEndFound = text.indexOf('\n', nextStart);
-        final nextEnd = nextEndFound < 0 ? text.length : nextEndFound;
-        next = (nextStart + column).clamp(nextStart, nextEnd).toInt();
-      }
+      final editable = _findRenderEditable();
+      if (editable == null) return;
+
+      // Use the rendered caret geometry rather than newline characters. This
+      // follows visual lines, including soft wraps, and keeps the preferred
+      // horizontal position stable when moving through short lines.
+      final caretRect =
+          editable.getLocalRectForCaret(TextPosition(offset: caret));
+      _preferredVerticalX ??= caretRect.center.dx;
+      final direction = key == LogicalKeyboardKey.arrowUp ? -1.0 : 1.0;
+      final targetPoint = Offset(
+        _preferredVerticalX!,
+        caretRect.center.dy + direction * caretRect.height,
+      );
+      next = editable.getPositionForPoint(targetPoint).offset;
+      next = next.clamp(0, text.length).toInt();
+      if (next == caret) return;
     } else {
       return;
     }
@@ -436,6 +441,23 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     } else {
       _controller.selection = TextSelection.collapsed(offset: next);
     }
+  }
+
+  RenderEditable? _findRenderEditable() {
+    final root = _editorFieldKey.currentContext?.findRenderObject();
+    if (root == null) return null;
+
+    RenderEditable? result;
+    void visit(RenderObject child) {
+      if (child is RenderEditable) {
+        result = child;
+        return;
+      }
+      child.visitChildren(visit);
+    }
+
+    visit(root);
+    return result;
   }
 
   void _selectAll() {
@@ -653,6 +675,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                           MediaQuery.textScalerOf(context),
                                     ),
                                     child: TextField(
+                                      key: _editorFieldKey,
                                       controller: _controller,
                                       focusNode: _focusNode,
                                       style: GoogleFonts.lxgwWenKaiMonoTc(
