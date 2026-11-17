@@ -63,6 +63,7 @@ class OctaveDotPainter extends CustomPainter {
     var offset = 0;
     final slurGroups = <String, List<int>>{};
     for (final run in runs) {
+      if (run.beam > 0) _paintBeams(canvas, layout, run, offset, beamPaint);
       for (var i = 0; i < run.text.length; i++) {
         final code = run.text.codeUnitAt(i);
         final boxesForGlyph = _boxes(layout, offset + i);
@@ -100,16 +101,6 @@ class OctaveDotPainter extends CustomPainter {
           }
         }
 
-        if (run.beam > 0 && code >= 0x31 && code <= 0x37) {
-          final boxes = _boxes(layout, offset + i);
-          if (boxes.isNotEmpty) {
-            final box = boxes.first;
-            for (var level = 0; level < run.beam; level++) {
-              final y = box.bottom + 2.5 + level * 3.2;
-              canvas.drawLine(Offset(box.left, y), Offset(box.right, y), beamPaint);
-            }
-          }
-        }
       }
       if (run.slurId != null) {
         slurGroups.putIfAbsent(run.slurId!, () => <int>[]).addAll(
@@ -143,6 +134,53 @@ class OctaveDotPainter extends CustomPainter {
     }
 
     layout.dispose();
+  }
+
+  void _paintBeams(
+    Canvas canvas,
+    TextPainter layout,
+    JianpuRun run,
+    int offset,
+    Paint paint,
+  ) {
+    TextBox? first;
+    TextBox? last;
+    double? lineTop;
+    var bottom = 0.0;
+
+    void flush() {
+      if (first != null && last != null) {
+        for (var level = 0; level < run.beam; level++) {
+          final y = bottom + 2.5 + level * 3.2;
+          canvas.drawLine(Offset(first!.left, y), Offset(last!.right, y), paint);
+        }
+      }
+      first = null;
+      last = null;
+      lineTop = null;
+      bottom = 0;
+    }
+
+    for (var i = 0; i < run.text.length; i++) {
+      final code = run.text.codeUnitAt(i);
+      if (code >= 0x31 && code <= 0x37) {
+        final boxes = _boxes(layout, offset + i);
+        if (boxes.isEmpty) {
+          flush();
+          continue;
+        }
+        final box = boxes.first;
+        if (first != null && (box.top - lineTop!).abs() > 2) flush();
+        first ??= box;
+        last = box;
+        lineTop ??= box.top;
+        if (box.bottom > bottom) bottom = box.bottom;
+      } else if (code != 0x20 || first == null) {
+        flush();
+      }
+      // Spaces between selected notes remain part of one continuous beam.
+    }
+    flush();
   }
 
   List<TextBox> _boxes(TextPainter painter, int offset) {
