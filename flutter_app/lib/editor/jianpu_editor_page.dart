@@ -1,12 +1,18 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:super_clipboard/super_clipboard.dart';
 
 import '../models/jianpu_document.dart';
 import 'octave_dot_painter.dart';
+
+const _jianpuClipboardFormat = CustomValueFormat<String>(
+  applicationId: 'com.chengqing97.jptypewriter.jianpu-runs',
+);
 
 /// First editing-engine spike: use Flutter's single EditableText surface,
 /// rather than one widget per note or a webview contenteditable element.
@@ -61,6 +67,31 @@ class JianpuEditingController extends TextEditingController
     notifyListeners();
   }
 
+  void replaceRangeWithRuns(int start, int end, List<JianpuRun> insertedRuns) {
+    if (start < 0 || end < start || end > text.length) return;
+    final updated = <JianpuRun>[];
+    var offset = 0;
+    for (final run in _runs) {
+      final runStart = offset, runEnd = runStart + run.text.length;
+      offset = runEnd;
+      final beforeEnd = runEnd.clamp(0, start).toInt();
+      if (beforeEnd > runStart) _appendRun(updated, run.copyWith(text: run.text.substring(0, beforeEnd - runStart)));
+    }
+    for (final run in insertedRuns) { _appendRun(updated, run); }
+    offset = 0;
+    for (final run in _runs) {
+      final runStart = offset, runEnd = runStart + run.text.length;
+      offset = runEnd;
+      final afterStart = runStart > end ? runStart : end;
+      if (runEnd > afterStart) _appendRun(updated, run.copyWith(text: run.text.substring(afterStart - runStart)));
+    }
+    final insertedText = insertedRuns.map((run) => run.text).join();
+    final updatedText = text.replaceRange(start, end, insertedText);
+    _runs = updated;
+    _lastText = updatedText;
+    value = TextEditingValue(text: updatedText, selection: TextSelection.collapsed(offset: start + insertedText.length));
+    notifyListeners();
+  }
   void _appendRun(List<JianpuRun> target, JianpuRun run) {
     if (run.text.isEmpty) return;
     if (target.isNotEmpty) {
@@ -346,6 +377,13 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       key == LogicalKeyboardKey.arrowDown;
 
   KeyEventResult _handleRepeatKey(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent &&
+        (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed) &&
+        !HardwareKeyboard.instance.isAltPressed) {
+      if (event.logicalKey == LogicalKeyboardKey.keyC) { _copySelection(); return KeyEventResult.handled; }
+      if (event.logicalKey == LogicalKeyboardKey.keyX) { _cutSelection(); return KeyEventResult.handled; }
+      if (event.logicalKey == LogicalKeyboardKey.keyV) { _pasteFromClipboard(); return KeyEventResult.handled; }
+    }
     if (event is KeyUpEvent && event.logicalKey == _heldArrowKey) {
       _stopArrowRepeat();
       return KeyEventResult.handled;
@@ -388,6 +426,81 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     return KeyEventResult.handled;
   }
 
+  List<JianpuRun> _runsForRange(int start, int end) {
+    final result = <JianpuRun>[]; var offset = 0;
+    for (final run in _controller.runs) {
+      final runStart = offset, runEnd = runStart + run.text.length; offset = runEnd;
+      final from = runStart > start ? runStart : start, to = runEnd < end ? runEnd : end;
+      if (from < to) result.add(run.copyWith(text: run.text.substring(from - runStart, to - runStart)));
+    }
+    return result;
+  }
+
+  String _encodeRuns(List<JianpuRun> runs) => jsonEncode({
+    'version': 1,
+    'runs': runs.map((run) => {'text': run.text, 'octave': run.octave, 'beam': run.beam, 'superscript': run.superscript, 'italic': run.italic, 'slurId': run.slurId}).toList(),
+  });
+
+  List<JianpuRun>? _decodeRuns(String payload) {
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is! Map || decoded['version'] != 1 || decoded['runs'] is! List) return null;
+      final result = <JianpuRun>[];
+      for (final item in decoded['runs'] as List) {
+        if (item is! Map || item['text'] is! String) return null;
+        result.add(JianpuRun(text: item['text'] as String, octave: item['octave'] is int ? item['octave'] as int : 0, beam: item['beam'] is int ? item['beam'] as int : 0, superscript: item['superscript'] == true, italic: item['italic'] == true, slurId: item['slurId'] is String ? item['slurId'] as String : null));
+      }
+      return result;
+    } catch (_) { return null; }
+  }
+
+  Future<void> _copySelection() async {
+    final sel = _controller.selection; if (!sel.isValid || sel.isCollapsed) return;
+    final runs = _runsForRange(sel.start, sel.end), plain = runs.map((r) => r.text).join();
+    final clipboard = SystemClipboard.instance;
+    if (clipboard == null) { await Clipboard.setData(ClipboardData(text: plain)); return; }
+    final item = DataWriterItem();
+    item.add(_jianpuClipboardFormat(_encodeRuns(runs)));
+    item.add(Formats.plainText(plain));
+    await clipboard.write([item]);
+  }
+
+  Future<void> _cutSelection() async {
+    final sel = _controller.selection; if (!sel.isValid || sel.isCollapsed) return;
+    await _copySelection();
+    _controller.replaceRangeWithRuns(sel.start, sel.end, const []);
+    _focusNode.requestFocus();
+  }
+
+  Future<void> _pasteFromClipboard() async {
+    final clipboard = SystemClipboard.instance;
+    if (clipboard == null) {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      if (data?.text != null) _insertPlainText(data!.text!);
+      return;
+    }
+    try {
+      final reader = await clipboard.read();
+      if (reader.canProvide(_jianpuClipboardFormat)) {
+        final payload = await reader.readValue(_jianpuClipboardFormat);
+        final runs = payload == null ? null : _decodeRuns(payload);
+        if (runs != null) { _insertRichRuns(runs); return; }
+      }
+      if (reader.canProvide(Formats.plainText)) {
+        final plain = await reader.readValue(Formats.plainText);
+        if (plain != null) _insertPlainText(plain);
+      }
+    } catch (_) { /* Preserve the document if clipboard access is denied. */ }
+  }
+
+  void _insertPlainText(String text) => _insertRichRuns(text.isEmpty ? const [] : [JianpuRun(text: text)]);
+
+  void _insertRichRuns(List<JianpuRun> sourceRuns) {
+    final sel = _controller.selection; if (!sel.isValid) return;
+    final runs = sourceRuns.map((run) => run.copyWith(slurId: run.slurId == null ? null : 'slur-${++_slurSequence}')).toList();
+    _controller.replaceRangeWithRuns(sel.start, sel.end, runs);
+    _focusNode.requestFocus();
+  }
   void _stopArrowRepeat() {
     _arrowRepeatInitialTimer?.cancel();
     _arrowRepeatInitialTimer = null;
