@@ -26,6 +26,7 @@ class JianpuRun {
     bool? superscript,
     bool? italic,
     String? slurId,
+    bool clearSlur = false,
   }) {
     return JianpuRun(
       text: text ?? this.text,
@@ -33,7 +34,7 @@ class JianpuRun {
       beam: beam ?? this.beam,
       superscript: superscript ?? this.superscript,
       italic: italic ?? this.italic,
-      slurId: slurId ?? this.slurId,
+      slurId: clearSlur ? null : (slurId ?? this.slurId),
     );
   }
 }
