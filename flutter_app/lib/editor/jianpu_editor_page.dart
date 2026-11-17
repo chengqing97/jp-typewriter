@@ -725,13 +725,6 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                 Expanded(
                     child: Text('My Documents',
                         style: Theme.of(context).textTheme.titleLarge)),
-                if (MediaQuery.sizeOf(context).width >= 760)
-                  IconButton(
-                    tooltip: 'Collapse documents',
-                    onPressed: () =>
-                        setState(() => _isDocumentDrawerExpanded = false),
-                    icon: const Icon(Icons.menu_open),
-                  ),
                 IconButton(
                   tooltip: 'New document',
                   onPressed: _isLoadingDocuments ? null : _createDocument,
@@ -764,8 +757,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                             }
                             if (!mounted) return;
                             if (MediaQuery.sizeOf(context).width >= 760) {
-                              setState(
-                                  () => _isDocumentDrawerExpanded = false);
+                              setState(() => _isDocumentDrawerExpanded = false);
                             } else {
                               Navigator.of(context).maybePop();
                             }
@@ -1327,9 +1319,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                         : 'Show documents',
                     onPressed: () => setState(() =>
                         _isDocumentDrawerExpanded = !_isDocumentDrawerExpanded),
-                    icon: Icon(_isDocumentDrawerExpanded
-                        ? Icons.menu_open
-                        : Icons.menu),
+                    icon: const Icon(Icons.menu),
                   ),
                 Flexible(child: Text(_currentDocumentTitle)),
               ],
