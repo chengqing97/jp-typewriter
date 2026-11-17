@@ -432,6 +432,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   String _currentDocumentTitle = 'Loading documents…';
   String? _lastPersistedContent;
   bool _isLoadingDocuments = true;
+  bool _isDocumentDrawerExpanded = true;
   bool _showHelp = true;
   int _slurSequence = 0;
   Timer? _arrowRepeatTimer;
@@ -720,6 +721,13 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                 Expanded(
                     child: Text('My Documents',
                         style: Theme.of(context).textTheme.titleLarge)),
+                if (MediaQuery.sizeOf(context).width >= 760)
+                  IconButton(
+                    tooltip: 'Collapse documents',
+                    onPressed: () =>
+                        setState(() => _isDocumentDrawerExpanded = false),
+                    icon: const Icon(Icons.menu_open),
+                  ),
                 IconButton(
                   tooltip: 'New document',
                   onPressed: _isLoadingDocuments ? null : _createDocument,
@@ -771,6 +779,41 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                     ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollapsedDocumentRail() {
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      child: SafeArea(
+        child: SizedBox(
+          width: 56,
+          child: Column(
+            children: [
+              IconButton(
+                tooltip: 'Show documents',
+                onPressed: () =>
+                    setState(() => _isDocumentDrawerExpanded = true),
+                icon: const Icon(Icons.menu),
+              ),
+              IconButton(
+                tooltip: 'New document',
+                onPressed: _isLoadingDocuments ? null : _createDocument,
+                icon: const Icon(Icons.add),
+              ),
+              const Divider(height: 1),
+              const Spacer(),
+              Tooltip(
+                message: _currentDocumentTitle,
+                child: const Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: Icon(Icons.description_outlined),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1317,7 +1360,9 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
           body: Row(
             children: [
               if (MediaQuery.sizeOf(context).width >= 760)
-                SizedBox(width: 280, child: _buildDocumentDrawer()),
+                _isDocumentDrawerExpanded
+                    ? SizedBox(width: 280, child: _buildDocumentDrawer())
+                    : _buildCollapsedDocumentRail(),
               Expanded(
                 child: SafeArea(
                   child: Column(
