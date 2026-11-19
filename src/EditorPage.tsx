@@ -215,8 +215,9 @@ export default function EditorPage() {
             </div>
           </div>
         </div>
-        {navigator.maxTouchPoints > 0 && <VirtualKeyboard />}
+        <VirtualKeyboard />
       </div>
     </Slate>
   );
 }
+// {navigator.maxTouchPoints > 0 && <VirtualKeyboard />}
