@@ -121,9 +121,9 @@ class _JianpuNotationOverlayState extends State<JianpuNotationOverlay> {
 
   void _observeEditable(RenderEditable? editable) {
     if (identical(editable, _observedEditable)) return;
-    _observedEditable?.viewportOffset.removeListener(_scheduleGeometryUpdate);
+    _observedEditable?.offset.removeListener(_scheduleGeometryUpdate);
     _observedEditable = editable;
-    _observedEditable?.viewportOffset.addListener(_scheduleGeometryUpdate);
+    _observedEditable?.offset.addListener(_scheduleGeometryUpdate);
   }
 
   RenderEditable? _findRenderEditable() {
