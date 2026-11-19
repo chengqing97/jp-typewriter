@@ -423,6 +423,7 @@ class JianpuEditorPage extends StatefulWidget {
 class _JianpuEditorPageState extends State<JianpuEditorPage> {
   late final JianpuEditingController _controller;
   late final FocusNode _focusNode;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey _editorFieldKey = GlobalKey();
   final GlobalKey _editorPaintKey = GlobalKey();
   final JianpuDocumentRepository _repository = JianpuDocumentRepository();
@@ -1228,6 +1229,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
           ),
         },
         child: Scaffold(
+          key: _scaffoldKey,
           drawer: Drawer(child: _buildDocumentDrawer()),
           appBar: AppBar(
             centerTitle: false,
@@ -1469,7 +1471,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                             if (latest != null) _openDocument(latest);
                           }
                           if (!mounted) return;
-                          Navigator.of(context).pop();
+                          _scaffoldKey.currentState?.closeDrawer();
                         },
                         trailing: PopupMenuButton<String>(
                           tooltip: 'Document actions',
