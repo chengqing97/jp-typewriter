@@ -497,25 +497,6 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   bool get _hasSelection =>
       _controller.selection.isValid && !_controller.selection.isCollapsed;
 
-  RenderEditable? _findRenderEditable() {
-    final context = _editorFieldKey.currentContext;
-    if (context is! Element) return null;
-
-    RenderEditable? result;
-    void visit(Element element) {
-      if (result != null) return;
-      final renderObject = element.findRenderObject();
-      if (renderObject is RenderEditable) {
-        result = renderObject;
-        return;
-      }
-      element.visitChildElements(visit);
-    }
-
-    visit(context);
-    return result;
-  }
-
   void _scheduleIntrinsicMeasurement() {
     final text = _controller.text;
     if (_intrinsicMeasurementScheduled ||
@@ -1395,15 +1376,14 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                             // first frame, before RenderEditable exists, use
                             // the matching TextPainter measurement.
                             _scheduleIntrinsicMeasurement();
-                            final requiredTextWidth =
-                                _renderedIntrinsicWidth ??
-                                    textPainter.maxIntrinsicWidth;
+                            final requiredTextWidth = _renderedIntrinsicWidth ??
+                                textPainter.maxIntrinsicWidth;
                             final requiredTextHeight =
                                 _renderedIntrinsicHeight ?? textPainter.height;
                             final requiredWidth = requiredTextWidth +
                                 horizontalContentPadding * 2;
-                            final requiredHeight = requiredTextHeight +
-                                verticalContentPadding * 2;
+                            final requiredHeight =
+                                requiredTextHeight + verticalContentPadding * 2;
                             final pageWidth = math.max(
                               basePageWidth,
                               math.max(
