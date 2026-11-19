@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
@@ -802,8 +803,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
 
   void _handleEditorAreaPointerMove(PointerMoveEvent event) {
     final origin = _paperTapCandidates[event.pointer];
-    if (origin != null &&
-        (event.position - origin).distance > kTouchSlop) {
+    if (origin != null && (event.position - origin).distance > kTouchSlop) {
       _paperTapCandidates.remove(event.pointer);
     }
   }
