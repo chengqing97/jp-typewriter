@@ -228,7 +228,7 @@ class _JianpuNotationOverlayState extends State<JianpuNotationOverlay> {
                   top: centerY - widget.dotDiameter / 2,
                   width: widget.dotDiameter,
                   height: widget.dotDiameter,
-                  id: 'dot-$offset-$dot',
+                  id: 'dot-${offset + characterOffset}-$dot',
                 ));
               }
             }
