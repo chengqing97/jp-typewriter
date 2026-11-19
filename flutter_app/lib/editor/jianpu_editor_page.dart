@@ -497,8 +497,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   }
 
   String _contentFingerprint() => jsonEncode(_controller.runs
-      .map((run) => {            'text': run.text,            'octave': run.octave,            'beam': run.beam,
-            'superscript': run.superscript,
+      .map((run) => {            'text': run.text,            'octave': run.octave,            'beam': run.beam,            'superscript': run.superscript,
             'italic': run.italic,
             'slurId': run.slurId,
           })
@@ -997,8 +996,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
               return;
             }          }
         }      }
-      if (reader.canProvide(Formats.plainText)) {
-        final plain = await reader.readValue(Formats.plainText);
+      if (reader.canProvide(Formats.plainText)) {        final plain = await reader.readValue(Formats.plainText);
         if (plain != null) _insertPlainText(plain);
       }
     } catch (_) {/* Preserve the document if clipboard access is denied. */}
@@ -1280,22 +1278,25 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                             return SingleChildScrollView(
                               padding: const EdgeInsets.all(20),
                               child: Center(
-                                child: Container(
-                                  key: _paperKey,
-                                  width: pageWidth,
-                                  height: pageHeight,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(3),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Color(0x18000000),
-                                        blurRadius: 18,
-                                        offset: Offset(0, 5),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      key: _paperKey,
+                                      width: pageWidth,
+                                      height: pageHeight,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(3),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Color(0x18000000),
+                                            blurRadius: 18,
+                                            offset: Offset(0, 5),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                  child: Theme(
+                                      child: Theme(
                                         data: Theme.of(context).copyWith(
                                           textSelectionTheme:
                                               const TextSelectionThemeData(
@@ -1309,84 +1310,85 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                           clipBehavior: Clip.none,
                                           children: [
                                             TextField(
-                                            key: _editorFieldKey,
-                                            controller: _controller,
-                                            focusNode: _focusNode,
-                                            style: GoogleFonts.lxgwWenKaiMonoTc(
-                                              fontSize: 18,
-                                              color: const Color(0xFF202124),
-                                            ),
-                                            cursorColor:
-                                                const Color(0xFF315E9E),
-                                            keyboardType:
-                                                TextInputType.multiline,
-                                            maxLines: null,
-                                            expands: true,
-                                            autofocus: false,
-                                            autocorrect: false,
-                                            enableSuggestions: false,
-                                            enableInteractiveSelection: true,
-                                            contextMenuBuilder:
-                                                (context, editableTextState) {
-                                              final items = editableTextState
-                                                  .contextMenuButtonItems;
-                                              for (var i = 0;
-                                                  i < items.length;
-                                                  i++) {
-                                                final item = items[i];
-                                                switch (item.type) {
-                                                  case ContextMenuButtonType
-                                                        .copy:
-                                                    items[i] = item.copyWith(
-                                                        onPressed: () {
-                                                      ContextMenuController
-                                                          .removeAny();
-                                                      unawaited(
-                                                          _copySelection());
-                                                    });
-                                                    break;
-                                                  case ContextMenuButtonType
-                                                        .cut:
-                                                    items[i] = item.copyWith(
-                                                        onPressed: () {
-                                                      ContextMenuController
-                                                          .removeAny();
-                                                      unawaited(
-                                                          _cutSelection());
-                                                    });
-                                                    break;
-                                                  case ContextMenuButtonType
-                                                        .paste:
-                                                    items[i] = item.copyWith(
-                                                        onPressed: () {
-                                                      ContextMenuController
-                                                          .removeAny();
-                                                      unawaited(
-                                                          _pasteFromClipboard());
-                                                    });
-                                                    break;
-                                                  default:
-                                                    break;
+                                              key: _editorFieldKey,
+                                              controller: _controller,
+                                              focusNode: _focusNode,
+                                              style: GoogleFonts.lxgwWenKaiMonoTc(
+                                                fontSize: 18,
+                                                color: const Color(0xFF202124),
+                                              ),
+                                              cursorColor:
+                                                  const Color(0xFF315E9E),
+                                              keyboardType:
+                                                  TextInputType.multiline,
+                                              maxLines: null,
+                                              expands: true,
+                                              autofocus: false,
+                                              autocorrect: false,
+                                              enableSuggestions: false,
+                                              enableInteractiveSelection: true,
+                                              contextMenuBuilder:
+                                                  (context, editableTextState) {
+                                                final items = editableTextState
+                                                    .contextMenuButtonItems;
+                                                for (var i = 0;
+                                                    i < items.length;
+                                                    i++) {
+                                                  final item = items[i];
+                                                  switch (item.type) {
+                                                    case ContextMenuButtonType
+                                                          .copy:
+                                                      items[i] = item.copyWith(
+                                                          onPressed: () {
+                                                        ContextMenuController
+                                                            .removeAny();
+                                                        unawaited(
+                                                            _copySelection());
+                                                      });
+                                                      break;
+                                                    case ContextMenuButtonType
+                                                          .cut:
+                                                      items[i] = item.copyWith(
+                                                          onPressed: () {
+                                                        ContextMenuController
+                                                            .removeAny();
+                                                        unawaited(
+                                                            _cutSelection());
+                                                      });
+                                                      break;
+                                                    case ContextMenuButtonType
+                                                          .paste:
+                                                      items[i] = item.copyWith(
+                                                          onPressed: () {
+                                                        ContextMenuController
+                                                            .removeAny();
+                                                        unawaited(
+                                                            _pasteFromClipboard());
+                                                      });
+                                                      break;
+                                                    default:
+                                                      break;
+                                                  }
                                                 }
-                                              }
-                                              return AdaptiveTextSelectionToolbar
-                                                  .buttonItems(
-                                                anchors: editableTextState
-                                                    .contextMenuAnchors,
-                                                buttonItems: items,
-                                              );
-                                            },
-                                            textCapitalization:
-                                                TextCapitalization.none,
-                                            decoration: const InputDecoration(
-                                              border: InputBorder.none,
-                                              enabledBorder: InputBorder.none,
-                                              focusedBorder: InputBorder.none,
-                                              disabledBorder: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.fromLTRB(42, 48, 42, 48),
-                                            ),
-                                            onChanged: (_) => setState(() {}),
+                                                return AdaptiveTextSelectionToolbar
+                                                    .buttonItems(
+                                                  anchors: editableTextState
+                                                      .contextMenuAnchors,
+                                                  buttonItems: items,
+                                                );
+                                              },
+                                              textCapitalization:
+                                                  TextCapitalization.none,
+                                              decoration: const InputDecoration(
+                                                border: InputBorder.none,
+                                                enabledBorder: InputBorder.none,
+                                                focusedBorder: InputBorder.none,
+                                                disabledBorder: InputBorder.none,
+                                                contentPadding:
+                                                    EdgeInsets.fromLTRB(
+                                                        42, 48, 42, 48),
+                                              ),
+                                              onChanged: (_) => setState(() {}),
                                             ),
                                             Positioned.fill(
                                               child: JianpuNotationOverlay(
@@ -1397,48 +1399,30 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                           ],
                                         ),
                                       ),
-                                      if (_showHelp) ...[
-                                        const SizedBox(height: 32),
-                                        const Divider(),
-                                        Text(
-                                          'Editing engine prototype',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .labelLarge,
-                                        ),
-                                        const SizedBox(height: 6),
-                                        const Text(
-                                          'Connect a physical keyboard and test '
-                                          'ArrowUp / ArrowDown across wrapped lines, '
-                                          'Home / End, Shift + arrows, selection, '
-                                          'and text insertion.',
-                                          style: TextStyle(
-                                            color: Colors.black54,
-                                            height: 1.5,
-                                          ),
-                                        ),
-                                      ],
-
-                                ),
-                                if (_showHelp) ...[
-                                  const SizedBox(height: 32),
-                                  const Divider(),
-                                  Text(
-                                    'Editing engine prototype',
-                                    style: Theme.of(context).textTheme.labelLarge,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  const Text(
-                                    'Connect a physical keyboard and test '
-                                    'ArrowUp / ArrowDown across wrapped lines, '
-                                    'Home / End, Shift + arrows, selection, '
-                                    'and text insertion.',
-                                    style: TextStyle(
-                                      color: Colors.black54,
-                                      height: 1.5,
                                     ),
-                                  ),
-                                ],
+                                    if (_showHelp) ...[
+                                      const SizedBox(height: 32),
+                                      const Divider(),
+                                      Text(
+                                        'Editing engine prototype',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelLarge,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      const Text(
+                                        'Connect a physical keyboard and test '
+                                        'ArrowUp / ArrowDown across wrapped lines, '
+                                        'Home / End, Shift + arrows, selection, '
+                                        'and text insertion.',
+                                        style: TextStyle(
+                                          color: Colors.black54,
+                                          height: 1.5,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
                               ),
                             );
                           },
@@ -1497,8 +1481,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                         onTap: () async {
                           if (!selected) {
                             await _flushPendingSave();
-                            if (!mounted) return;
-                            final latest =
+                            if (!mounted) return;                            final latest =
                                 await _repository.getDocument(doc.id);
                             if (latest != null) _openDocument(latest);
                           }
