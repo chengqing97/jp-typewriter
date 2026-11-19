@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class JianpuEditorToolbar extends StatelessWidget {
   const JianpuEditorToolbar({
@@ -72,7 +73,7 @@ class JianpuEditorToolbar extends StatelessWidget {
                     onPressed: () => onInsertSymbol(symbol),
                     icon: Text(
                       symbol,
-                      style: const TextStyle(fontSize: 24),
+                      style: GoogleFonts.getFont('Noto Music', fontSize: 24),
                     ),
                   ),
               ],
