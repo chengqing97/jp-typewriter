@@ -431,7 +431,7 @@ class JianpuEditingController extends TextEditingController
       );
       var localStart = 0;
       while (localStart < run.text.length) {
-        final newlineIndex = run.text.indexOf('\\n', localStart);
+        final newlineIndex = run.text.indexOf('\n', localStart);
         final segmentEnd =
             newlineIndex < 0 ? run.text.length : newlineIndex;
 
@@ -458,7 +458,7 @@ class JianpuEditingController extends TextEditingController
                 ? spacingAtOffset[nextLineOffset]
                 : 0;
         spans.add(TextSpan(
-          text: '\\n',
+          text: '\n',
           style: spacingBeforeNextLine > 0
               ? baseStyle.copyWith(
                   height: (18 + spacingBeforeNextLine) / 18,
