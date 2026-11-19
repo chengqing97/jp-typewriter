@@ -497,8 +497,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   }
 
   String _contentFingerprint() => jsonEncode(_controller.runs
-      .map((run) => {
-            'text': run.text,
+      .map((run) => {            'text': run.text,
             'octave': run.octave,            'beam': run.beam,
             'superscript': run.superscript,
             'italic': run.italic,
@@ -997,8 +996,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
             if (runs != null) {
               _insertRichRuns(runs);
               return;
-            }
-          }
+            }          }
         }
       }
       if (reader.canProvide(Formats.plainText)) {
@@ -1244,7 +1242,10 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
             },
           ),
         },
-        child: Scaffold(
+        child: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: _handleEditorAreaPointerDown,
+          child: Scaffold(
           key: _scaffoldKey,
           drawer: Drawer(child: _buildDocumentDrawer()),
           appBar: AppBar(
@@ -1264,11 +1265,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
           body: Stack(
             children: [
               Positioned.fill(
-                child: Listener(
-                  behavior: HitTestBehavior.translucent,
-                  onPointerDown: _handleEditorAreaPointerDown,
-                  child: SafeArea(
-                    child: Column(
+                child: SafeArea(
+                  child: Column(
                     children: [
                       KeyedSubtree(
                         key: _toolbarKey,
@@ -1440,6 +1438,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
               ),
             ],
           ),
+          ),
         ),
       ),
     );
@@ -1497,8 +1496,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                           onSelected: (action) {
                             if (action == 'rename') _renameDocument(doc);
                             if (action == 'delete') _deleteDocument(doc);
-                          },
-                          itemBuilder: (context) => const [
+                          },                          itemBuilder: (context) => const [
                             PopupMenuItem(
                                 value: 'rename', child: Text('Rename')),
                             PopupMenuItem(
