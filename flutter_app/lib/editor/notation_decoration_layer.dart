@@ -253,7 +253,7 @@ class _JianpuNotationOverlayState extends State<JianpuNotationOverlay> {
                 kind: _DecorationKind.beam,
                 left: first!.left,
                 top: bottom + 2.5 + level * widget.beamGap,
-                width: (last!.right - first!.left).clamp(0.0, double.infinity),
+                width: (last!.right - first!.left).clamp(0.0, double.infinity).toDouble(),
                 height: widget.beamThickness,
                 id: 'beam-$runIndex-$level-${first!.left}',
               ));
@@ -317,7 +317,7 @@ class _JianpuNotationOverlayState extends State<JianpuNotationOverlay> {
 
       final width = last.right - first.left;
       if (width <= 0) continue;
-      final archHeight = (width * .12).clamp(5.0, 18.0);
+      final archHeight = (width * .12).clamp(5.0, 18.0).toDouble();
       next.add(_NotationDecoration(
         kind: _DecorationKind.slur,
         left: first.left,
