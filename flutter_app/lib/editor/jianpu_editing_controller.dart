@@ -442,7 +442,9 @@ class JianpuEditingController extends TextEditingController
       final firstLineEnd = text.indexOf('\n');
       final end = firstLineEnd < 0 ? text.length : firstLineEnd;
       for (var i = 0; i < end; i++) {
-        lineHeightAtOffset[i] = spacingAtOffset[0];
+        if (spacingAtOffset[0] > lineHeightAtOffset[i]) {
+          lineHeightAtOffset[i] = spacingAtOffset[0];
+        }
       }
     }
 
