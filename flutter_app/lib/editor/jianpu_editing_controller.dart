@@ -145,6 +145,34 @@ class JianpuEditingController extends TextEditingController
     notifyListeners();
   }
 
+  void changeLineSpacingAt(int offset, int delta) {
+    if (offset < 0 || offset > text.length || text.isEmpty) return;
+    final lineStart = text.lastIndexOf('\\n', offset == 0 ? 0 : offset - 1) + 1;
+    if (lineStart >= text.length || text[lineStart] == '\\n') return;
+    var runOffset = 0;
+    final updated = <JianpuRun>[];
+    var changed = false;
+    for (final run in _runs) {
+      final runStart = runOffset;
+      final runEnd = runStart + run.text.length;
+      runOffset = runEnd;
+      if (changed || lineStart < runStart || lineStart >= runEnd) {
+        _appendRun(updated, run);
+        continue;
+      }
+      final local = lineStart - runStart;
+      if (local > 0) _appendRun(updated, run.copyWith(text: run.text.substring(0, local)));
+      final next = (run.lineSpacingBefore + delta).clamp(0, 40).toInt();
+      _appendRun(updated, run.copyWith(text: run.text.substring(local, local + 1), lineSpacingBefore: next));
+      if (local + 1 < run.text.length) _appendRun(updated, run.copyWith(text: run.text.substring(local + 1)));
+      changed = true;
+    }
+    if (!changed) return;
+    _recordUndo();
+    _runs = updated;
+    notifyListeners();
+  }
+
   void replaceRangeWithRuns(int start, int end, List<JianpuRun> insertedRuns) {
     if (start < 0 || end < start || end > text.length) return;
     _recordUndo();
@@ -191,7 +219,8 @@ class JianpuEditingController extends TextEditingController
           previous.beam == run.beam &&
           previous.superscript == run.superscript &&
           previous.italic == run.italic &&
-          previous.slurId == run.slurId) {
+          previous.slurId == run.slurId &&
+          previous.lineSpacingBefore == run.lineSpacingBefore) {
         target[target.length - 1] =
             previous.copyWith(text: previous.text + run.text);
         return;
@@ -372,6 +401,8 @@ class JianpuEditingController extends TextEditingController
           fontStyle: run.italic ? FontStyle.italic : FontStyle.normal,
           fontSize: run.superscript ? 15 : null,
           color: run.superscript ? Colors.transparent : null,
+          height: run.lineSpacingBefore > 0 ? (18 + run.lineSpacingBefore) / 18 : null,
+          leadingDistribution: TextLeadingDistribution.even,
         ),
       ));
     }
