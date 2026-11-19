@@ -12,6 +12,26 @@ dart run build_runner build --delete-conflicting-outputs
 flutter run
 ```
 
+### Run in a browser
+
+Drift uses SQLite compiled to WebAssembly on the web. Download the matching
+runtime assets once (and again whenever the resolved Drift version changes):
+
+```sh
+./tool/download_drift_web_assets.sh
+flutter run -d chrome
+```
+
+The script downloads `sqlite3.wasm` and `drift_worker.js` for Drift 2.35.4 into
+`web/`. Keep the script version aligned with the `drift` version in
+`pubspec.lock`. The browser database is separate from the native
+`jianpu_documents.db`; browser documents are stored by the browser's local
+storage implementation and do not automatically transfer between devices.
+
+For a production web deployment, ensure `.wasm` files are served with the
+`application/wasm` MIME type. Drift can fall back to IndexedDB-backed storage
+when the browser does not support its preferred file-system APIs.
+
 Drift generates the typed database implementation in
 `lib/storage/app_database.g.dart`. Run the code-generation command after
 changing the Drift tables or database annotations.
