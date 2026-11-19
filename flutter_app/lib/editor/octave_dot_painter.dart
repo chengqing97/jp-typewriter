@@ -1,5 +1,4 @@
 import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../models/jianpu_document.dart';
@@ -75,7 +74,7 @@ class OctaveDotPainter extends CustomPainter {
     final slurGroups = <String, List<int>>{};
     for (final run in runs) {
       if (canUseEditableGeometry && run.beam > 0) {
-        _paintBeams(canvas, editable!, paintBox as RenderBox, run, offset, beamPaint);
+        _paintBeams(canvas, editable, paintBox, run, offset, beamPaint);
       }
       var characterOffset = 0;
       for (final rune in run.text.runes) {
@@ -105,7 +104,8 @@ class OctaveDotPainter extends CustomPainter {
         }
         if (run.octave != 0 && _octaveDotCharacter.hasMatch(character)) {
           final box = canUseEditableGeometry
-              ? _actualGlyphRect(editable!, paintBox as RenderBox, textOffset, characterLength)
+              ? _actualGlyphRect(
+                  editable, paintBox, textOffset, characterLength)
               : null;
           if (box != null) {
             final x = box.center.dx;
@@ -188,13 +188,20 @@ class OctaveDotPainter extends CustomPainter {
       final characterLength = character.length;
       if (!_beamExcludedCharacter.hasMatch(character)) {
         final box = _actualGlyphRect(
-          editable, paintBox, offset + characterOffset, characterLength,
+          editable,
+          paintBox,
+          offset + characterOffset,
+          characterLength,
         );
         if (box == null) {
           flush();
         } else {
           final textBox = TextBox.fromLTRBD(
-            box.left, box.top, box.right, box.bottom, TextDirection.ltr,
+            box.left,
+            box.top,
+            box.right,
+            box.bottom,
+            TextDirection.ltr,
           );
           if (first != null && (box.top - lineTop!).abs() > 2) flush();
           first ??= textBox;
@@ -238,7 +245,8 @@ class OctaveDotPainter extends CustomPainter {
     if (offset < 0 || offset + length > controller.text.length) return null;
 
     Rect toPaintCoordinates(Rect rect) {
-      final topLeft = paintBox.globalToLocal(editable.localToGlobal(rect.topLeft));
+      final topLeft =
+          paintBox.globalToLocal(editable.localToGlobal(rect.topLeft));
       final bottomRight =
           paintBox.globalToLocal(editable.localToGlobal(rect.bottomRight));
       return Rect.fromPoints(topLeft, bottomRight);

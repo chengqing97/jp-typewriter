@@ -433,7 +433,6 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   String _currentDocumentTitle = 'Loading documents…';
   String? _lastPersistedContent;
   bool _isLoadingDocuments = true;
-  bool _isDocumentDrawerExpanded = true;
   bool _showHelp = true;
   int _slurSequence = 0;
   Timer? _arrowRepeatTimer;
@@ -599,11 +598,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       ..clear()
       ..addAll(docs);
     _openDocument(doc);
-    if (MediaQuery.sizeOf(context).width >= 760) {
-      setState(() => _isDocumentDrawerExpanded = false);
-    } else {
-      Navigator.of(context).maybePop();
-    }
+    Navigator.of(context).maybePop();
   }
 
   Future<void> _renameDocument(LocalJianpuDocument doc) async {
@@ -1474,11 +1469,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                             if (latest != null) _openDocument(latest);
                           }
                           if (!mounted) return;
-                          if (MediaQuery.sizeOf(context).width >= 760) {
-                            setState(() => _isDocumentDrawerExpanded = false);
-                          } else {
-                            Navigator.of(context).maybePop();
-                          }
+                          Navigator.of(context).pop();
                         },
                         trailing: PopupMenuButton<String>(
                           tooltip: 'Document actions',
