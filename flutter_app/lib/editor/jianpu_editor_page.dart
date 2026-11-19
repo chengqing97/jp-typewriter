@@ -424,6 +424,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   late final JianpuEditingController _controller;
   late final FocusNode _focusNode;
   final GlobalKey _editorFieldKey = GlobalKey();
+  final GlobalKey _editorPaintKey = GlobalKey();
   final JianpuDocumentRepository _repository = JianpuDocumentRepository();
   final List<LocalJianpuDocument> _documents = [];
   StreamSubscription<List<LocalJianpuDocument>>? _documentsSubscription;
@@ -1295,6 +1296,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                           ),
                                         ),
                                         child: CustomPaint(
+                                          key: _editorPaintKey,
                                           foregroundPainter: OctaveDotPainter(
                                             controller: _controller,
                                             baseStyle:
@@ -1306,6 +1308,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                                 Directionality.of(context),
                                             textScaler: MediaQuery.textScalerOf(
                                                 context),
+                                            textFieldKey: _editorFieldKey,
+                                            paintKey: _editorPaintKey,
                                           ),
                                           child: TextField(
                                             key: _editorFieldKey,
