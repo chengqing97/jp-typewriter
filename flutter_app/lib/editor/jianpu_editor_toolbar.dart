@@ -15,6 +15,7 @@ class JianpuEditorToolbar extends StatelessWidget {
     required this.onLowerOctave,
     required this.onClearFormatting,
     required this.onToggleSlur,
+    required this.onInsertSymbol,
   });
 
   final bool canUndo;
@@ -29,6 +30,7 @@ class JianpuEditorToolbar extends StatelessWidget {
   final VoidCallback onLowerOctave;
   final VoidCallback onClearFormatting;
   final VoidCallback onToggleSlur;
+  final ValueChanged<String> onInsertSymbol;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +62,19 @@ class JianpuEditorToolbar extends StatelessWidget {
                 _tool(Icons.arrow_downward, 'Lower octave (Ctrl/Cmd+Down)', onLowerOctave),
                 _tool(Icons.format_clear, 'Clear formatting (Ctrl/Cmd+D)', onClearFormatting),
                 _tool(Icons.looks, 'Toggle slur (Ctrl/Cmd+A)', onToggleSlur),
+                const VerticalDivider(width: 16, indent: 12, endIndent: 12),
+                for (final symbol in const [
+                  '𝄆', '𝄋', '𝄌', '𝄍', '𝄎', '𝄏', '𝄇', '𝄁', '𝄂',
+                ])
+                  IconButton(
+                    tooltip: 'Insert $symbol',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => onInsertSymbol(symbol),
+                    icon: Text(
+                      symbol,
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ),
               ],
             ),
           ),
