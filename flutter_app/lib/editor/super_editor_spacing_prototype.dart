@@ -64,7 +64,7 @@ class _SuperEditorSpacingPrototypeState
               final spacing = _spacingFor(node).toDouble();
               return {
                 Styles.padding: CascadingPadding.only(top: spacing),
-                Styles.textStyle: const TextStyle(
+                'textStyle': const TextStyle(
                   fontSize: 28,
                   height: 1.35,
                   color: Colors.black,
