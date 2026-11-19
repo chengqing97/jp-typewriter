@@ -1234,18 +1234,12 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         child: Scaffold(
           drawer: Drawer(child: _buildDocumentDrawer()),
           appBar: AppBar(
-            title: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(child: Text(_currentDocumentTitle)),
-              ],
+            centerTitle: false,
+            title: GestureDetector(
+              onTap: _isLoadingDocuments ? null : _renameCurrentDocument,
+              child: Text(_currentDocumentTitle),
             ),
             actions: [
-              IconButton(
-                tooltip: 'Rename document',
-                onPressed: _isLoadingDocuments ? null : _renameCurrentDocument,
-                icon: const Icon(Icons.edit_outlined),
-              ),
               IconButton(
                 tooltip: 'Editing test instructions',
                 onPressed: () => setState(() => _showHelp = !_showHelp),
