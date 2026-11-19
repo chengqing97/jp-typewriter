@@ -712,79 +712,6 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     }
   }
 
-  Widget _buildDocumentDrawer() {
-    return SafeArea(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Text(
-              "JP Typewriter",
-              style: GoogleFonts.lxgwWenKaiMonoTc(fontSize: 22),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                FilledButton.tonalIcon(
-                  onPressed: _isLoadingDocuments ? null : _createDocument,
-                  label: const Text("New"),
-                  icon: const Icon(Icons.add),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: _isLoadingDocuments
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    itemCount: _documents.length,
-                    itemBuilder: (context, index) {
-                      final doc = _documents[index];
-                      final selected = doc.id == _currentDocumentId;
-                      return ListTile(
-                        selected: selected,
-                        title: Text(doc.title,
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
-                        subtitle: Text(_formatDocumentDate(doc.updatedAt)),
-                        onTap: () async {
-                          if (!selected) {
-                            await _flushPendingSave();
-                            if (!mounted) return;
-                            final latest =
-                                await _repository.getDocument(doc.id);
-                            if (latest != null) _openDocument(latest);
-                          }
-                          if (!mounted) return;
-                          if (MediaQuery.sizeOf(context).width >= 760) {
-                            setState(() => _isDocumentDrawerExpanded = false);
-                          } else {
-                            Navigator.of(context).maybePop();
-                          }
-                        },
-                        trailing: PopupMenuButton<String>(
-                          tooltip: 'Document actions',
-                          onSelected: (action) {
-                            if (action == 'rename') _renameDocument(doc);
-                            if (action == 'delete') _deleteDocument(doc);
-                          },
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(
-                                value: 'rename', child: Text('Rename')),
-                            PopupMenuItem(
-                                value: 'delete', child: Text('Delete')),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _formatDocumentDate(DateTime date) {
     final d = date.toLocal();
     final now = DateTime.now();
@@ -1514,6 +1441,79 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDocumentDrawer() {
+    return SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Text(
+              "JP Typewriter",
+              style: GoogleFonts.lxgwWenKaiMonoTc(fontSize: 22),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: _isLoadingDocuments ? null : _createDocument,
+                  label: const Text("New"),
+                  icon: const Icon(Icons.add),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _isLoadingDocuments
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _documents.length,
+                    itemBuilder: (context, index) {
+                      final doc = _documents[index];
+                      final selected = doc.id == _currentDocumentId;
+                      return ListTile(
+                        selected: selected,
+                        title: Text(doc.title,
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(_formatDocumentDate(doc.updatedAt)),
+                        onTap: () async {
+                          if (!selected) {
+                            await _flushPendingSave();
+                            if (!mounted) return;
+                            final latest =
+                                await _repository.getDocument(doc.id);
+                            if (latest != null) _openDocument(latest);
+                          }
+                          if (!mounted) return;
+                          if (MediaQuery.sizeOf(context).width >= 760) {
+                            setState(() => _isDocumentDrawerExpanded = false);
+                          } else {
+                            Navigator.of(context).maybePop();
+                          }
+                        },
+                        trailing: PopupMenuButton<String>(
+                          tooltip: 'Document actions',
+                          onSelected: (action) {
+                            if (action == 'rename') _renameDocument(doc);
+                            if (action == 'delete') _deleteDocument(doc);
+                          },
+                          itemBuilder: (context) => const [
+                            PopupMenuItem(
+                                value: 'rename', child: Text('Rename')),
+                            PopupMenuItem(
+                                value: 'delete', child: Text('Delete')),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
