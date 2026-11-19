@@ -713,74 +713,74 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   }
 
   Widget _buildDocumentDrawer() {
-    return Material(
-      color: Theme.of(context).colorScheme.surface,
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 20, 8, 12),
-              child: Row(children: [
-                Expanded(
-                    child: Text('My Documents',
-                        style: Theme.of(context).textTheme.titleLarge)),
-                IconButton(
-                  tooltip: 'New document',
+    return SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Text(
+              "JP Typewriter",
+              style: GoogleFonts.lxgwWenKaiMonoTc(fontSize: 22),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                FilledButton.tonalIcon(
                   onPressed: _isLoadingDocuments ? null : _createDocument,
+                  label: const Text("New"),
                   icon: const Icon(Icons.add),
                 ),
-              ]),
+              ],
             ),
-            const Divider(height: 1),
-            Expanded(
-              child: _isLoadingDocuments
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      itemCount: _documents.length,
-                      itemBuilder: (context, index) {
-                        final doc = _documents[index];
-                        final selected = doc.id == _currentDocumentId;
-                        return ListTile(
-                          selected: selected,
-                          leading: const Icon(Icons.description_outlined),
-                          title: Text(doc.title,
-                              maxLines: 1, overflow: TextOverflow.ellipsis),
-                          subtitle: Text(_formatDocumentDate(doc.updatedAt)),
-                          onTap: () async {
-                            if (!selected) {
-                              await _flushPendingSave();
-                              if (!mounted) return;
-                              final latest =
-                                  await _repository.getDocument(doc.id);
-                              if (latest != null) _openDocument(latest);
-                            }
+          ),
+          Expanded(
+            child: _isLoadingDocuments
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _documents.length,
+                    itemBuilder: (context, index) {
+                      final doc = _documents[index];
+                      final selected = doc.id == _currentDocumentId;
+                      return ListTile(
+                        selected: selected,
+                        title: Text(doc.title,
+                            maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(_formatDocumentDate(doc.updatedAt)),
+                        onTap: () async {
+                          if (!selected) {
+                            await _flushPendingSave();
                             if (!mounted) return;
-                            if (MediaQuery.sizeOf(context).width >= 760) {
-                              setState(() => _isDocumentDrawerExpanded = false);
-                            } else {
-                              Navigator.of(context).maybePop();
-                            }
+                            final latest =
+                                await _repository.getDocument(doc.id);
+                            if (latest != null) _openDocument(latest);
+                          }
+                          if (!mounted) return;
+                          if (MediaQuery.sizeOf(context).width >= 760) {
+                            setState(() => _isDocumentDrawerExpanded = false);
+                          } else {
+                            Navigator.of(context).maybePop();
+                          }
+                        },
+                        trailing: PopupMenuButton<String>(
+                          tooltip: 'Document actions',
+                          onSelected: (action) {
+                            if (action == 'rename') _renameDocument(doc);
+                            if (action == 'delete') _deleteDocument(doc);
                           },
-                          trailing: PopupMenuButton<String>(
-                            tooltip: 'Document actions',
-                            onSelected: (action) {
-                              if (action == 'rename') _renameDocument(doc);
-                              if (action == 'delete') _deleteDocument(doc);
-                            },
-                            itemBuilder: (context) => const [
-                              PopupMenuItem(
-                                  value: 'rename', child: Text('Rename')),
-                              PopupMenuItem(
-                                  value: 'delete', child: Text('Delete')),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
+                          itemBuilder: (context) => const [
+                            PopupMenuItem(
+                                value: 'rename', child: Text('Rename')),
+                            PopupMenuItem(
+                                value: 'delete', child: Text('Delete')),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -1305,22 +1305,11 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
           ),
         },
         child: Scaffold(
-          drawer: MediaQuery.sizeOf(context).width < 760
-              ? Drawer(child: _buildDocumentDrawer())
-              : null,
+          drawer: Drawer(child: _buildDocumentDrawer()),
           appBar: AppBar(
             title: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (MediaQuery.sizeOf(context).width >= 760)
-                  IconButton(
-                    tooltip: _isDocumentDrawerExpanded
-                        ? 'Hide documents'
-                        : 'Show documents',
-                    onPressed: () => setState(() =>
-                        _isDocumentDrawerExpanded = !_isDocumentDrawerExpanded),
-                    icon: const Icon(Icons.menu),
-                  ),
                 Flexible(child: Text(_currentDocumentTitle)),
               ],
             ),
@@ -1389,8 +1378,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                             controller: _controller,
                                             baseStyle:
                                                 GoogleFonts.lxgwWenKaiMonoTc(
-                                              fontSize: 23,
-                                              height: 2.0,
+                                              fontSize: 18,
                                               color: const Color(0xFF202124),
                                             ),
                                             textDirection:
@@ -1403,8 +1391,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                             controller: _controller,
                                             focusNode: _focusNode,
                                             style: GoogleFonts.lxgwWenKaiMonoTc(
-                                              fontSize: 23,
-                                              height: 2.0,
+                                              fontSize: 18,
                                               color: const Color(0xFF202124),
                                             ),
                                             cursorColor:
@@ -1534,37 +1521,42 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   Widget _buildToolbar(BuildContext context) {
     return Material(
       color: Theme.of(context).colorScheme.surface,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          children: [
-            IconButton(
-              tooltip: 'Undo (Ctrl/Cmd+Z)',
-              onPressed: _controller.canUndo ? _undo : null,
-              icon: const Icon(Icons.undo),
+      child: SizedBox(
+        width: double.infinity,
+        child: Center(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                IconButton(
+                  tooltip: 'Undo (Ctrl/Cmd+Z)',
+                  onPressed: _controller.canUndo ? _undo : null,
+                  icon: const Icon(Icons.undo),
+                ),
+                IconButton(
+                  tooltip: 'Redo (Ctrl/Cmd+Shift+Z)',
+                  onPressed: _controller.canRedo ? _redo : null,
+                  icon: const Icon(Icons.redo),
+                ),
+                _tool(Icons.format_italic, 'Toggle italic (Ctrl/Cmd+I)',
+                    _toggleItalic),
+                _tool(Icons.superscript, 'Toggle superscript (Ctrl/Cmd+S)',
+                    _toggleSuperscript),
+                _tool(Icons.arrow_back, 'Increase beam (Ctrl/Cmd+Left)',
+                    () => _changeBeam(1)),
+                _tool(Icons.arrow_forward, 'Decrease beam (Ctrl/Cmd+Right)',
+                    () => _changeBeam(-1)),
+                _tool(Icons.arrow_upward, 'Raise octave (Ctrl/Cmd+Up)',
+                    () => _changeOctave(1)),
+                _tool(Icons.arrow_downward, 'Lower octave (Ctrl/Cmd+Down)',
+                    () => _changeOctave(-1)),
+                _tool(Icons.format_clear, 'Clear formatting (Ctrl/Cmd+D)',
+                    _clearStyles),
+                _tool(Icons.looks, 'Toggle slur (Ctrl/Cmd+A)', _toggleSlur),
+              ],
             ),
-            IconButton(
-              tooltip: 'Redo (Ctrl/Cmd+Shift+Z)',
-              onPressed: _controller.canRedo ? _redo : null,
-              icon: const Icon(Icons.redo),
-            ),
-            _tool(Icons.format_italic, 'Toggle italic (Ctrl/Cmd+I)',
-                _toggleItalic),
-            _tool(Icons.superscript, 'Toggle superscript (Ctrl/Cmd+S)',
-                _toggleSuperscript),
-            _tool(Icons.arrow_back, 'Increase beam (Ctrl/Cmd+Left)',
-                () => _changeBeam(1)),
-            _tool(Icons.arrow_forward, 'Decrease beam (Ctrl/Cmd+Right)',
-                () => _changeBeam(-1)),
-            _tool(Icons.arrow_upward, 'Raise octave (Ctrl/Cmd+Up)',
-                () => _changeOctave(1)),
-            _tool(Icons.arrow_downward, 'Lower octave (Ctrl/Cmd+Down)',
-                () => _changeOctave(-1)),
-            _tool(Icons.format_clear, 'Clear formatting (Ctrl/Cmd+D)',
-                _clearStyles),
-            _tool(Icons.looks, 'Toggle slur (Ctrl/Cmd+A)', _toggleSlur),
-          ],
+          ),
         ),
       ),
     );
