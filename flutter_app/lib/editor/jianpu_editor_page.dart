@@ -1302,9 +1302,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                       Expanded(
                         child: LayoutBuilder(
                           builder: (context, constraints) {
-                            final basePageWidth = constraints.maxWidth
-                                .clamp(280.0, 760.0)
-                                .toDouble();
+                            const basePageWidth = 600.0;
                             final notationStyle = GoogleFonts.lxgwWenKaiMonoTc(
                               fontSize: 18,
                               color: const Color(0xFF202124),
@@ -1324,132 +1322,147 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                             // until both the text width and height fit inside
                             // the printable area, then derive its height
                             // from the A4 ratio.
-                            const horizontalContentPadding = 84.0;
-                            const verticalContentPadding = 96.0;
-                            final requiredWidth =
-                                textPainter.width + horizontalContentPadding;
+                            const horizontalContentPadding = 42.0;
+                            const verticalContentPadding = 48.0;
+                            final requiredWidth = textPainter.width +
+                                horizontalContentPadding * 2;
                             final requiredHeight =
-                                textPainter.height + verticalContentPadding;
+                                textPainter.height + verticalContentPadding * 2;
                             final pageWidth = math.max(
                               basePageWidth,
-                              math.max(requiredWidth,
-                                  requiredHeight * 210 / 297),
+                              math.max(
+                                  requiredWidth, requiredHeight * 210 / 297),
                             );
                             final pageHeight = pageWidth * 297 / 210;
                             return SingleChildScrollView(
-                              padding: const EdgeInsets.all(20),
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 child: SizedBox(
-                                  width: math.max(pageWidth, constraints.maxWidth),
+                                  width:
+                                      math.max(pageWidth, constraints.maxWidth),
                                   child: Align(
                                     alignment: Alignment.topCenter,
                                     child: Container(
+                                      margin: const EdgeInsets.all(20),
                                       key: _paperKey,
                                       width: pageWidth,
                                       height: pageHeight,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(3),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Color(0x18000000),
-                                        blurRadius: 18,
-                                        offset: Offset(0, 5),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Theme(
-                                    data: Theme.of(context).copyWith(
-                                      textSelectionTheme:
-                                          const TextSelectionThemeData(
-                                        selectionHandleColor: Color(0xFF315E9E),
-                                      ),
-                                    ),
-                                    child: Stack(
-                                      fit: StackFit.expand,
-                                      alignment: Alignment.topLeft,
-                                      clipBehavior: Clip.none,
-                                      children: [
-                                        TextField(
-                                          key: _editorFieldKey,
-                                          controller: _controller,
-                                          focusNode: _focusNode,
-                                          style: notationStyle,
-                                          cursorColor: const Color(0xFF315E9E),
-                                          keyboardType: TextInputType.multiline,
-                                          maxLines: null,
-                                          expands: true,
-                                          autofocus: false,
-                                          autocorrect: false,
-                                          enableSuggestions: false,
-                                          enableInteractiveSelection: true,
-                                          contextMenuBuilder:
-                                              (context, editableTextState) {
-                                            final items = editableTextState
-                                                .contextMenuButtonItems;
-                                            for (var i = 0;
-                                                i < items.length;
-                                                i++) {
-                                              final item = items[i];
-                                              switch (item.type) {
-                                                case ContextMenuButtonType.copy:
-                                                  items[i] = item.copyWith(
-                                                      onPressed: () {
-                                                    ContextMenuController
-                                                        .removeAny();
-                                                    unawaited(_copySelection());
-                                                  });
-                                                  break;
-                                                case ContextMenuButtonType.cut:
-                                                  items[i] = item.copyWith(
-                                                      onPressed: () {
-                                                    ContextMenuController
-                                                        .removeAny();
-                                                    unawaited(_cutSelection());
-                                                  });
-                                                  break;
-                                                case ContextMenuButtonType
-                                                      .paste:
-                                                  items[i] = item.copyWith(
-                                                      onPressed: () {
-                                                    ContextMenuController
-                                                        .removeAny();
-                                                    unawaited(
-                                                        _pasteFromClipboard());
-                                                  });
-                                                  break;
-                                                default:
-                                                  break;
-                                              }
-                                            }
-                                            return AdaptiveTextSelectionToolbar
-                                                .buttonItems(
-                                              anchors: editableTextState
-                                                  .contextMenuAnchors,
-                                              buttonItems: items,
-                                            );
-                                          },
-                                          textCapitalization:
-                                              TextCapitalization.none,
-                                          decoration: const InputDecoration(
-                                            border: InputBorder.none,
-                                            enabledBorder: InputBorder.none,
-                                            focusedBorder: InputBorder.none,
-                                            disabledBorder: InputBorder.none,
-                                            contentPadding: EdgeInsets.fromLTRB(
-                                                42, 48, 42, 48),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(3),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Color(0x18000000),
+                                            blurRadius: 18,
+                                            offset: Offset(0, 5),
                                           ),
-                                          onChanged: (_) => setState(() {}),
-                                        ),
-                                        Positioned.fill(
-                                          child: JianpuNotationOverlay(
-                                            controller: _controller,
-                                            textFieldKey: _editorFieldKey,
+                                        ],
+                                      ),
+                                      child: Theme(
+                                        data: Theme.of(context).copyWith(
+                                          textSelectionTheme:
+                                              const TextSelectionThemeData(
+                                            selectionHandleColor:
+                                                Color(0xFF315E9E),
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                        child: Stack(
+                                          fit: StackFit.expand,
+                                          alignment: Alignment.topLeft,
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            TextField(
+                                              key: _editorFieldKey,
+                                              controller: _controller,
+                                              focusNode: _focusNode,
+                                              style: notationStyle,
+                                              cursorColor:
+                                                  const Color(0xFF315E9E),
+                                              keyboardType:
+                                                  TextInputType.multiline,
+                                              maxLines: null,
+                                              expands: true,
+                                              autofocus: false,
+                                              autocorrect: false,
+                                              enableSuggestions: false,
+                                              enableInteractiveSelection: true,
+                                              contextMenuBuilder:
+                                                  (context, editableTextState) {
+                                                final items = editableTextState
+                                                    .contextMenuButtonItems;
+                                                for (var i = 0;
+                                                    i < items.length;
+                                                    i++) {
+                                                  final item = items[i];
+                                                  switch (item.type) {
+                                                    case ContextMenuButtonType
+                                                          .copy:
+                                                      items[i] = item.copyWith(
+                                                          onPressed: () {
+                                                        ContextMenuController
+                                                            .removeAny();
+                                                        unawaited(
+                                                            _copySelection());
+                                                      });
+                                                      break;
+                                                    case ContextMenuButtonType
+                                                          .cut:
+                                                      items[i] = item.copyWith(
+                                                          onPressed: () {
+                                                        ContextMenuController
+                                                            .removeAny();
+                                                        unawaited(
+                                                            _cutSelection());
+                                                      });
+                                                      break;
+                                                    case ContextMenuButtonType
+                                                          .paste:
+                                                      items[i] = item.copyWith(
+                                                          onPressed: () {
+                                                        ContextMenuController
+                                                            .removeAny();
+                                                        unawaited(
+                                                            _pasteFromClipboard());
+                                                      });
+                                                      break;
+                                                    default:
+                                                      break;
+                                                  }
+                                                }
+                                                return AdaptiveTextSelectionToolbar
+                                                    .buttonItems(
+                                                  anchors: editableTextState
+                                                      .contextMenuAnchors,
+                                                  buttonItems: items,
+                                                );
+                                              },
+                                              textCapitalization:
+                                                  TextCapitalization.none,
+                                              decoration: const InputDecoration(
+                                                border: InputBorder.none,
+                                                enabledBorder: InputBorder.none,
+                                                focusedBorder: InputBorder.none,
+                                                disabledBorder:
+                                                    InputBorder.none,
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                  vertical:
+                                                      verticalContentPadding,
+                                                  horizontal:
+                                                      horizontalContentPadding,
+                                                ),
+                                              ),
+                                              onChanged: (_) => setState(() {}),
+                                            ),
+                                            Positioned.fill(
+                                              child: JianpuNotationOverlay(
+                                                controller: _controller,
+                                                textFieldKey: _editorFieldKey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
