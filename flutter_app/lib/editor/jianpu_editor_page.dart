@@ -444,6 +444,10 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   Timer? _arrowRepeatInitialTimer;
   LogicalKeyboardKey? _heldArrowKey;
   double? _preferredVerticalX;
+  double? _renderedIntrinsicWidth;
+  double? _renderedIntrinsicHeight;
+  String? _lastIntrinsicMeasurementText;
+  bool _intrinsicMeasurementScheduled = false;
 
   static const _arrowRepeatDelay = Duration(milliseconds: 400);
   static const _arrowRepeatInterval = Duration(milliseconds: 45);
@@ -512,8 +516,45 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     return result;
   }
 
+  void _scheduleIntrinsicMeasurement() {
+    final text = _controller.text;
+    if (_intrinsicMeasurementScheduled ||
+        _lastIntrinsicMeasurementText == text) {
+      return;
+    }
+
+    _intrinsicMeasurementScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _intrinsicMeasurementScheduled = false;
+      if (!mounted || text != _controller.text) return;
+
+      // Measure after EditableText has received the controller update. Doing
+      // this during the controller notification can read RenderEditable's
+      // previous text because its listener runs later in the same dispatch.
+      final editable = _findRenderEditable();
+      if (editable == null || !editable.attached) return;
+
+      final width = editable.getMaxIntrinsicWidth(double.infinity);
+      final height = editable.getMaxIntrinsicHeight(double.infinity);
+      if (!width.isFinite || !height.isFinite) return;
+
+      _lastIntrinsicMeasurementText = text;
+      if (_renderedIntrinsicWidth == width &&
+          _renderedIntrinsicHeight == height) {
+        return;
+      }
+
+      setState(() {
+        _renderedIntrinsicWidth = width;
+        _renderedIntrinsicHeight = height;
+      });
+    });
+  }
+
   void _handleControllerChanged() {
     if (!mounted) return;
+    _lastIntrinsicMeasurementText = null;
+    _scheduleIntrinsicMeasurement();
     setState(() {});
     _scheduleSave();
   }
@@ -1353,22 +1394,12 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                             // exact text layout used by the TextField. On the
                             // first frame, before RenderEditable exists, use
                             // the matching TextPainter measurement.
-                            final editableIntrinsicWidth =
-                                _findRenderEditable()?.getMaxIntrinsicWidth(
-                              double.infinity,
-                            );
+                            _scheduleIntrinsicMeasurement();
                             final requiredTextWidth =
-                                editableIntrinsicWidth ??
+                                _renderedIntrinsicWidth ??
                                     textPainter.maxIntrinsicWidth;
-                            final lineMetrics = textPainter.computeLineMetrics();
-                            final measuredTextHeight = lineMetrics.fold<double>(
-                              0,
-                              (total, line) => total + line.height,
-                            );
-                            final requiredTextHeight = math.max(
-                              textPainter.height,
-                              measuredTextHeight,
-                            );
+                            final requiredTextHeight =
+                                _renderedIntrinsicHeight ?? textPainter.height;
                             final requiredWidth = requiredTextWidth +
                                 horizontalContentPadding * 2;
                             final requiredHeight = requiredTextHeight +
