@@ -410,6 +410,10 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     _formatSelection((run) => run.copyWith(superscript: !run.superscript));
   }
 
+  void _insertToolbarSymbol(String symbol) {
+    _insertPlainText(symbol);
+  }
+
   void _toggleSlur() {
     if (!_hasSelection) return;
     final shouldClear = _selectedRuns().any((run) => run.slurId != null);
@@ -1150,6 +1154,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       onLowerOctave: () => _changeOctave(-1),
       onClearFormatting: _clearStyles,
       onToggleSlur: _toggleSlur,
+      onInsertSymbol: _insertToolbarSymbol,
     );
   }
 
