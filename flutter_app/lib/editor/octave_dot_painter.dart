@@ -1,3 +1,5 @@
+import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../models/jianpu_document.dart';
@@ -18,18 +20,25 @@ class OctaveDotPainter extends CustomPainter {
     required this.baseStyle,
     required this.textDirection,
     required this.textScaler,
+    required this.textFieldKey,
+    required this.paintKey,
   }) : super(repaint: controller);
 
   final JianpuNotationSource controller;
   final TextStyle baseStyle;
   final TextDirection textDirection;
   final TextScaler textScaler;
+  final GlobalKey textFieldKey;
+  final GlobalKey paintKey;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (size.isEmpty || controller.text.isEmpty) return;
 
     final runs = controller.runs;
+    final editable = _findRenderEditable();
+    final paintBox = paintKey.currentContext?.findRenderObject();
+    final canUseEditableGeometry = editable != null && paintBox is RenderBox;
     final spans = <InlineSpan>[
       for (final run in runs)
         TextSpan(
@@ -65,7 +74,9 @@ class OctaveDotPainter extends CustomPainter {
     var offset = 0;
     final slurGroups = <String, List<int>>{};
     for (final run in runs) {
-      if (run.beam > 0) _paintBeams(canvas, layout, run, offset, beamPaint);
+      if (canUseEditableGeometry && run.beam > 0) {
+        _paintBeams(canvas, editable!, paintBox as RenderBox, run, offset, beamPaint);
+      }
       var characterOffset = 0;
       for (final rune in run.text.runes) {
         final character = String.fromCharCode(rune);
@@ -93,10 +104,11 @@ class OctaveDotPainter extends CustomPainter {
           glyph.dispose();
         }
         if (run.octave != 0 && _octaveDotCharacter.hasMatch(character)) {
-          final boxes = _boxes(layout, textOffset, characterLength);
-          if (boxes.isNotEmpty) {
-            final box = boxes.first;
-            final x = (box.left + box.right) / 2;
+          final box = canUseEditableGeometry
+              ? _actualGlyphRect(editable!, paintBox as RenderBox, textOffset, characterLength)
+              : null;
+          if (box != null) {
+            final x = box.center.dx;
             for (var dot = 0; dot < run.octave.abs(); dot++) {
               final y = run.octave > 0
                   ? box.top - 3.5 - dot * 4.2
@@ -145,7 +157,8 @@ class OctaveDotPainter extends CustomPainter {
 
   void _paintBeams(
     Canvas canvas,
-    TextPainter layout,
+    RenderEditable editable,
+    RenderBox paintBox,
     JianpuRun run,
     int offset,
     Paint paint,
@@ -174,14 +187,18 @@ class OctaveDotPainter extends CustomPainter {
       final character = String.fromCharCode(rune);
       final characterLength = character.length;
       if (!_beamExcludedCharacter.hasMatch(character)) {
-        final boxes = _boxes(layout, offset + characterOffset, characterLength);
-        if (boxes.isEmpty) {
+        final box = _actualGlyphRect(
+          editable, paintBox, offset + characterOffset, characterLength,
+        );
+        if (box == null) {
           flush();
         } else {
-          final box = boxes.first;
+          final textBox = TextBox.fromLTRBD(
+            box.left, box.top, box.right, box.bottom, TextDirection.ltr,
+          );
           if (first != null && (box.top - lineTop!).abs() > 2) flush();
-          first ??= box;
-          last = box;
+          first ??= textBox;
+          last = textBox;
           lineTop ??= box.top;
           if (box.bottom > bottom) bottom = box.bottom;
         }
@@ -191,6 +208,54 @@ class OctaveDotPainter extends CustomPainter {
       characterOffset += characterLength;
     }
     flush();
+  }
+
+  RenderEditable? _findRenderEditable() {
+    final context = textFieldKey.currentContext;
+    if (context is! Element) return null;
+
+    RenderEditable? result;
+    void visit(Element element) {
+      if (result != null) return;
+      final renderObject = element.findRenderObject();
+      if (renderObject is RenderEditable) {
+        result = renderObject;
+        return;
+      }
+      element.visitChildElements(visit);
+    }
+
+    visit(context);
+    return result;
+  }
+
+  Rect? _actualGlyphRect(
+    RenderEditable editable,
+    RenderBox paintBox,
+    int offset,
+    int length,
+  ) {
+    if (offset < 0 || offset + length > controller.text.length) return null;
+
+    Rect toPaintCoordinates(Rect rect) {
+      final topLeft = paintBox.globalToLocal(editable.localToGlobal(rect.topLeft));
+      final bottomRight =
+          paintBox.globalToLocal(editable.localToGlobal(rect.bottomRight));
+      return Rect.fromPoints(topLeft, bottomRight);
+    }
+
+    final start = toPaintCoordinates(
+      editable.getLocalRectForCaret(TextPosition(offset: offset)),
+    );
+    final end = toPaintCoordinates(
+      editable.getLocalRectForCaret(TextPosition(offset: offset + length)),
+    );
+    return Rect.fromLTRB(
+      start.center.dx < end.center.dx ? start.center.dx : end.center.dx,
+      start.top < end.top ? start.top : end.top,
+      start.center.dx > end.center.dx ? start.center.dx : end.center.dx,
+      start.bottom > end.bottom ? start.bottom : end.bottom,
+    );
   }
 
   List<TextBox> _boxes(TextPainter painter, int offset, [int length = 1]) {
