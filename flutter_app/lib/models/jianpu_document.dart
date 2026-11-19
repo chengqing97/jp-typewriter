@@ -10,6 +10,7 @@ class JianpuRun {
     this.superscript = false,
     this.italic = false,
     this.slurId,
+    this.lineSpacingBefore = 0,
   });
 
   final String text;
@@ -18,6 +19,7 @@ class JianpuRun {
   final bool superscript;
   final bool italic;
   final String? slurId;
+  final int lineSpacingBefore;
 
   JianpuRun copyWith({
     String? text,
@@ -27,6 +29,7 @@ class JianpuRun {
     bool? italic,
     String? slurId,
     bool clearSlur = false,
+    int? lineSpacingBefore,
   }) {
     return JianpuRun(
       text: text ?? this.text,
@@ -35,6 +38,7 @@ class JianpuRun {
       superscript: superscript ?? this.superscript,
       italic: italic ?? this.italic,
       slurId: clearSlur ? null : (slurId ?? this.slurId),
+      lineSpacingBefore: lineSpacingBefore ?? this.lineSpacingBefore,
     );
   }
 }
