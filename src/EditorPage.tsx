@@ -1,8 +1,9 @@
 import styles from "./EditorPage.module.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createEditor, Range } from "slate";
+import { createEditor, Editor, Range, Node } from "slate";
 import {
   Editable,
+  ReactEditor,
   type RenderElementProps,
   type RenderLeafProps,
   Slate,
@@ -138,8 +139,35 @@ export default function EditorPage() {
                 autoCorrect="off"
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
+                onCopy={(event) => {
+                  if (
+                    !editor.selection ||
+                    Range.isCollapsed(editor.selection)
+                  ) {
+                    return;
+                  }
+
+                  event.preventDefault();
+
+                  const { clipboardData } = event;
+
+                  // Preserve Slate's internal rich-text clipboard format.
+                  ReactEditor.setFragmentData(editor, clipboardData);
+
+                  // Extract the selected document fragment.
+                  const fragment = Editor.fragment(editor, editor.selection);
+
+                  // Generate clean plain text without formatting or decorations.
+                  const plainText = fragment
+                    .map((node) => Node.string(node))
+                    .join("\n");
+
+                  clipboardData.setData("text/plain", plainText);
+
+                  // Prevent external applications from receiving HTML formatting.
+                  clipboardData.clearData("text/html");
+                }}
                 onKeyDown={(e) => {
-                  console.log("Slate received:", e.key, e.isTrusted);
                   const ctrlKey = e.metaKey || e.ctrlKey;
                   if (ctrlKey && e.key == "=") {
                     e.preventDefault();
