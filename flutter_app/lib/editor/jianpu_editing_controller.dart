@@ -409,18 +409,66 @@ class JianpuEditingController extends TextEditingController
     TextStyle? style,
     required bool withComposing,
   }) {
-    final spans = <InlineSpan>[];
+    // A line's "space before" belongs to the line break immediately before
+    // it. Giving the newline that line's height expands the preceding line
+    // box and moves this line down, rather than adding space after the line.
+    final spacingAtOffset = List<int>.filled(text.length, 0);
+    var runOffset = 0;
     for (final run in _runs) {
-      spans.add(TextSpan(
-        text: run.text,
-        style: TextStyle(
-          fontStyle: run.italic ? FontStyle.italic : FontStyle.normal,
-          fontSize: run.superscript ? 15 : null,
-          color: run.superscript ? Colors.transparent : null,
-          height: run.lineSpacingBefore > 0 ? (18 + run.lineSpacingBefore) / 18 : null,
-          leadingDistribution: TextLeadingDistribution.even,
-        ),
-      ));
+      for (var i = 0; i < run.text.length; i++) {
+        spacingAtOffset[runOffset + i] = run.lineSpacingBefore;
+      }
+      runOffset += run.text.length;
+    }
+
+    final spans = <InlineSpan>[];
+    runOffset = 0;
+    for (final run in _runs) {
+      final baseStyle = TextStyle(
+        fontStyle: run.italic ? FontStyle.italic : FontStyle.normal,
+        fontSize: run.superscript ? 15 : null,
+        color: run.superscript ? Colors.transparent : null,
+      );
+      var localStart = 0;
+      while (localStart < run.text.length) {
+        final newlineIndex = run.text.indexOf('\\n', localStart);
+        final segmentEnd =
+            newlineIndex < 0 ? run.text.length : newlineIndex;
+
+        if (segmentEnd > localStart) {
+          final isFirstLine = runOffset + localStart == 0;
+          final firstLineSpacing =
+              isFirstLine ? spacingAtOffset[0] : 0;
+          spans.add(TextSpan(
+            text: run.text.substring(localStart, segmentEnd),
+            style: firstLineSpacing > 0
+                ? baseStyle.copyWith(
+                    height: (18 + firstLineSpacing) / 18,
+                    leadingDistribution: TextLeadingDistribution.even,
+                  )
+                : baseStyle,
+          ));
+        }
+
+        if (newlineIndex < 0) break;
+
+        final nextLineOffset = runOffset + newlineIndex + 1;
+        final spacingBeforeNextLine =
+            nextLineOffset < spacingAtOffset.length
+                ? spacingAtOffset[nextLineOffset]
+                : 0;
+        spans.add(TextSpan(
+          text: '\\n',
+          style: spacingBeforeNextLine > 0
+              ? baseStyle.copyWith(
+                  height: (18 + spacingBeforeNextLine) / 18,
+                  leadingDistribution: TextLeadingDistribution.even,
+                )
+              : baseStyle,
+        ));
+        localStart = newlineIndex + 1;
+      }
+      runOffset += run.text.length;
     }
     return TextSpan(style: style, children: spans);
   }
