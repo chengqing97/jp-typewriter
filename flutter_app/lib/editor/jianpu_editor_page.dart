@@ -438,6 +438,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   bool _showHelp = true;
   int _slurSequence = 0;
   Timer? _arrowRepeatTimer;
+  final Map<int, Offset> _paperTapCandidates = {};
   Timer? _arrowRepeatInitialTimer;
   LogicalKeyboardKey? _heldArrowKey;
   double? _preferredVerticalX;
@@ -789,12 +790,31 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
 
   void _handleEditorAreaPointerDown(PointerDownEvent event) {
     if (_containsGlobalPoint(_paperKey, event.position)) {
-      _focusNode.requestFocus();
+      // Defer focusing until pointer-up. A drag that scrolls the page must not
+      // activate the editor or bring up the on-screen keyboard.
+      _paperTapCandidates[event.pointer] = event.position;
       return;
     }
     // Keep the selection available while toolbar controls are being used.
     if (_containsGlobalPoint(_toolbarKey, event.position)) return;
     _focusNode.unfocus();
+  }
+
+  void _handleEditorAreaPointerMove(PointerMoveEvent event) {
+    final origin = _paperTapCandidates[event.pointer];
+    if (origin != null &&
+        (event.position - origin).distance > kTouchSlop) {
+      _paperTapCandidates.remove(event.pointer);
+    }
+  }
+
+  void _handleEditorAreaPointerUp(PointerUpEvent event) {
+    final origin = _paperTapCandidates.remove(event.pointer);
+    if (origin != null) _focusNode.requestFocus();
+  }
+
+  void _handleEditorAreaPointerCancel(PointerCancelEvent event) {
+    _paperTapCandidates.remove(event.pointer);
   }
 
   bool _isArrowKey(LogicalKeyboardKey key) =>
@@ -1249,6 +1269,9 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         child: Listener(
           behavior: HitTestBehavior.translucent,
           onPointerDown: _handleEditorAreaPointerDown,
+          onPointerMove: _handleEditorAreaPointerMove,
+          onPointerUp: _handleEditorAreaPointerUp,
+          onPointerCancel: _handleEditorAreaPointerCancel,
           child: Scaffold(
             key: _scaffoldKey,
             drawer: Drawer(child: _buildDocumentDrawer()),
