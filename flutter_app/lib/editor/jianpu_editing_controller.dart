@@ -147,26 +147,42 @@ class JianpuEditingController extends TextEditingController
 
   void changeLineSpacingAt(int offset, int delta) {
     if (offset < 0 || offset > text.length || text.isEmpty) return;
-    final lineStart = offset == 0 ? 0 : text.lastIndexOf('\n', offset - 1) + 1;
-    if (lineStart >= text.length || text[lineStart] == '\n') return;
-    var runOffset = 0;
+    final lineStart = offset == 0 ? 0 : text.lastIndexOf('\\n', offset - 1) + 1;
+    var lineEnd = text.indexOf('\\n', lineStart);
+    if (lineEnd < 0) lineEnd = text.length;
+    if (lineStart >= lineEnd) return;
+
     final updated = <JianpuRun>[];
+    var runOffset = 0;
     var changed = false;
     for (final run in _runs) {
       final runStart = runOffset;
       final runEnd = runStart + run.text.length;
       runOffset = runEnd;
-      if (changed || lineStart < runStart || lineStart >= runEnd) {
+
+      final overlapStart = runStart > lineStart ? runStart : lineStart;
+      final overlapEnd = runEnd < lineEnd ? runEnd : lineEnd;
+      if (overlapStart >= overlapEnd) {
         _appendRun(updated, run);
         continue;
       }
-      final local = lineStart - runStart;
-      if (local > 0) _appendRun(updated, run.copyWith(text: run.text.substring(0, local)));
+
+      final localStart = overlapStart - runStart;
+      final localEnd = overlapEnd - runStart;
+      if (localStart > 0) {
+        _appendRun(updated, run.copyWith(text: run.text.substring(0, localStart)));
+      }
       final next = (run.lineSpacingBefore + delta).clamp(0, 40).toInt();
-      _appendRun(updated, run.copyWith(text: run.text.substring(local, local + 1), lineSpacingBefore: next));
-      if (local + 1 < run.text.length) _appendRun(updated, run.copyWith(text: run.text.substring(local + 1)));
+      _appendRun(updated, run.copyWith(
+        text: run.text.substring(localStart, localEnd),
+        lineSpacingBefore: next,
+      ));
+      if (localEnd < run.text.length) {
+        _appendRun(updated, run.copyWith(text: run.text.substring(localEnd)));
+      }
       changed = true;
     }
+
     if (!changed) return;
     _recordUndo();
     _runs = updated;
