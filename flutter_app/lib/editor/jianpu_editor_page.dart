@@ -425,6 +425,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   late final FocusNode _focusNode;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey _editorFieldKey = GlobalKey();
+  final GlobalKey _paperKey = GlobalKey();
+  final GlobalKey _toolbarKey = GlobalKey();
   final JianpuDocumentRepository _repository = JianpuDocumentRepository();
   final List<LocalJianpuDocument> _documents = [];
   StreamSubscription<List<LocalJianpuDocument>>? _documentsSubscription;
@@ -497,8 +499,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   String _contentFingerprint() => jsonEncode(_controller.runs
       .map((run) => {
             'text': run.text,
-            'octave': run.octave,
-            'beam': run.beam,
+            'octave': run.octave,            'beam': run.beam,
             'superscript': run.superscript,
             'italic': run.italic,
             'slurId': run.slurId,
@@ -778,6 +779,23 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     if (!_focusNode.hasFocus) _stopArrowRepeat();
   }
 
+  bool _containsGlobalPoint(GlobalKey key, Offset point) {
+    final renderObject = key.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.attached) return false;
+    final rect = renderObject.localToGlobal(Offset.zero) & renderObject.size;
+    return rect.contains(point);
+  }
+
+  void _handleEditorAreaPointerDown(PointerDownEvent event) {
+    if (_containsGlobalPoint(_paperKey, event.position)) {
+      _focusNode.requestFocus();
+      return;
+    }
+    // Keep the selection available while toolbar controls are being used.
+    if (_containsGlobalPoint(_toolbarKey, event.position)) return;
+    _focusNode.unfocus();
+  }
+
   bool _isArrowKey(LogicalKeyboardKey key) =>
       key == LogicalKeyboardKey.arrowLeft ||
       key == LogicalKeyboardKey.arrowRight ||
@@ -997,8 +1015,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     final sel = _controller.selection;
     if (!sel.isValid) return;
     final slurIds = <String, String>{};
-    final runs = sourceRuns.map((run) {
-      final oldId = run.slurId;
+    final runs = sourceRuns.map((run) {      final oldId = run.slurId;
       if (oldId == null) return run;
       final newId = slurIds.putIfAbsent(oldId, () => 'slur-${++_slurSequence}');
       return run.copyWith(slurId: newId);
@@ -1247,10 +1264,16 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
           body: Stack(
             children: [
               Positioned.fill(
-                child: SafeArea(
-                  child: Column(
+                child: Listener(
+                  behavior: HitTestBehavior.translucent,
+                  onPointerDown: _handleEditorAreaPointerDown,
+                  child: SafeArea(
+                    child: Column(
                     children: [
-                      _buildToolbar(context),
+                      KeyedSubtree(
+                        key: _toolbarKey,
+                        child: _buildToolbar(context),
+                      ),
                       Expanded(
                         child: LayoutBuilder(
                           builder: (context, constraints) {
@@ -1262,6 +1285,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                               padding: const EdgeInsets.all(20),
                               child: Center(
                                 child: Container(
+                                  key: _paperKey,
                                   width: pageWidth,
                                   constraints: BoxConstraints(
                                     minHeight: pageHeight,
@@ -1411,6 +1435,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                       _buildStatusBar(context),
                     ],
                   ),
+                  ),
                 ),
               ),
             ],
@@ -1497,8 +1522,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
         child: Center(
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),            child: Row(
               children: [
                 IconButton(
                   tooltip: 'Undo (Ctrl/Cmd+Z)',
