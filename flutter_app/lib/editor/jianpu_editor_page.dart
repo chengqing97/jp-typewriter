@@ -497,8 +497,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   }
 
   String _contentFingerprint() => jsonEncode(_controller.runs
-      .map((run) => {            'text': run.text,
-            'octave': run.octave,            'beam': run.beam,
+      .map((run) => {            'text': run.text,            'octave': run.octave,            'beam': run.beam,
             'superscript': run.superscript,
             'italic': run.italic,
             'slurId': run.slurId,
@@ -997,8 +996,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
               _insertRichRuns(runs);
               return;
             }          }
-        }
-      }
+        }      }
       if (reader.canProvide(Formats.plainText)) {
         final plain = await reader.readValue(Formats.plainText);
         if (plain != null) _insertPlainText(plain);
@@ -1285,11 +1283,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                 child: Container(
                                   key: _paperKey,
                                   width: pageWidth,
-                                  constraints: BoxConstraints(
-                                    minHeight: pageHeight,
-                                  ),
-                                  padding:
-                                      const EdgeInsets.fromLTRB(42, 48, 42, 48),
+                                  height: pageHeight,
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(3),
@@ -1301,11 +1295,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                       ),
                                     ],
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      Theme(
+                                  child: Theme(
                                         data: Theme.of(context).copyWith(
                                           textSelectionTheme:
                                               const TextSelectionThemeData(
@@ -1314,6 +1304,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                           ),
                                         ),
                                         child: Stack(
+                                          fit: StackFit.expand,
                                           alignment: Alignment.topLeft,
                                           clipBehavior: Clip.none,
                                           children: [
@@ -1330,6 +1321,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                             keyboardType:
                                                 TextInputType.multiline,
                                             maxLines: null,
+                                            expands: true,
                                             autofocus: false,
                                             autocorrect: false,
                                             enableSuggestions: false,
@@ -1386,9 +1378,13 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                             },
                                             textCapitalization:
                                                 TextCapitalization.none,
-                                            decoration:
-                                                const InputDecoration.collapsed(
-                                              hintText: '',
+                                            decoration: const InputDecoration(
+                                              border: InputBorder.none,
+                                              enabledBorder: InputBorder.none,
+                                              focusedBorder: InputBorder.none,
+                                              disabledBorder: InputBorder.none,
+                                              contentPadding:
+                                                  EdgeInsets.fromLTRB(42, 48, 42, 48),
                                             ),
                                             onChanged: (_) => setState(() {}),
                                             ),
@@ -1422,9 +1418,27 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                           ),
                                         ),
                                       ],
-                                    ],
-                                  ),
+
                                 ),
+                                if (_showHelp) ...[
+                                  const SizedBox(height: 32),
+                                  const Divider(),
+                                  Text(
+                                    'Editing engine prototype',
+                                    style: Theme.of(context).textTheme.labelLarge,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  const Text(
+                                    'Connect a physical keyboard and test '
+                                    'ArrowUp / ArrowDown across wrapped lines, '
+                                    'Home / End, Shift + arrows, selection, '
+                                    'and text insertion.',
+                                    style: TextStyle(
+                                      color: Colors.black54,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ],
                               ),
                             );
                           },
@@ -1497,8 +1511,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                             if (action == 'rename') _renameDocument(doc);
                             if (action == 'delete') _deleteDocument(doc);
                           },                          itemBuilder: (context) => const [
-                            PopupMenuItem(
-                                value: 'rename', child: Text('Rename')),
+                            PopupMenuItem(                                value: 'rename', child: Text('Rename')),
                             PopupMenuItem(
                                 value: 'delete', child: Text('Delete')),
                           ],
