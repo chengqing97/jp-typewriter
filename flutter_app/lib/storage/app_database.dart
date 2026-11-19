@@ -1,9 +1,6 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path/path.dart' as p;
-import 'package:sqflite/sqflite.dart' show getDatabasesPath;
+
+import 'database_connection.dart';
 
 part 'app_database.g.dart';
 
@@ -25,7 +22,7 @@ class JianpuDocuments extends Table {
 
 @DriftDatabase(tables: [JianpuDocuments])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase() : super(openConnection());
 
   @override
   int get schemaVersion => 1;
@@ -43,14 +40,4 @@ class AppDatabase extends _$AppDatabase {
           // matches the existing sqflite database schema.
         },
       );
-}
-
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final databasePath = p.join(
-      await getDatabasesPath(),
-      'jianpu_documents.db',
-    );
-    return NativeDatabase(File(databasePath));
-  });
 }
