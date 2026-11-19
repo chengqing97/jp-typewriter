@@ -147,7 +147,7 @@ class JianpuEditingController extends TextEditingController
 
   void changeLineSpacingAt(int offset, int delta) {
     if (offset < 0 || offset > text.length || text.isEmpty) return;
-    final lineStart = text.lastIndexOf('\\n', offset == 0 ? 0 : offset - 1) + 1;
+    final lineStart = offset == 0 ? 0 : text.lastIndexOf('\\n', offset - 1) + 1;
     if (lineStart >= text.length || text[lineStart] == '\\n') return;
     var runOffset = 0;
     final updated = <JianpuRun>[];
