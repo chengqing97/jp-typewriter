@@ -16,7 +16,7 @@ class _SuperEditorSpacingPrototypeState
     extends State<SuperEditorSpacingPrototype> {
   late final MutableDocument _document;
   late final MutableDocumentComposer _composer;
-  late final DocumentEditor _editor;
+  late final Editor _editor;
 
   static const _spacingKey = 'lineSpacingBefore';
 
@@ -39,7 +39,7 @@ class _SuperEditorSpacingPrototypeState
   }
 
   ParagraphNode _paragraph(String text) => ParagraphNode(
-        id: DocumentEditor.createNodeId(),
+        id: Editor.createNodeId(),
         text: AttributedText(text),
         metadata: const {_spacingKey: 0},
       );
@@ -51,7 +51,8 @@ class _SuperEditorSpacingPrototypeState
     final node = _document.getNodeAt(index);
     if (node is! ParagraphNode) return;
     final next = (_spacingFor(node) + delta).clamp(0, 80);
-    node.putMetadataValue(_spacingKey, next);
+    node.metadata[_spacingKey] = next;
+    node.notifyListeners();
     setState(() {});
   }
 
