@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
@@ -1301,17 +1302,52 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                       Expanded(
                         child: LayoutBuilder(
                           builder: (context, constraints) {
-                            final pageWidth = constraints.maxWidth
+                            final basePageWidth = constraints.maxWidth
                                 .clamp(280.0, 760.0)
                                 .toDouble();
+                            final notationStyle = GoogleFonts.lxgwWenKaiMonoTc(
+                              fontSize: 18,
+                              color: const Color(0xFF202124),
+                            );
+                            final textPainter = TextPainter(
+                              text: _controller.buildTextSpan(
+                                context: context,
+                                style: notationStyle,
+                                withComposing: false,
+                              ),
+                              textDirection: Directionality.of(context),
+                              textScaler: MediaQuery.textScalerOf(context),
+                              textWidthBasis: TextWidthBasis.longestLine,
+                            )..layout(maxWidth: double.infinity);
+
+                            // Keep every line on one line. Expand the page
+                            // until both the text width and height fit inside
+                            // the printable area, then derive its height
+                            // from the A4 ratio.
+                            const horizontalContentPadding = 84.0;
+                            const verticalContentPadding = 96.0;
+                            final requiredWidth =
+                                textPainter.width + horizontalContentPadding;
+                            final requiredHeight =
+                                textPainter.height + verticalContentPadding;
+                            final pageWidth = math.max(
+                              basePageWidth,
+                              math.max(requiredWidth,
+                                  requiredHeight * 210 / 297),
+                            );
                             final pageHeight = pageWidth * 297 / 210;
                             return SingleChildScrollView(
                               padding: const EdgeInsets.all(20),
-                              child: Center(
-                                child: Container(
-                                  key: _paperKey,
-                                  width: pageWidth,
-                                  height: pageHeight,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: SizedBox(
+                                  width: math.max(pageWidth, constraints.maxWidth),
+                                  child: Align(
+                                    alignment: Alignment.topCenter,
+                                    child: Container(
+                                      key: _paperKey,
+                                      width: pageWidth,
+                                      height: pageHeight,
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(3),
@@ -1339,10 +1375,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                           key: _editorFieldKey,
                                           controller: _controller,
                                           focusNode: _focusNode,
-                                          style: GoogleFonts.lxgwWenKaiMonoTc(
-                                            fontSize: 18,
-                                            color: const Color(0xFF202124),
-                                          ),
+                                          style: notationStyle,
                                           cursorColor: const Color(0xFF315E9E),
                                           keyboardType: TextInputType.multiline,
                                           maxLines: null,
@@ -1416,6 +1449,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                           ),
                                         ),
                                       ],
+                                    ),
                                     ),
                                   ),
                                 ),
