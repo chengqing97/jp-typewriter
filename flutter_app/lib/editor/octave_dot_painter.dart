@@ -2,7 +2,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../models/jianpu_document.dart';
 
-final _octaveDotCharacter = RegExp(r'^[a-ac-zA-Z1-9]
+final _octaveDotCharacter = RegExp(r'^[a-ac-zA-Z1-9]$');
+final _beamExcludedCharacter = RegExp(r'[\s\\|()\-𝄍𝄎𝄏𝄆𝄋𝄌𝄇𝄂]');
 abstract interface class JianpuNotationSource implements Listenable {
   String get text;
   List<JianpuRun> get runs;
