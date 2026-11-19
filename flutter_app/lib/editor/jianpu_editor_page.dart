@@ -1418,20 +1418,6 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                   ),
                 ),
               ),
-              if (MediaQuery.sizeOf(context).width >= 760 &&
-                  _isDocumentDrawerExpanded)
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Material(
-                    elevation: 12,
-                    child: SizedBox(
-                      width: 280,
-                      child: _buildDocumentDrawer(),
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
