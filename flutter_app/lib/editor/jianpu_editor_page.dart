@@ -1324,10 +1324,26 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                             // from the A4 ratio.
                             const horizontalContentPadding = 42.0;
                             const verticalContentPadding = 48.0;
-                            final requiredWidth = textPainter.width +
+                            // Use intrinsic width rather than the laid-out
+                            // paragraph width, with a little extra room for
+                            // EditableText's caret and glyph metrics. This
+                            // prevents the field reaching its wrap threshold
+                            // before the paper has expanded.
+                            final requiredTextWidth =
+                                textPainter.maxIntrinsicWidth + 24.0;
+                            final lineMetrics = textPainter.computeLineMetrics();
+                            final measuredTextHeight = lineMetrics.fold<double>(
+                              0,
+                              (total, line) => total + line.height,
+                            );
+                            final requiredTextHeight = math.max(
+                              textPainter.height,
+                              measuredTextHeight,
+                            );
+                            final requiredWidth = requiredTextWidth +
                                 horizontalContentPadding * 2;
-                            final requiredHeight =
-                                textPainter.height + verticalContentPadding * 2;
+                            final requiredHeight = requiredTextHeight +
+                                verticalContentPadding * 2;
                             final pageWidth = math.max(
                               basePageWidth,
                               math.max(
@@ -1382,6 +1398,13 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                                   TextInputType.multiline,
                                               maxLines: null,
                                               expands: true,
+                                              // The paper itself grows to fit
+                                              // the complete document. The
+                                              // editable surface must never
+                                              // become an independently
+                                              // scrollable viewport.
+                                              scrollPhysics:
+                                                  const NeverScrollableScrollPhysics(),
                                               autofocus: false,
                                               autocorrect: false,
                                               enableSuggestions: false,
