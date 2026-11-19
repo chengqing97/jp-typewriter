@@ -110,9 +110,15 @@ class OctaveDotPainter extends CustomPainter {
           if (box != null) {
             final x = box.center.dx;
             for (var dot = 0; dot < run.octave.abs(); dot++) {
+              // Negative-octave dots belong below the beam stack. Keep
+              // the first dot below the lowest beam, then stack additional
+              // octave dots with the usual spacing.
+              final belowBeamOffset = run.beam > 0
+                  ? 2.5 + (run.beam - 1) * 3.2 + 4.5
+                  : 3.5;
               final y = run.octave > 0
                   ? box.top - 3.5 - dot * 4.2
-                  : box.bottom + 3.5 + dot * 4.2;
+                  : box.bottom + belowBeamOffset + dot * 4.2;
               canvas.drawCircle(Offset(x, y), 1.65, ink);
             }
           }
