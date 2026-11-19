@@ -47,7 +47,7 @@ class LocalJianpuDocument {
         italic: item['italic'] == true,
         slurId: item['slurId'] is String ? item['slurId'] as String : null,
         lineSpacingBefore: item['lineSpacingBefore'] is int
-            ? (item['lineSpacingBefore'] as int).clamp(0, 40)
+            ? (item['lineSpacingBefore'] as int).clamp(0, 40).toInt()
             : 0,
       ));
     }
