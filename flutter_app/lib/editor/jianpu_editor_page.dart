@@ -493,6 +493,25 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   bool get _hasSelection =>
       _controller.selection.isValid && !_controller.selection.isCollapsed;
 
+  RenderEditable? _findRenderEditable() {
+    final context = _editorFieldKey.currentContext;
+    if (context is! Element) return null;
+
+    RenderEditable? result;
+    void visit(Element element) {
+      if (result != null) return;
+      final renderObject = element.findRenderObject();
+      if (renderObject is RenderEditable) {
+        result = renderObject;
+        return;
+      }
+      element.visitChildElements(visit);
+    }
+
+    visit(context);
+    return result;
+  }
+
   void _handleControllerChanged() {
     if (!mounted) return;
     setState(() {});
@@ -1329,8 +1348,18 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                             // EditableText's caret and glyph metrics. This
                             // prevents the field reaching its wrap threshold
                             // before the paper has expanded.
+                            // Prefer the editable's own intrinsic
+                            // measurement so the page width follows the
+                            // exact text layout used by the TextField. On the
+                            // first frame, before RenderEditable exists, use
+                            // the matching TextPainter measurement.
+                            final editableIntrinsicWidth =
+                                _findRenderEditable()?.getMaxIntrinsicWidth(
+                              double.infinity,
+                            );
                             final requiredTextWidth =
-                                textPainter.maxIntrinsicWidth + 24.0;
+                                editableIntrinsicWidth ??
+                                    textPainter.maxIntrinsicWidth;
                             final lineMetrics = textPainter.computeLineMetrics();
                             final measuredTextHeight = lineMetrics.fold<double>(
                               0,
