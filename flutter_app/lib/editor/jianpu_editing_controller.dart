@@ -409,9 +409,10 @@ class JianpuEditingController extends TextEditingController
     TextStyle? style,
     required bool withComposing,
   }) {
-    // A line's "space before" belongs to the line break immediately before
-    // it. Giving the newline that line's height expands the preceding line
-    // box and moves this line down, rather than adding space after the line.
+    // lineSpacingBefore is stored on each character in a line. To add space
+    // before a line, increase the height of the preceding line's text. Apply
+    // the height to every run fragment in that line so formatting boundaries
+    // don't cause the spacing to disappear.
     final spacingAtOffset = List<int>.filled(text.length, 0);
     var runOffset = 0;
     for (final run in _runs) {
@@ -419,6 +420,30 @@ class JianpuEditingController extends TextEditingController
         spacingAtOffset[runOffset + i] = run.lineSpacingBefore;
       }
       runOffset += run.text.length;
+    }
+
+    final lineHeightAtOffset = List<int>.filled(text.length, 0);
+    var lineStart = 0;
+    for (var i = 0; i < text.length; i++) {
+      if (text[i] != '\n') continue;
+      final nextLineStart = i + 1;
+      final gap = nextLineStart < spacingAtOffset.length
+          ? spacingAtOffset[nextLineStart]
+          : 0;
+      for (var j = lineStart; j <= i; j++) {
+        lineHeightAtOffset[j] = gap;
+      }
+      lineStart = nextLineStart;
+    }
+
+    // The first line has no preceding newline, so its stored spacing is
+    // represented as extra line height on that line.
+    if (text.isNotEmpty) {
+      final firstLineEnd = text.indexOf('\n');
+      final end = firstLineEnd < 0 ? text.length : firstLineEnd;
+      for (var i = 0; i < end; i++) {
+        lineHeightAtOffset[i] = spacingAtOffset[0];
+      }
     }
 
     final spans = <InlineSpan>[];
@@ -429,50 +454,37 @@ class JianpuEditingController extends TextEditingController
         fontSize: run.superscript ? 15 : null,
         color: run.superscript ? Colors.transparent : null,
       );
+
       var localStart = 0;
       while (localStart < run.text.length) {
-        final newlineIndex = run.text.indexOf('\n', localStart);
-        final segmentEnd =
-            newlineIndex < 0 ? run.text.length : newlineIndex;
-
-        if (segmentEnd > localStart) {
-          final isFirstLine = runOffset + localStart == 0;
-          final firstLineSpacing =
-              isFirstLine ? spacingAtOffset[0] : 0;
-          spans.add(TextSpan(
-            text: run.text.substring(localStart, segmentEnd),
-            style: firstLineSpacing > 0
-                ? baseStyle.copyWith(
-                    height: (18 + firstLineSpacing) / 18,
-                    leadingDistribution: TextLeadingDistribution.even,
-                  )
-                : baseStyle,
-          ));
+        final isNewline = run.text[localStart] == '\n';
+        var localEnd = localStart + 1;
+        while (localEnd < run.text.length &&
+            (run.text[localEnd] == '\n') == isNewline &&
+            (isNewline ||
+                lineHeightAtOffset[runOffset + localEnd] ==
+                    lineHeightAtOffset[runOffset + localStart])) {
+          localEnd++;
         }
 
-        if (newlineIndex < 0) break;
-
-        final nextLineOffset = runOffset + newlineIndex + 1;
-        final spacingBeforeNextLine =
-            nextLineOffset < spacingAtOffset.length
-                ? spacingAtOffset[nextLineOffset]
-                : 0;
+        final gap = lineHeightAtOffset[runOffset + localStart];
+        final spanStyle = !isNewline && gap > 0
+            ? baseStyle.copyWith(
+                height: (18 + gap) / 18,
+                leadingDistribution: TextLeadingDistribution.even,
+              )
+            : baseStyle;
         spans.add(TextSpan(
-          text: '\n',
-          style: spacingBeforeNextLine > 0
-              ? baseStyle.copyWith(
-                  height: (18 + spacingBeforeNextLine) / 18,
-                  leadingDistribution: TextLeadingDistribution.even,
-                )
-              : baseStyle,
+          text: run.text.substring(localStart, localEnd),
+          style: spanStyle,
         ));
-        localStart = newlineIndex + 1;
+        localStart = localEnd;
       }
       runOffset += run.text.length;
     }
+
     return TextSpan(style: style, children: spans);
   }
-
   @override
   void dispose() {
     removeListener(_reconcileTextChanges);
