@@ -18,7 +18,7 @@ Drift uses SQLite compiled to WebAssembly on the web. Download the matching
 runtime assets once (and again whenever the resolved Drift version changes):
 
 ```sh
-./tool/download_drift_web_assets.sh
+bash tool/download_drift_web_assets.sh
 flutter run -d chrome
 ```
 
