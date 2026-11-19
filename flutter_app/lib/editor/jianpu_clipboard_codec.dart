@@ -18,7 +18,8 @@ class JianpuClipboardCodec {
                   'beam': run.beam,
                   'superscript': run.superscript,
                   'italic': run.italic,
-                  'slurId': run.slurId
+                  'slurId': run.slurId,
+                  'lineSpacingBefore': run.lineSpacingBefore
                 })
             .toList(),
       });
@@ -50,7 +51,10 @@ class JianpuClipboardCodec {
             superscript: item['superscript'] == true,
             italic: item['italic'] == true,
             slurId:
-                item['slurId'] is String ? item['slurId'] as String : null));
+                item['slurId'] is String ? item['slurId'] as String : null,
+            lineSpacingBefore: item['lineSpacingBefore'] is int
+                ? (item['lineSpacingBefore'] as int).clamp(0, 40)
+                : 0));
       }
       return result;
     } catch (_) {
