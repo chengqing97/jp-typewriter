@@ -918,9 +918,16 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                         child: LayoutBuilder(
                           builder: (context, constraints) {
                             const basePageWidth = 600.0;
-                            final notationStyle = GoogleFonts.lxgwWenKaiMonoTc(
+                            // Load Noto Music and keep it as a glyph fallback
+                            // behind the primary Jianpu text font.
+                            final notoMusicFamily =
+                                GoogleFonts.getFont('Noto Music').fontFamily!;
+                            final notationStyle =
+                                GoogleFonts.lxgwWenKaiMonoTc(
                               fontSize: 18,
                               color: const Color(0xFF202124),
+                            ).copyWith(
+                              fontFamilyFallback: [notoMusicFamily],
                             );
                             final textPainter = TextPainter(
                               text: _controller.buildTextSpan(
