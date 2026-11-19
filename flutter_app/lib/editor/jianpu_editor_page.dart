@@ -167,6 +167,7 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
             'superscript': run.superscript,
             'italic': run.italic,
             'slurId': run.slurId,
+            'lineSpacingBefore': run.lineSpacingBefore,
           })
       .toList());
 
@@ -414,6 +415,13 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
     _insertPlainText(symbol);
   }
 
+  void _changeCurrentLineSpacing(int delta) {
+    final selection = _controller.selection;
+    if (!selection.isValid) return;
+    _controller.changeLineSpacingAt(selection.extentOffset, delta);
+    _focusNode.requestFocus();
+  }
+
   void _toggleSlur() {
     if (!_hasSelection) return;
     final shouldClear = _selectedRuns().any((run) => run.slurId != null);
@@ -489,6 +497,20 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       key == LogicalKeyboardKey.arrowDown;
 
   KeyEventResult _handleRepeatKey(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent &&
+        (HardwareKeyboard.instance.isControlPressed ||
+            HardwareKeyboard.instance.isMetaPressed) &&
+        !HardwareKeyboard.instance.isAltPressed) {
+      if (event.logicalKey == LogicalKeyboardKey.equal) {
+        _changeCurrentLineSpacing(4);
+        return KeyEventResult.handled;
+      }
+      if (event.logicalKey == LogicalKeyboardKey.minus) {
+        _changeCurrentLineSpacing(-4);
+        return KeyEventResult.handled;
+      }
+    }
+
     if (event is KeyDownEvent &&
         (HardwareKeyboard.instance.isControlPressed ||
             HardwareKeyboard.instance.isMetaPressed) &&
@@ -1162,6 +1184,8 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
       onClearFormatting: _clearStyles,
       onToggleSlur: _toggleSlur,
       onInsertSymbol: _insertToolbarSymbol,
+      onIncreaseLineSpacing: () => _changeCurrentLineSpacing(4),
+      onDecreaseLineSpacing: () => _changeCurrentLineSpacing(-4),
     );
   }
 
