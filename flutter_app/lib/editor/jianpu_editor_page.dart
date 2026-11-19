@@ -37,7 +37,6 @@ class JianpuEditingController extends TextEditingController
     _lastText = text;
     _runs = text.isEmpty ? <JianpuRun>[] : <JianpuRun>[JianpuRun(text: text)];
     _lastKnownSelection = selection;
-    _undoStack.add(_snapshot());
     addListener(_reconcileTextChanges);
   }
 
@@ -111,9 +110,10 @@ class JianpuEditingController extends TextEditingController
     final caret = TextSelection.collapsed(offset: _lastText.length);
     value = TextEditingValue(text: _lastText, selection: caret);
     _lastKnownSelection = caret;
-    _undoStack
-      ..clear()
-      ..add(_snapshot());
+    // History starts empty for every loaded document. The first user edit
+    // records its own pre-edit state; seeding this stack creates a duplicate
+    // initial undo step.
+    _undoStack.clear();
     _redoStack.clear();
     _isTypingGroup = false;
     _lastTypingTime = null;
