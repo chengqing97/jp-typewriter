@@ -10,7 +10,7 @@ import 'package:super_clipboard/super_clipboard.dart';
 import '../models/jianpu_document.dart';
 import '../storage/jianpu_document_repository.dart';
 import '../storage/local_jianpu_document.dart';
-import 'octave_dot_painter.dart';
+import 'notation_decoration_layer.dart';
 
 const _jianpuClipboardFormat = CustomValueFormat<String>(
   applicationId: 'com.chengqing97.jptypewriter.jianpu-runs',
@@ -425,7 +425,6 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
   late final FocusNode _focusNode;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey _editorFieldKey = GlobalKey();
-  final GlobalKey _editorPaintKey = GlobalKey();
   final JianpuDocumentRepository _repository = JianpuDocumentRepository();
   final List<LocalJianpuDocument> _documents = [];
   StreamSubscription<List<LocalJianpuDocument>>? _documentsSubscription;
@@ -1292,23 +1291,11 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                                 Color(0xFF315E9E),
                                           ),
                                         ),
-                                        child: CustomPaint(
-                                          key: _editorPaintKey,
-                                          foregroundPainter: OctaveDotPainter(
-                                            controller: _controller,
-                                            baseStyle:
-                                                GoogleFonts.lxgwWenKaiMonoTc(
-                                              fontSize: 18,
-                                              color: const Color(0xFF202124),
-                                            ),
-                                            textDirection:
-                                                Directionality.of(context),
-                                            textScaler: MediaQuery.textScalerOf(
-                                                context),
-                                            textFieldKey: _editorFieldKey,
-                                            paintKey: _editorPaintKey,
-                                          ),
-                                          child: TextField(
+                                        child: Stack(
+                                          alignment: Alignment.topLeft,
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            TextField(
                                             key: _editorFieldKey,
                                             controller: _controller,
                                             focusNode: _focusNode,
@@ -1382,7 +1369,14 @@ class _JianpuEditorPageState extends State<JianpuEditorPage> {
                                               hintText: '',
                                             ),
                                             onChanged: (_) => setState(() {}),
-                                          ),
+                                            ),
+                                            Positioned.fill(
+                                              child: JianpuNotationOverlay(
+                                                controller: _controller,
+                                                textFieldKey: _editorFieldKey,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                       if (_showHelp) ...[
