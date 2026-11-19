@@ -12,6 +12,22 @@ dart run build_runner build --delete-conflicting-outputs
 flutter run
 ```
 
+### Run the isolated SuperEditor spacing prototype
+
+This is a separate entrypoint. It leaves the existing editor unchanged and
+starts with sample Jianpu lines so paragraph spacing, cross-paragraph
+selection, typing, and keyboard navigation can be evaluated independently.
+
+```sh
+cd flutter_app
+flutter pub get
+flutter run -t lib/main_super_editor_prototype.dart
+```
+
+The prototype currently tests paragraph-level spacing only. It does not yet
+load existing Jianpu documents or migrate octave dots, beams, slurs, clipboard,
+undo/redo, or persistence.
+
 ### Run in a browser
 
 Drift uses SQLite compiled to WebAssembly on the web. Download the matching
