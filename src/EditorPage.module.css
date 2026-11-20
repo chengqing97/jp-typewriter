@@ -32,14 +32,13 @@
   border-radius: 7px;
   background-color: white;
   box-shadow: rgba(0 0 0 / 4%) 0 1px 5px;
+  cursor: text;
 }
 
 .editable {
-  min-height: 800px;
-  aspect-ratio: 210 / 297;
+  min-width: 566px;
   padding: 40px;
   outline: none;
-  box-sizing: border-box;
   touch-action: manipulation;
   width: fit-content;
   user-select: text;

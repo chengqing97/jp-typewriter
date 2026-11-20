@@ -1,6 +1,6 @@
 import styles from "./EditorPage.module.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createEditor, Editor, Range, Node } from "slate";
+import { createEditor, Editor, Range, Node, Transforms } from "slate";
 import {
   Editable,
   ReactEditor,
@@ -128,7 +128,15 @@ export default function EditorPage() {
         <Toolbar />
         <div className={styles.body}>
           <div className={styles.backdrop}>
-            <div ref={paperRef} className={styles.paper}>
+            <div
+              ref={paperRef}
+              className={styles.paper}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                ReactEditor.focus(editor);
+                Transforms.select(editor, Editor.end(editor, []));
+              }}
+            >
               <Editable
                 ref={editableRef}
                 className={styles.editable}
@@ -140,6 +148,7 @@ export default function EditorPage() {
                 autoCorrect="off"
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
+                onPointerDown={(e) => e.stopPropagation()}
                 onCopy={(e) => {
                   if (
                     !editor.selection ||
