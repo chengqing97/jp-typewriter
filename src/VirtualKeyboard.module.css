@@ -49,11 +49,30 @@
   align-items: flex-end;
 }
 
-.leftPart {
+.group1 {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 76px;
+}
+.group2 {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+.group3 {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 76px;
+  margin-right: 20px;
+}
+.group4 {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 6px;
+  height: 100px;
 }
 
 .modifierButton {
@@ -83,11 +102,6 @@
   box-shadow: inset 0 0 0 1px #93c5fd;
 }
 
-.middlePart {
-  display: flex;
-  flex-direction: row;
-  gap: 12px;
-}
 .actionButton {
   flex: 1;
   min-width: 70px;
@@ -115,14 +129,6 @@
 .actionButton:active {
   background: #dbeafe;
   color: #1d4ed8;
-}
-
-.rightPart {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  gap: 6px;
-  height: 100px;
 }
 
 .arrowColumn {

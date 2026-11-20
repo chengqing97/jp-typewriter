@@ -6,52 +6,23 @@ import {
   LuKeyboard,
 } from "react-icons/lu";
 import styles from "./VirtualKeyboard.module.css";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Transforms, Range, Editor, Element } from "slate";
 import { useSlate } from "slate-react";
 import { useEditorContext } from "./useEditorContext";
 import { handleCopy, handleCut, handlePaste } from "./utils/copyPaste";
 
 type Direction = "ArrowLeft" | "ArrowRight" | "ArrowUp" | "ArrowDown";
-type Modifier = "shift" | "ctrl";
 
 export default function VirtualKeyboard() {
   const editor = useSlate();
   const { editableRef, isFocused, keyboardVisible, setKeyboardVisible } =
     useEditorContext();
 
-  const pointers = useRef(new Map<number, Modifier>());
-  const [shift, setShift] = useState(false);
-  const [ctrl, setCtrl] = useState(false);
-
-  function updateModifiers() {
-    const values = [...pointers.current.values()];
-    setShift(values.includes("shift"));
-    setCtrl(values.includes("ctrl"));
-  }
-
-  function pressModifier(e: React.PointerEvent, modifier: Modifier) {
-    e.preventDefault();
-
-    pointers.current.set(e.pointerId, modifier);
-    updateModifiers();
-  }
-
-  useEffect(() => {
-    function releaseModifier(e: PointerEvent) {
-      if (pointers.current.delete(e.pointerId)) {
-        updateModifiers();
-      }
-    }
-
-    window.addEventListener("pointerup", releaseModifier);
-    window.addEventListener("pointercancel", releaseModifier);
-
-    return () => {
-      window.removeEventListener("pointerup", releaseModifier);
-      window.removeEventListener("pointercancel", releaseModifier);
-    };
-  }, []);
+  const [leftShift, setLeftShift] = useState(false);
+  const [leftCtrl, setLeftCtrl] = useState(false);
+  const [rightShift, setRightShift] = useState(false);
+  const [rightCtrl, setRightCtrl] = useState(false);
 
   function moveCursor(direction: Direction) {
     const { selection: editorSelection } = editor;
@@ -63,6 +34,9 @@ export default function VirtualKeyboard() {
     if (!editorSelection) return;
     if (!windowSelection) return;
     if (!block) return;
+
+    const shift = leftShift || rightShift;
+    const ctrl = leftCtrl || rightCtrl;
 
     if (!shift && Range.isExpanded(editorSelection)) {
       if (ctrl) {
@@ -206,28 +180,39 @@ export default function VirtualKeyboard() {
       </button>
       {keyboardVisible && (
         <div className={styles.keyboardContainer}>
-          <div className={styles.leftPart}>
+          <div className={styles.group1}>
             <button
               type="button"
               className={`${styles.modifierButton} ${
-                shift ? styles.active : ""
+                leftShift ? styles.active : ""
               }`}
-              onPointerDown={(e) => pressModifier(e, "shift")}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setLeftShift(true);
+              }}
+              onPointerUp={() => setLeftShift(false)}
             >
               Shift
             </button>
             <button
               type="button"
               className={`${styles.modifierButton} ${
-                ctrl ? styles.active : ""
+                leftCtrl ? styles.active : ""
               }`}
-              onPointerDown={(e) => pressModifier(e, "ctrl")}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setLeftCtrl(true);
+              }}
+              onPointerUp={() => setLeftCtrl(false)}
             >
               Ctrl
             </button>
           </div>
+          <div style={{ flex: 1 }} />
 
-          <div className={styles.middlePart}>
+          <div className={styles.group2}>
             <button
               type="button"
               className={styles.actionButton}
@@ -263,7 +248,36 @@ export default function VirtualKeyboard() {
             </button>
           </div>
 
-          <div className={styles.rightPart}>
+          <div style={{ flex: 1 }} />
+          <div className={styles.group3}>
+            <button
+              type="button"
+              className={`${styles.modifierButton} ${
+                rightShift ? styles.active : ""
+              }`}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setRightShift((x) => !x);
+              }}
+            >
+              Shift
+            </button>
+            <button
+              type="button"
+              className={`${styles.modifierButton} ${
+                rightCtrl ? styles.active : ""
+              }`}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setRightCtrl((x) => !x);
+              }}
+            >
+              Ctrl
+            </button>
+          </div>
+          <div className={styles.group4}>
             {arrowButton("ArrowLeft", <LuArrowLeft />)}
 
             <div className={styles.arrowColumn}>
