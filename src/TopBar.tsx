@@ -2,13 +2,12 @@ import styles from "./TopBar.module.css";
 import { useSlate } from "slate-react";
 import { useState, type ButtonHTMLAttributes } from "react";
 import { CustomEditor } from "./CustomEditor";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import type { SaveState } from "./types";
 import { useEditorContext } from "./useEditorContext";
 import { DEFAULT_TITLE, OFFLINE_MODE } from "./constants";
 import { SideBarButton } from "./SideBar";
 import DeleteDialog from "./DeleteDialog";
+import { handleExport } from "./utils/exportPDF";
 
 export default function TopBar() {
   const editor = useSlate();
@@ -58,27 +57,8 @@ export default function TopBar() {
   async function exportPDF() {
     const div = paperRef.current;
     if (!div) return;
-
-    const canvas = await html2canvas(div, {
-      scale: 2,
-      useCORS: true,
-    });
-
-    const width = div.offsetWidth;
-    const height = div.offsetHeight;
-
-    const pdf = new jsPDF({
-      orientation: width > height ? "landscape" : "portrait",
-      unit: "mm",
-      format: "a4",
-      compress: true,
-    });
-
-    const img = canvas.toDataURL("image/jpeg", 0.8);
-    const title = currentDoc?.title ?? CustomEditor.getTitle(editor);
-
-    pdf.addImage(img, "PNG", 0, 0, 210, 297);
-    pdf.save(title + ".pdf");
+    const filename = currentDoc?.title ?? CustomEditor.getTitle(editor);
+    handleExport(div, filename);
   }
 
   return (
