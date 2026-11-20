@@ -23,6 +23,7 @@ import {
 import { useEditorContext } from "./useEditorContext";
 import Toolbar from "./Toolbar";
 import VirtualKeyboard from "./VirtualKeyboard";
+import { isMac } from "./utils/isMac";
 
 const defaultValue: Descendant[] = [
   {
@@ -155,55 +156,55 @@ export default function EditorPage() {
                   e.clipboardData.setData("text/plain", plainText);
                 }}
                 onKeyDown={(e) => {
-                  const ctrlKey = e.metaKey || e.ctrlKey;
-                  if (ctrlKey && e.key == "=") {
+                  const modeKey = isMac ? e.metaKey : e.ctrlKey;
+                  if (modeKey && e.key == "=") {
                     e.preventDefault();
                     CustomEditor.gapUp(editor);
                     return;
                   }
-                  if (ctrlKey && e.key == "-") {
+                  if (modeKey && e.key == "-") {
                     e.preventDefault();
                     CustomEditor.gapDown(editor);
                     return;
                   }
-                  if (ctrlKey && e.key == "s") {
+                  if (modeKey && e.key == "s") {
                     e.preventDefault();
                     CustomEditor.toggleSuperscript(editor);
                     return;
                   }
                   if (!editor.selection) return;
                   if (Range.isCollapsed(editor.selection)) return;
-                  if (ctrlKey && e.key == "ArrowUp") {
+                  if (modeKey && e.key == "ArrowUp") {
                     e.preventDefault();
                     CustomEditor.octaveUp(editor);
                     return;
                   }
-                  if (ctrlKey && e.key == "ArrowDown") {
+                  if (modeKey && e.key == "ArrowDown") {
                     e.preventDefault();
                     CustomEditor.octaveDown(editor);
                     return;
                   }
-                  if (ctrlKey && e.key == "ArrowLeft") {
+                  if (modeKey && e.key == "ArrowLeft") {
                     e.preventDefault();
                     CustomEditor.beamUp(editor);
                     return;
                   }
-                  if (ctrlKey && e.key == "ArrowRight") {
+                  if (modeKey && e.key == "ArrowRight") {
                     e.preventDefault();
                     CustomEditor.beamDown(editor);
                     return;
                   }
-                  if (ctrlKey && e.key == "a") {
+                  if (modeKey && e.key == "a") {
                     e.preventDefault();
                     CustomEditor.toggleSlur(editor);
                     return;
                   }
-                  if (ctrlKey && e.key == "d") {
+                  if (modeKey && e.key == "d") {
                     e.preventDefault();
                     CustomEditor.clearFormat(editor);
                     return;
                   }
-                  if (ctrlKey && e.key == "i") {
+                  if (modeKey && e.key == "i") {
                     e.preventDefault();
                     CustomEditor.toggleItalic(editor);
                     return;
