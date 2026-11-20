@@ -36,7 +36,7 @@ type EditorContextValue = {
   isFocused: boolean;
   setIsFocused: Dispatch<SetStateAction<boolean>>;
   keyboardVisible: boolean;
-  setKeyboardVisible: Dispatch<SetStateAction<boolean>>;
+  toggleKeyboard: () => void;
 };
 
 const EditorContext = createContext<EditorContextValue | null>(null);
@@ -53,7 +53,9 @@ export function EditorContextProvider(props: PropsWithChildren) {
   const [loadState, setLoadState] = useState<LoadState>("loaded");
   const [currentSortIndex, setCurrentSortIndex] = useState(0);
   const [isFocused, setIsFocused] = useState(false);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(
+    localStorage.getItem("keyboardVisible") === "true",
+  );
 
   useEffect(() => {
     (async () => {
@@ -136,6 +138,11 @@ export function EditorContextProvider(props: PropsWithChildren) {
     }
   }
 
+  const toggleKeyboard = () => {
+    localStorage.setItem("keyboardVisible", keyboardVisible ? "false" : "true");
+    setKeyboardVisible((x) => !x);
+  };
+
   return (
     <EditorContext.Provider
       value={{
@@ -158,7 +165,7 @@ export function EditorContextProvider(props: PropsWithChildren) {
         isFocused,
         setIsFocused,
         keyboardVisible,
-        setKeyboardVisible,
+        toggleKeyboard,
       }}
     >
       {props.children}

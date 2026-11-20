@@ -16,7 +16,7 @@ type Direction = "ArrowLeft" | "ArrowRight" | "ArrowUp" | "ArrowDown";
 
 export default function VirtualKeyboard() {
   const editor = useSlate();
-  const { editableRef, isFocused, keyboardVisible, setKeyboardVisible } =
+  const { editableRef, isFocused, keyboardVisible, toggleKeyboard } =
     useEditorContext();
 
   const [leftShift, setLeftShift] = useState(false);
@@ -170,7 +170,7 @@ export default function VirtualKeyboard() {
         type="button"
         className={styles.toggleButton}
         onPointerDown={(e) => e.preventDefault()}
-        onClick={() => setKeyboardVisible((v) => !v)}
+        onClick={toggleKeyboard}
         aria-label={
           keyboardVisible ? "Hide virtual keyboard" : "Show virtual keyboard"
         }
