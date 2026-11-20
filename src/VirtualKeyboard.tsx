@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { Transforms, Range, Editor, Element } from "slate";
 import { useSlate } from "slate-react";
 import { useEditorContext } from "./useEditorContext";
-import { copy, paste } from "./utils/copyPaste";
+import { handleCopy, handleCut, handlePaste } from "./utils/copyPaste";
 
 type Direction = "ArrowLeft" | "ArrowRight" | "ArrowUp" | "ArrowDown";
 type Modifier = "shift" | "ctrl";
@@ -234,9 +234,7 @@ export default function VirtualKeyboard() {
               onPointerDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const { selection } = editor;
-                if (!selection || Range.isCollapsed(selection)) return;
-                document.execCommand("cut");
+                handleCut(editor);
               }}
             >
               Cut
@@ -247,10 +245,7 @@ export default function VirtualKeyboard() {
               onPointerDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const { selection } = editor;
-                if (!selection || Range.isCollapsed(selection)) return;
-                // copy(editor);
-                document.execCommand("copy");
+                handleCopy(editor);
               }}
             >
               Copy
@@ -261,7 +256,7 @@ export default function VirtualKeyboard() {
               onPointerDown={async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                paste(editor);
+                handlePaste(editor);
               }}
             >
               Paste

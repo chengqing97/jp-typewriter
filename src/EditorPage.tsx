@@ -139,22 +139,20 @@ export default function EditorPage() {
                 autoCorrect="off"
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                onCopy={(event) => {
+                onCopy={(e) => {
                   if (
                     !editor.selection ||
                     Range.isCollapsed(editor.selection)
                   ) {
                     return;
                   }
-                  event.preventDefault();
-                  const { clipboardData } = event;
-                  ReactEditor.setFragmentData(editor, clipboardData);
+                  e.preventDefault();
+                  ReactEditor.setFragmentData(editor, e.clipboardData);
                   const fragment = Editor.fragment(editor, editor.selection);
                   const plainText = fragment
                     .map((node) => Node.string(node))
                     .join("\n");
-                  clipboardData.setData("text/plain", plainText);
-                  clipboardData.clearData("text/html");
+                  e.clipboardData.setData("text/plain", plainText);
                 }}
                 onKeyDown={(e) => {
                   const ctrlKey = e.metaKey || e.ctrlKey;
@@ -215,9 +213,8 @@ export default function EditorPage() {
             </div>
           </div>
         </div>
-        <VirtualKeyboard />
+        {navigator.maxTouchPoints > 0 && <VirtualKeyboard />}
       </div>
     </Slate>
   );
 }
-// {navigator.maxTouchPoints > 0 && <VirtualKeyboard />}

@@ -1,136 +1,81 @@
-import { type Descendant, Editor, Range, Transforms } from "slate";
+import { Editor, Node, Transforms } from "slate";
 import { ReactEditor } from "slate-react";
 
-const SLATE_FRAGMENT_MIME = "application/x-slate-fragment";
+export async function handleCut(editor: Editor) {
+  if (!editor.selection) return;
 
-function encodeSlateFragment(fragment: Descendant[]): string {
-  const json = JSON.stringify(fragment);
-  // UTF-8 safe base64 encoding
-  const bytes = new TextEncoder().encode(json);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
+  const data = new DataTransfer();
+  ReactEditor.setFragmentData(editor, data, "cut");
 
-function decodeSlateFragment(encoded: string): Descendant[] | null {
-  if (!encoded) return null;
-  try {
-    const binary = atob(encoded);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    const json = new TextDecoder().decode(bytes);
-    const parsed = JSON.parse(json);
-    return Array.isArray(parsed) ? (parsed as Descendant[]) : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Copies the current Slate selection to the system clipboard
- * as both a rich Slate fragment and plain text.
- */
-export async function copy(
-  editor: Editor,
-  savedSelection?: Range | null,
-): Promise<boolean> {
-  const selection = editor.selection ?? savedSelection ?? null;
-  if (!selection || Range.isCollapsed(selection)) {
-    return false;
-  }
-
-  const fragment = Editor.fragment(editor, selection);
-  const plainText = Editor.string(editor, selection);
-
-  if (!fragment.length && !plainText) {
-    return false;
-  }
-
-  ReactEditor.focus(editor);
-  if (!editor.selection && savedSelection) {
-    Transforms.select(editor, savedSelection);
-  }
+  const fragment = Editor.fragment(editor, editor.selection);
+  const plainText = fragment.map((node) => Node.string(node)).join("\n");
+  data.setData("text/plain", plainText);
 
   try {
-    if (
-      navigator.clipboard &&
-      typeof ClipboardItem !== "undefined" &&
-      typeof navigator.clipboard.write === "function"
-    ) {
-      const encodedFragment = encodeSlateFragment(fragment);
-      const item = new ClipboardItem({
-        "text/plain": new Blob([plainText], { type: "text/plain" }),
-        [SLATE_FRAGMENT_MIME]: new Blob([encodedFragment], {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        "text/plain": new Blob([data.getData("text/plain")], {
           type: "text/plain",
         }),
-      });
-      await navigator.clipboard.write([item]);
-      return true;
-    }
+        "text/html": new Blob([data.getData("text/html")], {
+          type: "text/html",
+        }),
+      }),
+    ]);
 
-    if (
-      navigator.clipboard &&
-      typeof navigator.clipboard.writeText === "function"
-    ) {
-      await navigator.clipboard.writeText(plainText);
-      return true;
-    }
+    Transforms.delete(editor);
   } catch (err) {
-    console.error("Slate copy() failed:", err);
+    console.error("custom cut failed");
+    document.execCommand("cut");
   }
-
-  return false;
 }
 
-/**
- * Pastes from the system clipboard into Slate, preferring a rich
- * Slate fragment and falling back to plain text.
- */
-export async function paste(
-  editor: Editor,
-  savedSelection?: Range | null,
-): Promise<boolean> {
-  ReactEditor.focus(editor);
-  if (!editor.selection && savedSelection) {
-    Transforms.select(editor, savedSelection);
-  }
+export async function handleCopy(editor: Editor) {
+  if (!editor.selection) return;
+
+  const data = new DataTransfer();
+  ReactEditor.setFragmentData(editor, data, "copy");
+
+  const fragment = Editor.fragment(editor, editor.selection);
+  const plainText = fragment.map((node) => Node.string(node)).join("\n");
+  data.setData("text/plain", plainText);
 
   try {
-    // 1. Try reading rich Slate fragment via Clipboard API
-    if (navigator.clipboard && typeof navigator.clipboard.read === "function") {
-      const items = await navigator.clipboard.read();
-      for (const item of items) {
-        if (item.types.includes(SLATE_FRAGMENT_MIME)) {
-          const blob = await item.getType(SLATE_FRAGMENT_MIME);
-          const encoded = await blob.text();
-          const fragment = decodeSlateFragment(encoded);
-
-          if (fragment && fragment.length > 0) {
-            Transforms.insertFragment(editor, fragment);
-            return true;
-          }
-        }
-      }
-    }
-
-    // 2. Fallback to plain text
-    if (
-      navigator.clipboard &&
-      typeof navigator.clipboard.readText === "function"
-    ) {
-      const text = await navigator.clipboard.readText();
-      if (text) {
-        Transforms.insertText(editor, text);
-        return true;
-      }
-    }
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        "text/plain": new Blob([data.getData("text/plain")], {
+          type: "text/plain",
+        }),
+        "text/html": new Blob([data.getData("text/html")], {
+          type: "text/html",
+        }),
+        // Note: application/x-slate-fragment is often blocked by the async Clipboard API
+        // (especially Safari). The fragment is still embedded in the HTML as data-slate-fragment.
+      }),
+    ]);
   } catch (err) {
-    console.error("Slate paste() failed:", err);
+    console.error("custom copy failed");
+    document.execCommand("copy");
   }
+}
 
-  return false;
+export async function handlePaste(editor: ReactEditor) {
+  ReactEditor.focus(editor);
+
+  try {
+    const clipboardItems = await navigator.clipboard.read();
+    const data = new DataTransfer();
+
+    for (const item of clipboardItems) {
+      for (const type of item.types) {
+        const blob = await item.getType(type);
+        const text = await blob.text();
+        data.setData(type, text);
+      }
+    }
+    ReactEditor.insertData(editor, data);
+  } catch (err) {
+    console.error("custom paste failed");
+    document.execCommand("paste");
+  }
 }
